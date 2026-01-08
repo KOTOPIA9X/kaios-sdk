@@ -61,10 +61,12 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
     }
 
     .header {
-      padding: 20px;
+      padding: 15px 20px;
       text-align: center;
-      background: linear-gradient(180deg, #1a1a2e 0%, transparent 100%);
+      background: #0a0a0f;
+      border-bottom: 1px solid #1a1a2e;
       z-index: 10;
+      flex-shrink: 0;
     }
 
     .header h1 {
@@ -370,13 +372,24 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
     // Resize canvas to container (not full window - header takes space)
     function resize() {
       const container = document.querySelector('.visualizer-container');
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+      const rect = container.getBoundingClientRect();
+      // Use the actual computed bounding box, not clientHeight
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      // Force canvas to not exceed container
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '100%';
     }
     window.addEventListener('resize', resize);
-    // Delay initial resize to ensure container is laid out
-    setTimeout(resize, 50);
+    // Multiple resize calls to handle layout settling
     resize();
+    setTimeout(resize, 100);
+    setTimeout(resize, 500);
+    // Also observe for container size changes
+    if (typeof ResizeObserver !== 'undefined') {
+      const resizeObserver = new ResizeObserver(() => resize());
+      resizeObserver.observe(document.querySelector('.visualizer-container'));
+    }
 
     // ═══════════════════════════════════════════════════════════════════
     // KAIOS AUDIO BUS MODE (Real-time SSE)

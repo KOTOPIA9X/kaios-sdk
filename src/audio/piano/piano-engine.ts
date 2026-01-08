@@ -643,10 +643,10 @@ export class PianoEngine extends EventEmitter {
 
   /**
    * Play continuously until stopped - for ambient vibes
-   * Like someone softly playing piano to comfort themselves
+   * Like C418's Minecraft soundtrack - lush, warm, alive
    * Organic, breathing, with natural silences
    */
-  async playContinuous(style: 'joji' | 'yeule' | 'ambient' | 'mixed' = 'mixed'): Promise<void> {
+  async playContinuous(style: 'joji' | 'yeule' | 'ambient' | 'c418' | 'mixed' = 'c418'): Promise<void> {
     if (!this.config.enabled) return
     if (this.state.isContinuous) return  // Already playing continuously
 
@@ -656,88 +656,107 @@ export class PianoEngine extends EventEmitter {
 
     const playLoop = async () => {
       while (this.state.isContinuous && this.config.enabled) {
-        // Pick what to play - more weighted toward chords and single notes
         const playType = Math.random()
         const mood = EMOTION_MOODS[this.state.currentEmotion]
 
-        if (style === 'mixed' || style === 'ambient') {
-          // Organic mix: mostly single notes and chords, occasional phrases
-          // Like someone absent-mindedly playing to themselves
+        // C418 style: lush, warm, ambient Minecraft-like piano
+        if (style === 'c418' || style === 'ambient') {
+          // Very organic timing - notes that breathe and linger
+          // Like "Sweden", "Wet Hands", "Mice on Venus"
 
-          if (playType < 0.35) {
-            // Single floating note - most common, very gentle
-            const phrase = this.generatePhrase(this.state.currentEmotion)
-            const note = phrase.notes[Math.floor(Math.random() * phrase.notes.length)]
-            await this.playNote(note.pitch, 1200 + Math.random() * 800, note.velocity * 0.5)
+          if (playType < 0.25) {
+            // Single floating note - soft, long sustain
+            const octave = 3 + Math.floor(Math.random() * 2)  // Octave 3-4 (warm range)
+            const note = `${this.state.currentKey}${octave}`
+            await this.playNote(note, 3000 + Math.random() * 1500, 0.35)
+
+          } else if (playType < 0.45) {
+            // Gentle arpeggio - the C418 signature
+            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
+            const octave = 3 + Math.floor(Math.random() * 2)
+            const chordNotes = getChordNotes(this.state.currentKey, chordType, octave)
+            // Play as arpeggio with long delays between notes
+            for (let i = 0; i < Math.min(chordNotes.length, 3); i++) {
+              setTimeout(() => {
+                this.playNote(chordNotes[i], 2500 + Math.random() * 1000, 0.3 - i * 0.02)
+              }, i * (250 + Math.random() * 150))
+            }
 
           } else if (playType < 0.6) {
-            // Soft chord - warm and comforting
+            // Warm chord - held, letting it breathe
             const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            const octave = 2 + Math.floor(Math.random() * 2)  // Lower octaves for warmth
-            await this.playChord(this.state.currentKey, chordType, octave, 2000, 0.35)
+            const octave = 3  // Octave 3 for warmth
+            await this.playChord(this.state.currentKey, chordType, octave, 4000, 0.3)
 
-          } else if (playType < 0.75) {
-            // Two notes together (simple interval)
+          } else if (playType < 0.7) {
+            // Two notes - an interval, like a question and answer
             const phrase = this.generatePhrase(this.state.currentEmotion)
             if (phrase.notes.length >= 2) {
-              await this.playNote(phrase.notes[0].pitch, 1500, 0.4)
-              await this.sleep(200 + Math.random() * 300)
-              await this.playNote(phrase.notes[1].pitch, 1200, 0.35)
+              await this.playNote(phrase.notes[0].pitch, 2500, 0.35)
+              await this.sleep(800 + Math.random() * 600)  // Longer pause between notes
+              await this.playNote(phrase.notes[1].pitch, 2000, 0.3)
             }
 
-          } else if (playType < 0.85) {
-            // Short phrase - occasional melodic moment
-            const phrase = this.generatePhrase(this.state.currentEmotion)
-            // Only play first 2-3 notes, slowly
-            const shortPhrase = {
-              ...phrase,
-              notes: phrase.notes.slice(0, 2 + Math.floor(Math.random() * 2))
-            }
-            await this.playPhrase(shortPhrase)
+          } else if (playType < 0.75) {
+            // Bass note underneath (like a pad)
+            const bassNote = `${this.state.currentKey}2`
+            await this.playNote(bassNote, 4000, 0.25)
           }
-          // else: silence (15% - breathing room is important)
+          // else: 25% silence - very important for breathing
+
+        } else if (style === 'mixed') {
+          // Mix of styles
+          if (playType < 0.35) {
+            const phrase = this.generatePhrase(this.state.currentEmotion)
+            const note = phrase.notes[Math.floor(Math.random() * phrase.notes.length)]
+            await this.playNote(note.pitch, 2000, note.velocity * 0.4)
+          } else if (playType < 0.6) {
+            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
+            const octave = 2 + Math.floor(Math.random() * 2)
+            await this.playChord(this.state.currentKey, chordType, octave, 3000, 0.3)
+          } else if (playType < 0.75) {
+            const phrase = this.generatePhrase(this.state.currentEmotion)
+            if (phrase.notes.length >= 2) {
+              await this.playNote(phrase.notes[0].pitch, 2000, 0.35)
+              await this.sleep(400 + Math.random() * 400)
+              await this.playNote(phrase.notes[1].pitch, 1800, 0.3)
+            }
+          }
 
         } else if (style === 'joji') {
           // Sparse, melancholic - more silence, deeper notes
           if (playType < 0.3) {
-            // Single low note
             const note = `${this.state.currentKey}3`
-            await this.playNote(note, 1500, 0.35)
+            await this.playNote(note, 2000, 0.35)
           } else if (playType < 0.5) {
-            // Melancholic chord
             const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            await this.playChord(this.state.currentKey, chordType, 2, 2500, 0.3)
+            await this.playChord(this.state.currentKey, chordType, 2, 3000, 0.3)
           } else if (playType < 0.65) {
-            // Joji phrase
             const phrases = JOJI_PHRASES
             const phrase = phrases[Math.floor(Math.random() * phrases.length)]
             await this.playPhrase(phrase)
           }
-          // 35% silence
 
         } else if (style === 'yeule') {
           // Ethereal, sparse, high notes
           if (playType < 0.3) {
-            // High floating note
             const note = `${this.state.currentKey}5`
-            await this.playNote(note, 1800, 0.3)
+            await this.playNote(note, 2500, 0.3)
           } else if (playType < 0.5) {
-            // Ethereal chord
             const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            await this.playChord(this.state.currentKey, chordType, 4, 2000, 0.25)
+            await this.playChord(this.state.currentKey, chordType, 4, 3000, 0.25)
           } else if (playType < 0.6) {
             const phrases = YEULE_PHRASES
             const phrase = phrases[Math.floor(Math.random() * phrases.length)]
             await this.playPhrase(phrase)
           }
-          // 40% silence
         }
 
-        // Organic breathing room - longer pauses, more variance
-        // Like someone pausing to think, feel, breathe
-        const baseWait = style === 'ambient' ? 5000 : style === 'joji' ? 4500 : style === 'yeule' ? 5500 : 4000
-        const variance = baseWait * 0.8  // High variance for organic feel
-        const humanPause = Math.random() < 0.2 ? 3000 : 0  // Occasional extra pause
+        // C418-style breathing room - MUCH longer pauses
+        // This is what makes it feel alive and contemplative
+        const baseWait = style === 'c418' ? 6000 : style === 'ambient' ? 5500 : style === 'joji' ? 5000 : style === 'yeule' ? 5500 : 4500
+        const variance = baseWait * 0.7  // High variance
+        const humanPause = Math.random() < 0.25 ? 4000 + Math.random() * 3000 : 0  // Occasional long pause
         await this.sleep(baseWait + Math.random() * variance + humanPause)
       }
     }
