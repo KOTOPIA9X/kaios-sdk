@@ -594,10 +594,18 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
 
       const sliceWidth = canvas.width / dataArray.length;
       let x = 0;
+      const centerY = canvas.height / 2;
+      const time = Date.now() / 1000;
 
       for (let i = 0; i < dataArray.length; i++) {
         const v = (dataArray[i] || 0) / 255;
-        const y = canvas.height/2 + (v - 0.5) * canvas.height * 0.8;
+        // For frequency data: 0 = center, higher = more displacement
+        // Add sine wave modulation for organic movement
+        const wave = Math.sin(time * 2 + i * 0.1) * 0.3;
+        const displacement = v * canvas.height * 0.4 * (1 + wave);
+        // Alternate above/below center for wave effect
+        const direction = Math.sin(i * 0.2 + time * 3);
+        const y = centerY + displacement * direction;
 
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -609,26 +617,49 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
       ctx.shadowColor = currentTheme.primary;
       ctx.stroke();
       ctx.shadowBlur = 0;
+
+      // Draw center line reference
+      ctx.strokeStyle = currentTheme.secondary + '30';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(canvas.width, centerY);
+      ctx.stroke();
     }
 
     function drawCircle() {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      const radius = Math.min(canvas.width, canvas.height) * 0.3;
+      const baseRadius = Math.min(canvas.width, canvas.height) * 0.25;
+      const time = Date.now() / 1000;
 
+      // Calculate average amplitude for pulsing effect
+      const avgAmp = dataArray.reduce((a, b) => a + (b || 0), 0) / dataArray.length / 255;
+      const pulseRadius = baseRadius * (1 + avgAmp * 0.3 + Math.sin(time * 2) * 0.05);
+
+      // Draw outer glow
+      const gradient = ctx.createRadialGradient(centerX, centerY, pulseRadius * 0.5, centerX, centerY, pulseRadius * 2);
+      gradient.addColorStop(0, currentTheme.primary + '00');
+      gradient.addColorStop(0.5, currentTheme.primary + '10');
+      gradient.addColorStop(1, currentTheme.primary + '00');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw frequency bars radiating from center
       for (let i = 0; i < dataArray.length; i++) {
         const value = dataArray[i] || 0;
-        const angle = (i / dataArray.length) * Math.PI * 2;
-        const barLength = (value / 255) * radius;
+        const angle = (i / dataArray.length) * Math.PI * 2 - Math.PI / 2;
+        const barLength = (value / 255) * baseRadius * 1.5;
 
-        const x1 = centerX + Math.cos(angle) * radius;
-        const y1 = centerY + Math.sin(angle) * radius;
-        const x2 = centerX + Math.cos(angle) * (radius + barLength);
-        const y2 = centerY + Math.sin(angle) * (radius + barLength);
+        const x1 = centerX + Math.cos(angle) * pulseRadius;
+        const y1 = centerY + Math.sin(angle) * pulseRadius;
+        const x2 = centerX + Math.cos(angle) * (pulseRadius + barLength);
+        const y2 = centerY + Math.sin(angle) * (pulseRadius + barLength);
 
         const hue = (i / dataArray.length) * 60 + 320;
-        ctx.strokeStyle = 'hsla(' + hue + ', 80%, 60%, 0.8)';
-        ctx.lineWidth = 2;
+        const alpha = 0.4 + (value / 255) * 0.6;
+        ctx.strokeStyle = 'hsla(' + hue + ', 80%, 60%, ' + alpha + ')';
+        ctx.lineWidth = 3;
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
@@ -636,18 +667,31 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
         ctx.stroke();
       }
 
+      // Draw inner circle with breathing effect
+      const innerRadius = pulseRadius * 0.4;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, radius * 0.3, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
       ctx.fillStyle = currentTheme.bg;
       ctx.fill();
-      ctx.strokeStyle = currentTheme.primary;
+
+      // Inner ring
+      ctx.strokeStyle = currentTheme.primary + '80';
       ctx.lineWidth = 2;
       ctx.stroke();
 
+      // Kaomoji face
       ctx.fillStyle = currentTheme.primary;
-      ctx.font = '16px Courier New';
+      ctx.font = Math.round(innerRadius * 0.6) + 'px Courier New';
       ctx.textAlign = 'center';
-      ctx.fillText('(◕‿◕)', centerX, centerY + 5);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('(◕‿◕)', centerX, centerY);
+
+      // Outer ring pulse
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = currentTheme.secondary + '40';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
 
     let particles = [];

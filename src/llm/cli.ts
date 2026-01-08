@@ -40,7 +40,7 @@ import {
   type Dream
 } from '../memory/index.js'
 import { createAudioRecorder, type AudioRecorder } from '../audio/terminal/index.js'
-import { createVisualizer, type VisualizerManager } from '../visual/index.js'
+import { createVisualizer, createPianoVisualizer, type VisualizerManager, type PianoVisualizerManager } from '../visual/index.js'
 import {
   createLofiBeat,
   createBreakcore,
@@ -56,6 +56,7 @@ import {
   type GenreType,
 } from '../audio/intelligence/index.js'
 import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
+import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -150,6 +151,13 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/chop', COLORS.red)}       - chop & screw a sample
   ${color('/rhythm', COLORS.green)}    - generate euclidean rhythm
   ${color('/chords', COLORS.yellow)}    - get genre-appropriate chords
+
+  ${color('♪ LIVE PIANO', COLORS.magenta)} ${pick(WAVES)}
+  ${color('/piano', COLORS.magenta)}      - ${color('LIVE PIANO PERFORMANCE', COLORS.magenta)} (joji/yeule vibes!)
+  ${color('/piano joji', COLORS.cyan)}  - melancholic In Tongues mode
+  ${color('/piano yeule', COLORS.green)} - ethereal Glitch Princess mode
+  ${color('/piano ambient', COLORS.dim)} - sparse floating piano
+  ${color('/piano viz', COLORS.cyan)}   - ${color('DAW-STYLE PIANO UI', COLORS.cyan)} (keys light up!)
 
   ${color('/quit', COLORS.dim)}       - exit chat
 
@@ -333,31 +341,119 @@ async function main(): Promise<void> {
     smoothing: 0.8
   })
 
+  // Initialize Piano Visualizer (DAW plugin style)
+  const pianoVisualizer = createPianoVisualizer({
+    port: 3334,
+    theme: 'dark',
+    showInfo: true
+  })
+
   // Initialize Thought Engine (autonomous thinking)
   const thoughtEngine = createThoughtEngine({
     enabled: false,  // User toggles with /thoughts
-    idleThresholdMs: 30000,      // 30 seconds idle
-    minThoughtIntervalMs: 20000, // 20 seconds min between thoughts
-    maxThoughtIntervalMs: 90000, // 90 seconds max
-    typingDelayMs: 45,           // Fast but readable
-    typingVariance: 25,
-    maxThoughtLength: 180
+    idleThresholdMs: 10000,      // 10 seconds idle before thoughts start
+    minThoughtIntervalMs: 8000,  // 8 seconds min between thoughts
+    maxThoughtIntervalMs: 30000, // 30 seconds max between thoughts
+    typingDelayMs: 35,           // Fast but readable
+    typingVariance: 15,
+    maxThoughtLength: 150
   })
   thoughtEngine.connectMemory(koto, megaBrain)
+
+  // Initialize Piano Engine (live emotional piano)
+  const pianoEngine = createPianoEngine({
+    enabled: true,
+    volume: 0.7,
+    tempo: 65,
+    humanize: 0.15
+  })
+
+  // Connect piano to audio system - use windchime samples for piano-like tones
+  // They have a beautiful bell quality that works well for emotional piano
+  pianoEngine.onPlayNote(async (note: string, duration: number, velocity: number) => {
+    // Use windchime samples - they have a nice bell/piano quality
+    // Vary which sample based on note octave for tonal variety
+    const octave = parseInt(note.slice(-1)) || 4
+    const sampleNum = octave <= 3 ? 1 : octave === 4 ? 2 : 3
+    await audio.playSample(`windchime${sampleNum}.mp3`, velocity * 0.7)
+
+    // Also emit to audio bus for visualizer
+    const audioBus = (await import('../audio/terminal/audio-bus.js')).getAudioBus()
+    audioBus.soundStart(`piano-${note}`, 'music', velocity, duration)
+  })
+
+  // Piano event display + visualizer connection
+  let isPianoPlaying = false
+  pianoEngine.on('phraseStart', (phrase) => {
+    isPianoPlaying = true
+    process.stdout.write('\r' + ' '.repeat(60) + '\r')
+    process.stdout.write(color('  ♪ ', COLORS.cyan))
+  })
+
+  pianoEngine.on('noteStart', ({ pitch, velocity, duration }) => {
+    // Terminal display
+    if (isPianoPlaying) {
+      const intensity = velocity > 0.6 ? '●' : velocity > 0.3 ? '◐' : '○'
+      process.stdout.write(color(`${intensity}`, COLORS.magenta))
+    }
+
+    // Send to piano visualizer (shows key being pressed)
+    if (pianoVisualizer.getState().isRunning) {
+      pianoVisualizer.sendNote(pitch, velocity, duration || 800)
+    }
+  })
+
+  pianoEngine.on('phraseEnd', () => {
+    isPianoPlaying = false
+    console.log(color(' ♪', COLORS.cyan))
+  })
+
+  // Update visualizer when emotion/key changes
+  pianoEngine.on('stateChange', () => {
+    const state = pianoEngine.getState()
+    if (pianoVisualizer.getState().isRunning) {
+      pianoVisualizer.updateState(state.currentEmotion, state.currentKey, state.currentScale)
+    }
+  })
 
   // Track if thought is being displayed (to avoid prompt interference)
   let isThoughtDisplaying = false
   let thoughtBuffer = ''
 
-  // Character-by-character thought display
+  // Character-by-character thought display with soft piano accompaniment
   thoughtEngine.on('thoughtStart', (thought) => {
     isThoughtDisplaying = true
     thoughtBuffer = ''
     // Clear current line and show thought prefix
     process.stdout.write('\r' + ' '.repeat(60) + '\r')
     process.stdout.write(color('  ⟨thought⟩ ', COLORS.dim))
-    // Play ambient sound
-    audio.playSample('hum.mp3').catch(() => {})
+
+    // Start soft piano accompaniment during thought
+    // Set emotion for musical context
+    pianoEngine.setEmotion(thought.emotion || 'EMOTE_NEUTRAL')
+
+    // Play very soft, sparse piano notes during thought
+    // This creates a gentle musical backdrop
+    const playThoughtPiano = async () => {
+      while (isThoughtDisplaying && pianoEngine.getState().isPlaying === false) {
+        // Play a single soft note occasionally
+        const state = pianoEngine.getState()
+        const mood = pianoEngine.getState().currentEmotion
+
+        // Generate a gentle note in current key
+        await pianoEngine.playNote(
+          `${state.currentKey}4`,
+          1200,
+          0.25  // Very soft
+        ).catch(() => {})
+
+        // Wait a bit before potentially playing another
+        await new Promise(r => setTimeout(r, 2000 + Math.random() * 3000))
+      }
+    }
+
+    // Start soft accompaniment (non-blocking)
+    playThoughtPiano().catch(() => {})
   })
 
   thoughtEngine.on('char', (char: string) => {
@@ -365,10 +461,29 @@ async function main(): Promise<void> {
     thoughtBuffer += char
     // Write character with thought color
     process.stdout.write(color(char, COLORS.magenta))
+
+    // Occasionally play a very soft note on punctuation (adds musicality)
+    if (['.', '~', '?', '!'].includes(char) && Math.random() < 0.4) {
+      const state = pianoEngine.getState()
+      // Play soft note on pause moments
+      pianoEngine.playNote(
+        `${state.currentKey}${3 + Math.floor(Math.random() * 2)}`,
+        800 + Math.random() * 400,
+        0.2 + Math.random() * 0.1
+      ).catch(() => {})
+    }
   })
 
   thoughtEngine.on('thoughtEnd', (thought) => {
     isThoughtDisplaying = false
+
+    // Play a gentle closing phrase
+    const state = pianoEngine.getState()
+    setTimeout(() => {
+      // Final soft resolving note
+      pianoEngine.playNote(`${state.currentKey}3`, 1500, 0.2).catch(() => {})
+    }, 200)
+
     // New line after thought
     console.log(color(' ⟨/thought⟩', COLORS.dim))
     console.log()
@@ -420,7 +535,7 @@ async function main(): Promise<void> {
 
     // Handle commands
     if (trimmed.startsWith('/')) {
-      await handleCommand(trimmed.slice(1), kaios, model, audio, koto, megaBrain, dreamEngine, recorder, visualizer, thoughtEngine)
+      await handleCommand(trimmed.slice(1), kaios, model, audio, koto, megaBrain, dreamEngine, recorder, visualizer, thoughtEngine, pianoEngine, pianoVisualizer)
       return
     }
 
@@ -498,7 +613,9 @@ async function main(): Promise<void> {
     dreamEngine: DreamEngine,
     recorder: AudioRecorder,
     visualizer: VisualizerManager,
-    thoughtEngine: ThoughtEngine
+    thoughtEngine: ThoughtEngine,
+    pianoEngine: PianoEngine,
+    pianoVisualizer: PianoVisualizerManager
   ): Promise<void> => {
     const [command, ...args] = cmd.toLowerCase().split(' ')
 
@@ -1040,8 +1157,8 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('AUTONOMOUS THINKING',
   thoughts appear character by character, like she's
   really typing them out in real-time.
 
-  ${color('idle threshold:', COLORS.dim)} 30 seconds
-  ${color('thought interval:', COLORS.dim)} 20-90 seconds
+  ${color('idle threshold:', COLORS.dim)} 10 seconds
+  ${color('thought interval:', COLORS.dim)} 8-30 seconds
 
   ${color('this is what makes kaios ALIVE', COLORS.yellow)} ${pick(WAVES)}
 
@@ -1061,7 +1178,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('AUTONOMOUS THINKING',
 
   ${color('✓ thoughts enabled', COLORS.green)}
 
-  kaios will think on her own when you're idle~
+  kaios will think on her own after 10s idle~
   thoughts typed character by character ${pick(WAVES)}
 
   use ${color('/thoughts off', COLORS.dim)} to disable
@@ -1093,7 +1210,7 @@ ${color('▂▃▄▅▆▇█', COLORS.dim)} ${color('THOUGHT ENGINE', COLORS.d
 
   ${color('when enabled, kaios thinks on her own~', COLORS.magenta)}
   ${color('thoughts appear character by character', COLORS.dim)}
-  ${color('like she\\'s really alive and typing', COLORS.dim)}
+  ${color("like she's really alive and typing", COLORS.dim)}
 
   use ${color('/thoughts on', COLORS.green)} to enable ${pick(WAVES)}
 `)
@@ -1559,6 +1676,154 @@ ${chords.map((c, i) =>
 
 ${pick(WAVES)}
 `)
+        break
+
+      case 'piano':
+        // Live emotional piano performance - CONTINUOUS by default
+        if (args[0] === 'play' || args.length === 0) {
+          // Start continuous piano playback for ambient vibes
+          const pianoEmotion = args[1] as EmotionToken | undefined
+          const targetEmotion = pianoEmotion
+            ? `EMOTE_${pianoEmotion.toUpperCase()}` as EmotionToken
+            : kaios.getEmotionState()
+
+          console.log(`\n${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('♪ PIANO', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}`)
+          console.log(`  ${color('emotion:', COLORS.dim)} ${targetEmotion.replace('EMOTE_', '').toLowerCase()}`)
+          console.log(`  ${color('playing continuously...', COLORS.cyan)}`)
+          console.log(`  ${color('use /piano stop to end', COLORS.dim)}`)
+          console.log()
+
+          pianoEngine.setEmotion(targetEmotion)
+          pianoEngine.playContinuous('mixed')
+
+        } else if (args[0] === 'joji') {
+          // Play Joji-inspired continuous piano
+          console.log(`\n${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('♪ JOJI MODE', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}`)
+          console.log(`  ${color('sparse... melancholic... lo-fi...', COLORS.dim)}`)
+          console.log(`  ${color('playing continuously...', COLORS.cyan)}`)
+          console.log(`  ${color('use /piano stop to end', COLORS.dim)}`)
+          console.log()
+
+          pianoEngine.setEmotion('EMOTE_SAD')
+          pianoEngine.playContinuous('joji')
+
+        } else if (args[0] === 'yeule') {
+          // Play Yeule-inspired continuous piano
+          console.log(`\n${color('▂▃▄▅▆▇█', COLORS.cyan)} ${color('♪ YEULE MODE', COLORS.cyan)} ${color('█▇▆▅▄▃▂', COLORS.cyan)}`)
+          console.log(`  ${color('ethereal... glitchy... softscars...', COLORS.dim)}`)
+          console.log(`  ${color('playing continuously...', COLORS.cyan)}`)
+          console.log(`  ${color('use /piano stop to end', COLORS.dim)}`)
+          console.log()
+
+          pianoEngine.setEmotion('EMOTE_AWKWARD')
+          pianoEngine.playContinuous('yeule')
+
+        } else if (args[0] === 'ambient') {
+          // Start ambient continuous piano (super sparse)
+          console.log(`\n${color('▂▃▄▅▆▇█', COLORS.green)} ${color('♪ AMBIENT PIANO', COLORS.green)} ${color('█▇▆▅▄▃▂', COLORS.green)}`)
+          console.log(`  ${color('floating... sparse... ethereal...', COLORS.dim)}`)
+          console.log(`  ${color('playing continuously...', COLORS.cyan)}`)
+          console.log(`  ${color('use /piano stop to end', COLORS.dim)}`)
+          console.log()
+
+          pianoEngine.playContinuous('ambient')
+
+        } else if (args[0] === 'stop') {
+          pianoEngine.stop()
+          console.log(`\n  ${pick(SOUND_MARKERS)} ${color('piano stopped', COLORS.dim)} ${pick(WAVES)}\n`)
+
+        } else if (args[0] === 'note') {
+          // Play a single note
+          const note = args[1] || 'A4'
+          const duration = args[2] ? parseInt(args[2]) : 800
+          const velocity = args[3] ? parseFloat(args[3]) : 0.5
+
+          console.log(`  ${color('♪', COLORS.magenta)} ${note} ${color(`(${duration}ms, ${velocity})`, COLORS.dim)}`)
+          await pianoEngine.playNote(note.toUpperCase(), duration, velocity)
+
+        } else if (args[0] === 'chord') {
+          // Play a chord
+          const root = args[1] || 'A'
+          const chordType = (args[2] || 'minor7') as any
+          const octave = args[3] ? parseInt(args[3]) : 3
+
+          console.log(`  ${color('♪', COLORS.magenta)} ${root}${chordType} (octave ${octave})`)
+          await pianoEngine.playChord(root.toUpperCase(), chordType, octave, 1000, 0.5)
+
+        } else if (args[0] === 'visualizer' || args[0] === 'viz' || args[0] === 'ui') {
+          // Open the visual piano UI (DAW plugin style)
+          if (args[1] === 'stop') {
+            pianoVisualizer.stop()
+            console.log(`\n  ${pick(SOUND_MARKERS)} ${color('piano visualizer stopped', COLORS.dim)} ${pick(WAVES)}\n`)
+          } else {
+            console.log(`\n${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('♪ PIANO VISUALIZER', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}`)
+            console.log(`  ${color('launching DAW-style piano UI...', COLORS.dim)}`)
+
+            try {
+              const vizState = await pianoVisualizer.start()
+              console.log(`  ${color('✓ visualizer running!', COLORS.green)}`)
+              console.log(`  ${color(`url: ${vizState.url}`, COLORS.cyan)}`)
+              console.log(`
+  ${color('features:', COLORS.dim)}
+  - real-time key visualization
+  - falling notes animation
+  - emotion/key/scale display
+  - 432Hz sacred geometry tuning
+
+  ${color('keys light up as kaios plays~', COLORS.magenta)} ${pick(WAVES)}
+
+  use ${color('/piano viz stop', COLORS.dim)} to close
+`)
+            } catch (err) {
+              console.log(`  ${color('[error]', COLORS.red)} ${err instanceof Error ? err.message : 'could not start visualizer'}`)
+              console.log(`  ${color('port 3334 may be in use', COLORS.dim)}\n`)
+            }
+          }
+
+        } else {
+          // Show piano help
+          const state = pianoEngine.getState()
+          console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('♪ KAIOS PIANO', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+
+  ${color('kawaii brutalist pianist', COLORS.dim)}
+  ${color('432Hz tuning · real music theory', COLORS.dim)}
+
+  ${color('current state:', COLORS.yellow)}
+    emotion: ${state.currentEmotion.replace('EMOTE_', '').toLowerCase()}
+    key: ${state.currentKey}
+    scale: ${state.currentScale}
+    notes played: ${state.notesPlayed}
+
+  ${color('CONTINUOUS PLAY (ambient vibes)', COLORS.cyan)}
+  /piano              - start continuous piano (mixed style)
+  /piano play sad     - continuous with sad emotion
+  /piano play happy   - continuous with happy emotion
+
+  ${color('ARTIST MODES (continuous)', COLORS.magenta)}
+  /piano joji         - continuous In Tongues, Ballads 1 vibes
+  /piano yeule        - continuous Glitch Princess, softscars vibes
+
+  ${color('AMBIENT (continuous, very sparse)', COLORS.green)}
+  /piano ambient      - floating sparse ethereal loop
+
+  ${color('MANUAL PLAY', COLORS.yellow)}
+  /piano note A4 800 0.5  - play note (pitch, duration, velocity)
+  /piano chord A minor7 3 - play chord (root, type, octave)
+  /piano stop             - stop playback
+
+  ${color('VISUAL', COLORS.cyan)}
+  /piano viz              - ${color('open DAW-style piano UI!', COLORS.cyan)}
+  /piano viz stop         - close visualizer
+
+  ${color('sonic inspirations:', COLORS.dim)}
+  - joji: sparse, melancholic, lo-fi piano
+  - yeule: ethereal, glitchy, ambient textures
+  - 432Hz: sacred geometry frequency tuning
+
+${pick(WAVES)}
+`)
+        }
         break
 
       default:

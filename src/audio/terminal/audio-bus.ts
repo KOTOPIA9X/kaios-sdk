@@ -81,8 +81,14 @@ export class AudioBus extends EventEmitter {
   private startAnimationLoop(): void {
     // Run at ~60fps for smooth visualization
     this.animationInterval = setInterval(() => {
-      if (this.currentlyPlaying.size > 0) {
-        this.updateFrequencies()
+      // Always update - either add sound content or decay to silence
+      this.updateFrequencies()
+
+      // Check if we have any meaningful audio activity
+      const hasActivity = this.frequencyData.some(v => v > 1)
+
+      // Emit state if there's activity OR if we're decaying to zero
+      if (this.currentlyPlaying.size > 0 || hasActivity) {
         this.emitThrottled()
       }
     }, 16)  // ~60fps
@@ -250,11 +256,15 @@ export class AudioBus extends EventEmitter {
    */
   private updateFrequencies(): void {
     // Smooth decay existing values (creates trailing effect)
-    const DECAY_RATE = 0.85  // Adjust for faster/slower decay
+    // This ALWAYS runs, even when nothing is playing, so visualization fades out
+    const DECAY_RATE = 0.92  // Slower decay for smoother fade-out
     for (let i = 0; i < 128; i++) {
       this.frequencyData[i] *= DECAY_RATE
+      // Floor small values to zero to avoid infinite tiny values
+      if (this.frequencyData[i] < 0.5) this.frequencyData[i] = 0
     }
 
+    // If nothing playing, just return (frequencies will decay naturally)
     if (this.currentlyPlaying.size === 0) return
 
     // Add frequency content from currently playing sounds

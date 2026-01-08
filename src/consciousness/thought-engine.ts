@@ -276,9 +276,13 @@ export class ThoughtEngine extends EventEmitter {
     // Check if enough time since last thought
     if (timeSinceLastThought < this.config.minThoughtIntervalMs) return
 
-    // Random chance based on how long we've been idle
+    // High probability that increases with idle time
+    // After idle threshold: ~60% chance per check
+    // After 2x threshold: ~95% chance per check
     const idleRatio = Math.min(1, idleTime / this.config.maxThoughtIntervalMs)
-    if (Math.random() > idleRatio * 0.3) return  // Gradual increase in probability
+    const probability = 0.6 + (idleRatio * 0.35)  // 60-95% chance
+
+    if (Math.random() > probability) return
 
     // Generate a thought!
     this.generateThought()
