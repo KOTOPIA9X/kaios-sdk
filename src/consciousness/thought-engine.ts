@@ -795,4 +795,4 @@ export function createThoughtEngine(config?: Partial<ThoughtConfig>): ThoughtEng
 
 // Re-export types for external use
 export type { ThoughtJournalEntry }
-export { getThoughtJournal, ThoughtJournal }
+export { ThoughtJournal }
