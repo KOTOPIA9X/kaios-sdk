@@ -298,6 +298,21 @@ export interface PianoState {
   currentMotif: string[]      // The melodic motif being developed
   dynamicLevel: number        // 0-1, for crescendo/decrescendo
   phrasesPlayed: number       // Count for variety
+
+  // Two-hand system - like a real pianist
+  leftHandActive: boolean     // Is left hand currently playing?
+  rightHandActive: boolean    // Is right hand currently playing?
+  lastLeftNote: string        // Voice leading for bass
+  lastRightNote: string       // Voice leading for melody
+
+  // Session arc - emotional journey over time
+  sessionPhase: 'intro' | 'building' | 'peak' | 'falling' | 'outro'
+  sessionStartTime: number    // When did this session start?
+  phrasesInPhase: number      // How many phrases in current phase?
+
+  // Dynamic density control
+  currentDensity: number      // 0-1, current note density
+  targetDensity: number       // 0-1, where we're heading
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -616,7 +631,22 @@ export class PianoEngine extends EventEmitter {
       progressionPosition: 0,
       currentMotif: MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)],
       dynamicLevel: 0.35,
-      phrasesPlayed: 0
+      phrasesPlayed: 0,
+
+      // Two-hand system
+      leftHandActive: false,
+      rightHandActive: true,
+      lastLeftNote: 'A2',
+      lastRightNote: 'E4',
+
+      // Session arc - start random (30% chance to start intense)
+      sessionPhase: Math.random() < 0.3 ? 'peak' : 'intro',
+      sessionStartTime: Date.now(),
+      phrasesInPhase: 0,
+
+      // Density control
+      currentDensity: 0.2,
+      targetDensity: 0.2
     }
   }
 
@@ -815,6 +845,209 @@ export class PianoEngine extends EventEmitter {
     this.emit('ambientEnd')
   }
 
+  // ════════════════════════════════════════════════════════════════════════════════
+  // LEFT HAND / RIGHT HAND SYSTEM
+  // Real pianists have two hands - we should too
+  // ════════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Get the perfect 5th above a note
+   */
+  private getFifth(root: string): string {
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    const idx = notes.indexOf(root.replace(/\d/, ''))
+    return notes[(idx + 7) % 12]  // 7 semitones = perfect 5th
+  }
+
+  /**
+   * Get a note stepped by interval with voice leading
+   * Prefers small intervals for natural flow
+   */
+  private getVoiceLeadNote(fromNote: string, direction: 'up' | 'down' | 'any' = 'any'): string {
+    const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    const match = fromNote.match(/([A-G]#?)(\d)/)
+    if (!match) return fromNote
+
+    const [, noteName, octaveStr] = match
+    const baseNote = noteName.replace('#', '')
+    const isSharp = noteName.includes('#')
+    let octave = parseInt(octaveStr)
+    let noteIdx = notes.indexOf(baseNote)
+
+    // Weighted interval choice - prefer steps
+    const r = Math.random()
+    let step: number
+    if (r < 0.15) step = 0  // Unison (repeat)
+    else if (r < 0.55) step = 1  // Step (most common)
+    else if (r < 0.80) step = 2  // Third
+    else if (r < 0.90) step = 3  // Fourth
+    else if (r < 0.95) step = 4  // Fifth
+    else step = 7  // Octave (rare)
+
+    // Apply direction
+    if (direction === 'down' || (direction === 'any' && Math.random() < 0.5)) {
+      noteIdx -= step
+      if (noteIdx < 0) {
+        noteIdx += 7
+        octave--
+      }
+    } else {
+      noteIdx += step
+      if (noteIdx >= 7) {
+        noteIdx -= 7
+        octave++
+      }
+    }
+
+    // Keep in reasonable range
+    octave = Math.max(2, Math.min(6, octave))
+    return `${notes[noteIdx]}${octave}`
+  }
+
+  /**
+   * Play left hand bass pattern
+   * 5 patterns inspired by real pianists: sustained, octave, broken, walking, pedal
+   */
+  private async playLeftHand(chord: { root: string; chord: string; octave: number }, duration: number, velocity: number): Promise<void> {
+    if (!this.state.leftHandActive) return
+
+    const patterns = ['sustained', 'sustained', 'octave', 'broken', 'walking', 'pedal']
+    const pattern = patterns[Math.floor(Math.random() * patterns.length)]
+    const bassVelocity = velocity * 0.7  // Left hand softer than right
+
+    switch (pattern) {
+      case 'sustained':
+        // Single bass note, held very long (C418 style)
+        await this.playNote(`${chord.root}2`, duration * 2.5, bassVelocity * 0.8)
+        this.state.lastLeftNote = `${chord.root}2`
+        break
+
+      case 'octave':
+        // Root in low and mid octave together (fullness)
+        await this.playNote(`${chord.root}2`, duration * 2, bassVelocity * 0.7)
+        await this.sleep(80 + Math.random() * 120)
+        await this.playNote(`${chord.root}3`, duration * 1.5, bassVelocity * 0.6)
+        this.state.lastLeftNote = `${chord.root}3`
+        break
+
+      case 'broken':
+        // Slow arpeggio: root, 5th, octave (like Ghibli)
+        await this.playNote(`${chord.root}2`, duration * 0.8, bassVelocity * 0.8)
+        await this.sleep(350 + Math.random() * 250)
+        const fifth = this.getFifth(chord.root)
+        await this.playNote(`${fifth}2`, duration * 0.7, bassVelocity * 0.7)
+        await this.sleep(350 + Math.random() * 250)
+        await this.playNote(`${chord.root}3`, duration * 0.6, bassVelocity * 0.6)
+        this.state.lastLeftNote = `${chord.root}3`
+        break
+
+      case 'walking':
+        // Stepwise motion from last note toward chord root
+        const walkNote = this.getVoiceLeadNote(this.state.lastLeftNote, 'any')
+        await this.playNote(walkNote, duration * 0.8, bassVelocity * 0.75)
+        await this.sleep(400 + Math.random() * 300)
+        await this.playNote(`${chord.root}2`, duration * 1.2, bassVelocity * 0.8)
+        this.state.lastLeftNote = `${chord.root}2`
+        break
+
+      case 'pedal':
+        // Same bass note (drone) regardless of chord - creates tension
+        // Use the last left note as pedal point
+        await this.playNote(this.state.lastLeftNote, duration * 3, bassVelocity * 0.6)
+        break
+    }
+  }
+
+  /**
+   * Update session phase based on elapsed time and randomness
+   * Creates natural emotional arcs - sometimes disrupted for variety
+   */
+  private updateSessionPhase(): void {
+    const elapsed = Date.now() - this.state.sessionStartTime
+    const minutes = elapsed / 60000
+
+    // 8% chance to randomly shift phase for variety
+    if (Math.random() < 0.08) {
+      const phases: Array<'intro' | 'building' | 'peak' | 'falling' | 'outro'> = ['intro', 'building', 'peak', 'falling', 'outro']
+      this.state.sessionPhase = phases[Math.floor(Math.random() * phases.length)]
+      this.state.phrasesInPhase = 0
+      return
+    }
+
+    // Natural arc progression
+    const prevPhase = this.state.sessionPhase
+    if (minutes < 1.5) this.state.sessionPhase = 'intro'
+    else if (minutes < 3.5) this.state.sessionPhase = 'building'
+    else if (minutes < 6) this.state.sessionPhase = 'peak'
+    else if (minutes < 8) this.state.sessionPhase = 'falling'
+    else this.state.sessionPhase = 'outro'
+
+    if (prevPhase !== this.state.sessionPhase) {
+      this.state.phrasesInPhase = 0
+      this.emit('phaseChange', { phase: this.state.sessionPhase })
+    }
+  }
+
+  /**
+   * Adjust density based on current session phase
+   * Smoothly transitions between target densities
+   */
+  private adjustDensity(): void {
+    // Set target density based on phase
+    const densityTargets = {
+      intro: 0.15,
+      building: 0.35,
+      peak: 0.65,
+      falling: 0.3,
+      outro: 0.1
+    }
+
+    this.state.targetDensity = densityTargets[this.state.sessionPhase]
+
+    // Smoothly move toward target (10% per phrase)
+    const diff = this.state.targetDensity - this.state.currentDensity
+    this.state.currentDensity += diff * 0.1
+
+    // Update left hand activity based on phase
+    if (this.state.sessionPhase === 'intro' || this.state.sessionPhase === 'outro') {
+      this.state.leftHandActive = Math.random() < 0.15  // Rarely active
+    } else if (this.state.sessionPhase === 'building') {
+      this.state.leftHandActive = Math.random() < 0.4   // Sometimes active
+    } else if (this.state.sessionPhase === 'peak') {
+      this.state.leftHandActive = Math.random() < 0.75  // Usually active
+    } else {
+      this.state.leftHandActive = Math.random() < 0.3   // Falling - sustained pedal
+    }
+  }
+
+  /**
+   * Calculate wait time between phrases based on density
+   */
+  private calculatePhraseWait(style: string): number {
+    // Higher density = shorter waits
+    const densityMultiplier = 1 - (this.state.currentDensity * 0.7)
+
+    const baseWaits: Record<string, number> = {
+      c418: 800,
+      ambient: 1200,
+      joji: 1500,
+      yeule: 600,
+      mixed: 900
+    }
+
+    const baseWait = baseWaits[style] || 800
+    const variance = baseWait * 0.4
+
+    // Occasional dramatic pause (less frequent at high density)
+    const pauseChance = 0.1 * densityMultiplier
+    const dramaticPause = Math.random() < pauseChance ? 1000 + Math.random() * 1500 : 0
+
+    // Rubato - subtle organic variation
+    const rubato = (Math.random() - 0.5) * 300
+
+    return Math.max(200, (baseWait * densityMultiplier) + Math.random() * variance + dramaticPause + rubato)
+  }
+
   /**
    * Play continuously until stopped - REAL musical performance
    * Like C418's Minecraft soundtrack - with actual progressions, motifs, dynamics
@@ -829,6 +1062,13 @@ export class PianoEngine extends EventEmitter {
     this.state.phrasesPlayed = 0
     this.emit('continuousStart', { style })
 
+    // Initialize session arc - 30% chance to start intense
+    this.state.sessionStartTime = Date.now()
+    this.state.sessionPhase = Math.random() < 0.3 ? 'peak' : 'intro'
+    this.state.phrasesInPhase = 0
+    this.state.currentDensity = this.state.sessionPhase === 'peak' ? 0.5 : 0.15
+    this.state.targetDensity = this.state.currentDensity
+
     // Select a progression to follow for musical coherence
     this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
     this.state.progressionPosition = 0
@@ -836,38 +1076,61 @@ export class PianoEngine extends EventEmitter {
 
     const playLoop = async () => {
       while (this.state.isContinuous && this.config.enabled) {
+        // Update session phase and density for emotional arc
+        this.updateSessionPhase()
+        this.adjustDensity()
+
         const progression = C418_PROGRESSIONS[this.state.currentProgression]
         const currentChord = progression[this.state.progressionPosition]
 
-        // Dynamic swell - slowly build and release over phrases
-        if (Math.random() < 0.2) {
-          const dynamicChange = (Math.random() - 0.5) * 0.15
-          this.state.dynamicLevel = Math.max(0.2, Math.min(0.5, this.state.dynamicLevel + dynamicChange))
+        // Dynamic swell - based on session phase
+        const phaseVelocity = {
+          intro: 0.25,
+          building: 0.35,
+          peak: 0.45,
+          falling: 0.35,
+          outro: 0.2
         }
+        const baseVelocity = phaseVelocity[this.state.sessionPhase]
+        const velocity = baseVelocity + (Math.random() - 0.5) * 0.1
 
-        const velocity = this.state.dynamicLevel + (Math.random() - 0.5) * 0.08
-
-        // CHANGE MOTIFS FREQUENTLY for variety
-        if (Math.random() < 0.4) {
+        // CHANGE MOTIFS based on density (more often at high density)
+        if (Math.random() < 0.25 + this.state.currentDensity * 0.2) {
           this.state.currentMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
         }
 
-        // CHANGE PROGRESSIONS MORE OFTEN
-        if (Math.random() < 0.15) {
+        // CHANGE PROGRESSIONS (more stable at low density)
+        if (Math.random() < 0.08 + this.state.currentDensity * 0.1) {
           this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
           this.state.progressionPosition = 0
         }
 
+        // LEFT HAND - plays bass/chords alongside right hand
+        // Fire and forget - let it play in background
+        if (this.state.leftHandActive && Math.random() < 0.6) {
+          this.playLeftHand(currentChord, 3000 + Math.random() * 2000, velocity)
+        }
+
         // C418 STYLE - Musical, intentional, VARIED
+        // RIGHT HAND plays melody in octaves 4-5
         if (style === 'c418' || style === 'ambient') {
           const phraseType = Math.random()
 
           if (phraseType < 0.25) {
-            // MOTIF DEVELOPMENT with MORE VARIATION
+            // MOTIF DEVELOPMENT with voice leading
             const motif = this.state.currentMotif
-            // More varied octave shifts
-            const octaveShiftOptions = [-2, -1, 0, 0, 0, 1, 2]
+
+            // VOICE LEADING: First note should connect to last played note
+            // Gentle octave shifts - prefer staying close
+            const octaveShiftOptions = [-1, 0, 0, 0, 0, 1]
             const octaveShift = octaveShiftOptions[Math.floor(Math.random() * octaveShiftOptions.length)]
+
+            // Sometimes start with a voice-led transition note
+            if (Math.random() < 0.35 && this.state.lastRightNote) {
+              const bridgeNote = this.getVoiceLeadNote(this.state.lastRightNote, 'any')
+              await this.playNote(bridgeNote, 1200 + Math.random() * 800, velocity * 0.8)
+              await this.sleep(150 + Math.random() * 200)
+            }
 
             // Random starting point in motif
             const startIdx = Math.random() < 0.3 ? Math.floor(Math.random() * Math.min(2, motif.length)) : 0
@@ -881,16 +1144,21 @@ export class PianoEngine extends EventEmitter {
                 const match = note.match(/([A-G]#?)(\d)/)
                 if (match) {
                   const newOctave = parseInt(match[2]) + octaveShift
-                  if (newOctave >= 2 && newOctave <= 6) note = `${match[1]}${newOctave}`
+                  if (newOctave >= 3 && newOctave <= 5) note = `${match[1]}${newOctave}`  // Keep in sweet spot
                 }
               }
 
-              const noteVelocity = velocity - (i * 0.025) + (Math.random() - 0.5) * 0.05
+              // Velocity curve - gentle rise and fall
+              const curvePosition = i / Math.max(1, endIdx - startIdx - 1)
+              const velocityCurve = Math.sin(curvePosition * Math.PI) * 0.08  // Slight swell in middle
+              const noteVelocity = velocity + velocityCurve + (Math.random() - 0.5) * 0.04
               const noteDuration = 1500 + Math.random() * 2000
               await this.playNote(note, noteDuration, noteVelocity)
+              this.state.lastRightNote = note
 
-              // Varied pause between notes
-              const pause = 200 + Math.random() * 600
+              // Varied pause between notes - denser at high density
+              const densityFactor = 1 - this.state.currentDensity * 0.5
+              const pause = (200 + Math.random() * 500) * densityFactor
               await this.sleep(pause)
             }
 
@@ -1035,19 +1303,16 @@ export class PianoEngine extends EventEmitter {
         }
 
         this.state.phrasesPlayed++
+        this.state.phrasesInPhase++
 
-        // LUSH CONTINUOUS FLOW - almost no gaps
-        // Music breathes but never feels empty
-        const baseWait = style === 'c418' ? 600 : style === 'ambient' ? 800 : style === 'joji' ? 1000 : style === 'yeule' ? 500 : 600
-        const variance = baseWait * 0.4
+        // Track last melody note for voice leading
+        const lastPlayedNote = this.state.currentMotif[this.state.currentMotif.length - 1]
+        if (lastPlayedNote) this.state.lastRightNote = lastPlayedNote
 
-        // Very rare longer pause (5% chance, short)
-        const dramaticPause = Math.random() < 0.05 ? 800 + Math.random() * 1000 : 0
-
-        // Subtle rubato - organic tempo variation
-        const rubato = (Math.random() - 0.5) * 300
-
-        await this.sleep(baseWait + Math.random() * variance + dramaticPause + rubato)
+        // DYNAMIC TIMING based on session phase and density
+        // Sparse phases get more space, dense phases flow continuously
+        const phraseWait = this.calculatePhraseWait(style)
+        await this.sleep(phraseWait)
       }
     }
 

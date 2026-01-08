@@ -10,7 +10,7 @@
 
 import { EventEmitter } from 'events'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
+import { join } from 'path'
 import { homedir } from 'os'
 import { chat } from '../llm/chat.js'
 import type { EmotionToken } from '../core/types.js'
@@ -342,7 +342,7 @@ export class ThoughtEngine extends EventEmitter {
   private interrupted = false  // User activity interrupts current thought
   private thoughtHistory: Thought[] = []
   private koto: KotoManager | null = null
-  private megaBrain: MegaBrainManager | null = null
+  private _megaBrain: MegaBrainManager | null = null  // For future universal memory
   private recentContext: string[] = []  // Recent conversation snippets
   private journal: ThoughtJournal  // Persistent thought storage
 
@@ -464,7 +464,14 @@ export class ThoughtEngine extends EventEmitter {
    */
   connectMemory(koto: KotoManager, megaBrain?: MegaBrainManager): void {
     this.koto = koto
-    this.megaBrain = megaBrain || null
+    this._megaBrain = megaBrain || null
+  }
+
+  /**
+   * Get MegaBrain instance (for future universal memory features)
+   */
+  getMegaBrain(): MegaBrainManager | null {
+    return this._megaBrain
   }
 
   /**
