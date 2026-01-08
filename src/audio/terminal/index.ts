@@ -94,3 +94,11 @@ export {
   type PlayingSound,
   type SoundEvent
 } from './audio-bus.js'
+
+// SoX Synthesizer (for real piano synthesis)
+export {
+  SoxSynth,
+  getSoxSynth,
+  createSoxSynth,
+  type SoxSynthConfig
+} from './sox-synth.js'

@@ -332,7 +332,8 @@ export class ThoughtEngine extends EventEmitter {
       this.state.thoughtCount++
 
     } catch (err) {
-      // Silently fail - thoughts are ambient
+      // Emit error for debugging
+      this.emit('thoughtError', err)
     } finally {
       this.isTyping = false
       this.state.isThinking = false
@@ -410,8 +411,8 @@ ${memoryStr}
 task: ${promptChoice}`
 
     const response = await chat(systemPrompt, {
-      maxTokens: 100,
-      temperature: 0.9  // High creativity for thoughts
+      maxTokens: 100
+      // Note: temperature removed - not supported by all LLM backends
     })
 
     // Truncate if needed

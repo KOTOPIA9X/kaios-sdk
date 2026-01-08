@@ -367,12 +367,15 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
 
     let currentTheme = themes.kaios;
 
-    // Resize canvas
+    // Resize canvas to container (not full window - header takes space)
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const container = document.querySelector('.visualizer-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
     }
     window.addEventListener('resize', resize);
+    // Delay initial resize to ensure container is laid out
+    setTimeout(resize, 50);
     resize();
 
     // ═══════════════════════════════════════════════════════════════════

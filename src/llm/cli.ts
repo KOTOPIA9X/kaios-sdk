@@ -39,7 +39,7 @@ import {
   type DreamEngine,
   type Dream
 } from '../memory/index.js'
-import { createAudioRecorder, type AudioRecorder } from '../audio/terminal/index.js'
+import { createAudioRecorder, type AudioRecorder, getAudioBus, getSoxSynth } from '../audio/terminal/index.js'
 import { createVisualizer, createPianoVisualizer, type VisualizerManager, type PianoVisualizerManager } from '../visual/index.js'
 import {
   createLofiBeat,
@@ -368,44 +368,39 @@ async function main(): Promise<void> {
     humanize: 0.15
   })
 
-  // Connect piano to audio system - use windchime samples for piano-like tones
-  // They have a beautiful bell quality that works well for emotional piano
-  pianoEngine.onPlayNote(async (note: string, duration: number, velocity: number) => {
-    // Use windchime samples - they have a nice bell/piano quality
-    // Vary which sample based on note octave for tonal variety
-    const octave = parseInt(note.slice(-1)) || 4
-    const sampleNum = octave <= 3 ? 1 : octave === 4 ? 2 : 3
-    await audio.playSample(`windchime${sampleNum}.mp3`, velocity * 0.7)
+  // Connect piano to SoX synthesizer - real synthesized piano tones
+  const soxSynth = getSoxSynth()
+  soxSynth.setVolume(0.7)
 
-    // Also emit to audio bus for visualizer
-    const audioBus = (await import('../audio/terminal/audio-bus.js')).getAudioBus()
-    audioBus.soundStart(`piano-${note}`, 'music', velocity, duration)
+  pianoEngine.onPlayNote(async (note: string, duration: number, velocity: number) => {
+    // Use SoX to synthesize real piano-like tones at 432Hz tuning
+    await soxSynth.playNote(note, duration, velocity)
+    // Note: SoxSynth already emits to audio bus for visualization
   })
 
   // Piano event display + visualizer connection
-  let isPianoPlaying = false
-  pianoEngine.on('phraseStart', (phrase) => {
-    isPianoPlaying = true
-    process.stdout.write('\r' + ' '.repeat(60) + '\r')
-    process.stdout.write(color('  ♪ ', COLORS.cyan))
+  // In continuous mode, we DON'T output to terminal (let user type freely)
+  let isPianoContinuous = false
+
+  pianoEngine.on('continuousStart', () => {
+    isPianoContinuous = true
+  })
+
+  pianoEngine.on('continuousEnd', () => {
+    isPianoContinuous = false
+  })
+
+  pianoEngine.on('stopped', () => {
+    isPianoContinuous = false
   })
 
   pianoEngine.on('noteStart', ({ pitch, velocity, duration }) => {
-    // Terminal display
-    if (isPianoPlaying) {
-      const intensity = velocity > 0.6 ? '●' : velocity > 0.3 ? '◐' : '○'
-      process.stdout.write(color(`${intensity}`, COLORS.magenta))
-    }
-
-    // Send to piano visualizer (shows key being pressed)
+    // Note: Audio bus emission happens in SoxSynth.playNote()
+    // Send to piano visualizer UI (if running)
     if (pianoVisualizer.getState().isRunning) {
       pianoVisualizer.sendNote(pitch, velocity, duration || 800)
     }
-  })
-
-  pianoEngine.on('phraseEnd', () => {
-    isPianoPlaying = false
-    console.log(color(' ♪', COLORS.cyan))
+    // NO terminal output during continuous mode - let user type freely
   })
 
   // Update visualizer when emotion/key changes
@@ -489,6 +484,17 @@ async function main(): Promise<void> {
     console.log()
     // Re-show prompt
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
+  })
+
+  // Error handling for thought engine
+  thoughtEngine.on('thoughtError', (err: Error) => {
+    console.log(`\n${color('[thought-error]', COLORS.red)} ${err.message}`)
+    process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
+  })
+
+  thoughtEngine.on('thinkingStart', () => {
+    // Visual indicator that thinking is starting
+    process.stdout.write('\r' + color('  ⟨...thinking⟩', COLORS.dim))
   })
 
   // Setup readline interface
