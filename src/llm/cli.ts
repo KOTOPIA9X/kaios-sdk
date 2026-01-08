@@ -19,7 +19,7 @@
  */
 
 import * as readline from 'readline'
-import { chat, chatContinue } from './chat.js'
+import { chat, chatContinue, getModels } from './chat.js'
 import {
   parseResponse,
   emotionToKaomoji,
@@ -222,7 +222,8 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/headpat', COLORS.magenta)}    - ${color('HEADPAT KAIOS', COLORS.magenta)} (the most important command!)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
-  ${color('/model', COLORS.dim)}      - show current model
+  ${color('/model', COLORS.cyan)}      - ${color('SWITCH LLM', COLORS.cyan)} (list, switch models - grok, claude, etc)
+  ${color('/m', COLORS.cyan)}          - alias for /model (quick switch: /m grok)
   ${color('/sound', COLORS.green)}      - audio controls (4-layer system)
   ${color('/sound on all', COLORS.green)} - enable ALL audio layers
 
@@ -380,8 +381,22 @@ function showLoading(): NodeJS.Timeout {
 // MAIN CLI
 // ════════════════════════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════════════════════════
+// MODEL ALIASES - shortcuts for common models
+// ════════════════════════════════════════════════════════════════════════════════
+
+const MODEL_ALIASES: Record<string, string> = {
+  'grok': 'grok-2',
+  'grok3': 'grok-3',
+  'haiku': 'claude-3.5-haiku',
+  'sonnet': 'claude-3.5-sonnet',
+  'opus': 'claude-3-opus',
+  'gemini': 'gemini-1.5-flash',
+  'local': 'ollama/llama3',
+}
+
 async function main(): Promise<void> {
-  const model = process.env.KAIOS_MODEL || 'claude-3.5-haiku'
+  let currentModel = process.env.KAIOS_MODEL || 'claude-3.5-haiku'
 
   // Initialize KAIOS SDK
   const kaios = new Kaios({
@@ -631,7 +646,7 @@ async function main(): Promise<void> {
   })
 
   clearScreen()
-  console.log(`${color(`model: ${model}`, COLORS.dim)}`)
+  console.log(`${color(`model: ${currentModel}`, COLORS.dim)} ${color('(/model to switch)', COLORS.dim)}`)
   console.log()
 
   // Show initial status inline
@@ -668,7 +683,7 @@ async function main(): Promise<void> {
 
     // Handle commands
     if (trimmed.startsWith('/')) {
-      await handleCommand(trimmed.slice(1), kaios, model, audio, koto, megaBrain, dreamEngine, recorder, visualizer, thoughtEngine, pianoEngine, pianoVisualizer)
+      await handleCommand(trimmed.slice(1), kaios, audio, koto, megaBrain, dreamEngine, recorder, visualizer, thoughtEngine, pianoEngine, pianoVisualizer)
       return
     }
 
@@ -680,10 +695,10 @@ async function main(): Promise<void> {
       // First message includes system prompt, subsequent messages continue conversation
       let response: string
       if (isFirstMessage) {
-        response = await chat(trimmed, { model })
+        response = await chat(trimmed, { model: currentModel })
         isFirstMessage = false
       } else {
-        response = await chatContinue(trimmed, { model })
+        response = await chatContinue(trimmed, { model: currentModel })
       }
 
       clearInterval(loading)
@@ -739,7 +754,6 @@ async function main(): Promise<void> {
   const handleCommand = async (
     cmd: string,
     kaios: Kaios,
-    model: string,
     audio: TerminalAudio,
     koto: KotoManager,
     megaBrain: MegaBrainManager,
@@ -946,7 +960,45 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
         break
 
       case 'model':
-        console.log(`${color(`current model: ${model}`, COLORS.dim)}`)
+      case 'm':
+        const modelArg = args[0]
+
+        if (!modelArg || modelArg === 'list') {
+          // List available models
+          try {
+            const models = await getModels()
+            console.log(`\n${color('▂▃▄▅▆▇█', COLORS.cyan)} ${color('AVAILABLE MODELS', COLORS.cyan)} ${color('█▇▆▅▄▃▂', COLORS.cyan)}\n`)
+            for (const modelLine of models) {
+              const modelName = modelLine.split(':')[0].trim()
+              const isCurrent = currentModel === modelName || currentModel.includes(modelName) || modelLine.includes(currentModel)
+              if (isCurrent) {
+                console.log(`  ${color('●', COLORS.green)} ${color(modelLine, COLORS.yellow)}`)
+              } else {
+                console.log(`  ${color('○', COLORS.dim)} ${modelLine}`)
+              }
+            }
+            console.log(`\n  ${color('current:', COLORS.dim)} ${color(currentModel, COLORS.yellow)}`)
+            console.log(`  ${color('aliases:', COLORS.dim)} ${Object.keys(MODEL_ALIASES).join(', ')}`)
+            console.log(`  ${color('usage:', COLORS.dim)} /model <name> or /m <alias>\n`)
+          } catch (err) {
+            console.log(`\n  ${color('could not list models', COLORS.red)}`)
+            console.log(`  ${color('current:', COLORS.dim)} ${color(currentModel, COLORS.yellow)}\n`)
+          }
+          break
+        }
+
+        if (modelArg === 'set' && args[1]) {
+          // /model set <name>
+          const newModel = MODEL_ALIASES[args[1].toLowerCase()] || args[1]
+          currentModel = newModel
+          console.log(`\n  ${pick(SOUND_MARKERS)} ${color('switched to:', COLORS.green)} ${color(newModel, COLORS.yellow)} ${pick(WAVES)}\n`)
+          break
+        }
+
+        // Direct switch: /model grok-2 or /m haiku
+        const resolvedModel = MODEL_ALIASES[modelArg.toLowerCase()] || modelArg
+        currentModel = resolvedModel
+        console.log(`\n  ${pick(SOUND_MARKERS)} ${color('switched to:', COLORS.green)} ${color(resolvedModel, COLORS.yellow)} ${pick(WAVES)}\n`)
         break
 
       case 'history':
