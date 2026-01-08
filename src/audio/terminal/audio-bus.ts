@@ -57,6 +57,9 @@ export class AudioBus extends EventEmitter {
   private emotionState: string = 'neutral'
   private soundIdCounter = 0
   private cleanupInterval: NodeJS.Timeout | null = null
+  private animationInterval: NodeJS.Timeout | null = null
+  private lastEmitTime = 0
+  private readonly EMIT_THROTTLE_MS = 16  // ~60fps max
 
   // Frequency estimation for different sound categories
   private readonly CATEGORY_FREQUENCIES: Record<string, { low: number; high: number; peak: number }> = {
@@ -69,6 +72,31 @@ export class AudioBus extends EventEmitter {
   constructor() {
     super()
     this.startCleanup()
+    this.startAnimationLoop()
+  }
+
+  /**
+   * Start 60fps animation loop for smooth frequency updates
+   */
+  private startAnimationLoop(): void {
+    // Run at ~60fps for smooth visualization
+    this.animationInterval = setInterval(() => {
+      if (this.currentlyPlaying.size > 0) {
+        this.updateFrequencies()
+        this.emitThrottled()
+      }
+    }, 16)  // ~60fps
+  }
+
+  /**
+   * Emit state change, throttled to 60fps max
+   */
+  private emitThrottled(): void {
+    const now = Date.now()
+    if (now - this.lastEmitTime >= this.EMIT_THROTTLE_MS) {
+      this.lastEmitTime = now
+      this.emit('stateChange', this.getState())
+    }
   }
 
   /**
@@ -205,6 +233,9 @@ export class AudioBus extends EventEmitter {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval)
     }
+    if (this.animationInterval) {
+      clearInterval(this.animationInterval)
+    }
     this.clear()
     this.removeAllListeners()
   }
@@ -214,16 +245,19 @@ export class AudioBus extends EventEmitter {
   // ════════════════════════════════════════════════════════════════════════════
 
   /**
-   * Simulate frequency data based on currently playing sounds
-   * This creates a visual representation of audio activity
+   * Update frequency data with smooth animation
+   * Called at 60fps from animation loop for fluid visualization
    */
-  private simulateFrequencies(): void {
-    // Reset
-    this.frequencyData = new Array(128).fill(0)
+  private updateFrequencies(): void {
+    // Smooth decay existing values (creates trailing effect)
+    const DECAY_RATE = 0.85  // Adjust for faster/slower decay
+    for (let i = 0; i < 128; i++) {
+      this.frequencyData[i] *= DECAY_RATE
+    }
 
     if (this.currentlyPlaying.size === 0) return
 
-    // Build frequency spectrum from playing sounds
+    // Add frequency content from currently playing sounds
     for (const sound of this.currentlyPlaying.values()) {
       const freqProfile = this.CATEGORY_FREQUENCIES[sound.category] || this.CATEGORY_FREQUENCIES.sample
 
@@ -231,30 +265,47 @@ export class AudioBus extends EventEmitter {
       const elapsed = Date.now() - sound.startTime
       const progress = Math.min(1, elapsed / sound.duration)
 
-      // Attack-decay envelope
+      // Attack-decay-sustain-release envelope
       let envelope = 1
-      if (progress < 0.1) {
-        envelope = progress / 0.1  // Attack
-      } else if (progress > 0.7) {
-        envelope = (1 - progress) / 0.3  // Decay
+      if (progress < 0.05) {
+        envelope = progress / 0.05  // Fast attack
+      } else if (progress < 0.15) {
+        envelope = 1 - (progress - 0.05) * 2  // Quick decay to sustain
+      } else if (progress < 0.7) {
+        envelope = 0.8  // Sustain
+      } else {
+        envelope = 0.8 * (1 - (progress - 0.7) / 0.3)  // Release
       }
 
-      // Add frequency content
+      // Add frequency content with variation
+      const time = Date.now() / 1000
       for (let i = 0; i < 128; i++) {
         const freq = (i / 128) * 10000  // 0 - 10kHz
 
         if (freq >= freqProfile.low && freq <= freqProfile.high) {
           // Bell curve around peak frequency
           const distance = Math.abs(freq - freqProfile.peak) / (freqProfile.high - freqProfile.low)
-          const amplitude = Math.exp(-distance * 3) * sound.volume * envelope * 200
+          const baseAmplitude = Math.exp(-distance * 3) * sound.volume * envelope * 180
 
-          // Add some randomness for natural look
-          const noise = Math.random() * 20
+          // Add organic movement with sin waves at different frequencies
+          const wobble1 = Math.sin(time * 8 + i * 0.1) * 15
+          const wobble2 = Math.sin(time * 13 + i * 0.2) * 10
+          const noise = (Math.random() - 0.5) * 25
 
-          this.frequencyData[i] = Math.min(255, this.frequencyData[i] + amplitude + noise)
+          const amplitude = baseAmplitude + wobble1 + wobble2 + noise
+
+          this.frequencyData[i] = Math.min(255, Math.max(0, this.frequencyData[i] + amplitude * 0.3))
         }
       }
     }
+  }
+
+  /**
+   * Simulate frequency data (for initial state - called on sound start)
+   */
+  private simulateFrequencies(): void {
+    // Just trigger an immediate update
+    this.updateFrequencies()
   }
 
   /**

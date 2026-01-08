@@ -330,7 +330,8 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
     let isRunning = true;
     let mode = 'bars';
     let audioSource = '${config.source}'; // 'kaios' or 'microphone'
-    let pollInterval = null;
+    let eventSource = null;  // SSE connection
+    let animationId = null;
 
     // Theme colors
     const themes = {
@@ -375,64 +376,98 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
     resize();
 
     // ═══════════════════════════════════════════════════════════════════
-    // KAIOS AUDIO BUS MODE
+    // KAIOS AUDIO BUS MODE (Real-time SSE)
     // ═══════════════════════════════════════════════════════════════════
 
     function startKaiosMode() {
       audioSource = 'kaios';
-      sourceDisplay.textContent = 'kaios';
+      sourceDisplay.textContent = 'kaios (real-time)';
       sourceIndicator.textContent = 'KAIOS AUDIO BUS';
       sourceIndicator.classList.remove('mic');
-      document.getElementById('startBtn').textContent = 'listening';
+      document.getElementById('startBtn').textContent = 'connected';
       document.getElementById('startBtn').classList.add('active');
       noAudio.style.display = 'none';
       document.getElementById('playingFiles').style.display = 'block';
 
-      // Poll the audio bus API
-      if (pollInterval) clearInterval(pollInterval);
-      pollInterval = setInterval(fetchAudioBusState, 50); // 20fps
+      // Close existing connection
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+
+      // Connect via Server-Sent Events for real-time push updates
+      eventSource = new EventSource('/api/audiobus/stream');
+
+      eventSource.onmessage = function(event) {
+        try {
+          const state = JSON.parse(event.data);
+          handleAudioBusState(state);
+        } catch (err) {
+          console.error('SSE parse error:', err);
+        }
+      };
+
+      eventSource.onerror = function() {
+        sourceIndicator.textContent = 'RECONNECTING...';
+        // EventSource auto-reconnects
+      };
+
+      eventSource.onopen = function() {
+        sourceIndicator.textContent = 'KAIOS AUDIO BUS';
+      };
 
       isRunning = true;
-      animate();
+      animateKaios();
     }
 
-    async function fetchAudioBusState() {
-      try {
-        const response = await fetch('/api/audiobus');
-        const state = await response.json();
-
-        // Update frequency data
-        if (state.frequencyData && state.frequencyData.length > 0) {
-          dataArray = new Uint8Array(state.frequencyData);
-        }
-
-        // Update displays
-        activityDisplay.textContent = Math.round(state.activity * 100) + '%';
-        emotionDisplay.textContent = state.emotionState || 'neutral';
-
-        // Update playing files list
-        if (state.currentlyPlaying && state.currentlyPlaying.length > 0) {
-          fileList.innerHTML = state.currentlyPlaying.map(s =>
-            '<div class="playing-file">' + s.file.split('/').pop() + '</div>'
-          ).join('');
-          noAudio.style.display = 'none';
-        } else {
-          // Show recent sounds if nothing currently playing
-          if (state.recentSounds && state.recentSounds.length > 0) {
-            const recent = state.recentSounds.slice(-5).reverse();
-            fileList.innerHTML = recent.map(s => {
-              const age = Date.now() - s.timestamp;
-              const opacity = Math.max(0.3, 1 - age / 5000);
-              return '<div class="playing-file" style="opacity: ' + opacity + '">' +
-                s.file.split('/').pop() + '</div>';
-            }).join('');
-          } else {
-            fileList.innerHTML = '<div style="color: #666">waiting for sound...</div>';
-          }
-        }
-      } catch (err) {
-        // Silently fail - server might be restarting
+    function stopKaiosMode() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
       }
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+      isRunning = false;
+    }
+
+    function handleAudioBusState(state) {
+      // Update frequency data immediately
+      if (state.frequencyData && state.frequencyData.length > 0) {
+        dataArray = new Uint8Array(state.frequencyData);
+      }
+
+      // Update displays
+      activityDisplay.textContent = Math.round(state.activity * 100) + '%';
+      emotionDisplay.textContent = state.emotionState || 'neutral';
+
+      // Update playing files list
+      if (state.currentlyPlaying && state.currentlyPlaying.length > 0) {
+        fileList.innerHTML = state.currentlyPlaying.map(s =>
+          '<div class="playing-file">' + s.file.split('/').pop() + '</div>'
+        ).join('');
+        noAudio.style.display = 'none';
+      } else {
+        // Show recent sounds if nothing currently playing
+        if (state.recentSounds && state.recentSounds.length > 0) {
+          const recent = state.recentSounds.slice(-5).reverse();
+          fileList.innerHTML = recent.map(s => {
+            const age = Date.now() - s.timestamp;
+            const opacity = Math.max(0.3, 1 - age / 5000);
+            return '<div class="playing-file" style="opacity: ' + opacity + '">' +
+              s.file.split('/').pop() + '</div>';
+          }).join('');
+        } else {
+          fileList.innerHTML = '<div style="color: #666">waiting for sound...</div>';
+        }
+      }
+    }
+
+    function animateKaios() {
+      if (!isRunning || audioSource !== 'kaios') return;
+      animationId = requestAnimationFrame(animateKaios);
+      drawVisualization();
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -499,14 +534,8 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // ANIMATION
+    // ANIMATION (shared drawing code)
     // ═══════════════════════════════════════════════════════════════════
-
-    function animate() {
-      if (!isRunning || audioSource !== 'kaios') return;
-      requestAnimationFrame(animate);
-      drawVisualization();
-    }
 
     function drawVisualization() {
       // Clear with theme background
@@ -675,7 +704,7 @@ const generateVisualizerHTML = (config: VisualizerConfig): string => `
         if (audioSource === 'microphone') stopMicMode();
         startKaiosMode();
       } else {
-        if (pollInterval) clearInterval(pollInterval);
+        stopKaiosMode();
         startMicMode();
       }
     });
@@ -758,9 +787,48 @@ export class VisualizerManager {
 
     const html = generateVisualizerHTML(this.config)
 
+    // Track SSE clients for cleanup
+    const sseClients: Set<ServerResponse> = new Set()
+
     return new Promise((resolve, reject) => {
       this.server = createServer((req: IncomingMessage, res: ServerResponse) => {
-        // API endpoint for audio bus state
+        // SSE endpoint for real-time audio bus updates (60fps push)
+        if (req.url === '/api/audiobus/stream') {
+          res.writeHead(200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*'
+          })
+
+          // Send initial state
+          const audioBus = getAudioBus()
+          res.write(`data: ${JSON.stringify(audioBus.getState())}\n\n`)
+
+          // Listen for state changes and push to client
+          const onStateChange = (state: any) => {
+            try {
+              res.write(`data: ${JSON.stringify(state)}\n\n`)
+            } catch {
+              // Client disconnected
+              sseClients.delete(res)
+              audioBus.removeListener('stateChange', onStateChange)
+            }
+          }
+
+          audioBus.on('stateChange', onStateChange)
+          sseClients.add(res)
+
+          // Cleanup on disconnect
+          req.on('close', () => {
+            sseClients.delete(res)
+            audioBus.removeListener('stateChange', onStateChange)
+          })
+
+          return
+        }
+
+        // Legacy polling endpoint (fallback)
         if (req.url === '/api/audiobus') {
           const audioBus = getAudioBus()
           const state = audioBus.getState()
