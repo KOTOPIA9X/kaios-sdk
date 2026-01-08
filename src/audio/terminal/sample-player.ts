@@ -33,50 +33,50 @@ export interface SoundMapping {
 /**
  * Map sound markers to audio files
  * Supports both [marker] and *marker* formats
- * VOLUME HALVED for better mixing
+ * ULTRA QUIET - barely perceptible background texture
  */
 export const SOUND_MAPPINGS: SoundMapping[] = [
-  // Glitch sounds - barely there
-  { pattern: /\[bzzzt\]|\*bzzzt\*/gi, file: 'bzzzt.mp3', volume: 0.04 },
-  { pattern: /\[static~?\]|\*static~?\*/gi, file: 'glitch1.mp3', volume: 0.04 },
-  { pattern: /\[glitch\]|\*glitch\*/gi, file: 'glitch2.mp3', volume: 0.04 },
+  // Glitch sounds - ghost whisper
+  { pattern: /\[bzzzt\]|\*bzzzt\*/gi, file: 'bzzzt.mp3', volume: 0.015 },
+  { pattern: /\[static~?\]|\*static~?\*/gi, file: 'glitch1.mp3', volume: 0.015 },
+  { pattern: /\[glitch\]|\*glitch\*/gi, file: 'glitch2.mp3', volume: 0.015 },
 
-  // UI sounds - whisper
-  { pattern: /\[ping\]|\*ping\*/gi, file: '432hz_trim.mp3', volume: 0.03 },
-  { pattern: /\[click\]|\*click\*/gi, file: 'bzzzt.mp3', volume: 0.02 },
+  // UI sounds - subliminal
+  { pattern: /\[ping\]|\*ping\*/gi, file: '432hz_trim.mp3', volume: 0.01 },
+  { pattern: /\[click\]|\*click\*/gi, file: 'bzzzt.mp3', volume: 0.008 },
 
-  // Ambient sounds - ghost level
-  { pattern: /\[hum\]|\*hum\*/gi, file: 'ambient_drone_trim.mp3', volume: 0.03 },
-  { pattern: /\[whirr\]|\*whirr\*/gi, file: 'spacey.mp3', volume: 0.03 },
-  { pattern: /\[wind\]|\*wind\*/gi, file: 'windsamples/Wind Howl.mp3', volume: 0.04 },
+  // Ambient sounds - almost imagined
+  { pattern: /\[hum\]|\*hum\*/gi, file: 'ambient_drone_trim.mp3', volume: 0.012 },
+  { pattern: /\[whirr\]|\*whirr\*/gi, file: 'spacey.mp3', volume: 0.012 },
+  { pattern: /\[wind\]|\*wind\*/gi, file: 'windsamples/Wind Howl.mp3', volume: 0.015 },
 
-  // Melodic sounds - subtle
-  { pattern: /\[windchime\]|\*windchime\*/gi, file: 'windsamples/Raw Wind Chimes.mp3', volume: 0.05 },
-  { pattern: /\[chime\]|\*chime\*/gi, file: 'windsamples/Slowed_Winchimes.mp3', volume: 0.05 },
-  { pattern: /\[chimeloop\]|\*chimeloop\*/gi, file: 'windsamples/Windchimes Loop.mp3', volume: 0.04 },
+  // Melodic sounds - distant memory
+  { pattern: /\[windchime\]|\*windchime\*/gi, file: 'windsamples/Raw Wind Chimes.mp3', volume: 0.018 },
+  { pattern: /\[chime\]|\*chime\*/gi, file: 'windsamples/Slowed_Winchimes.mp3', volume: 0.018 },
+  { pattern: /\[chimeloop\]|\*chimeloop\*/gi, file: 'windsamples/Windchimes Loop.mp3', volume: 0.015 },
 
-  // Wind samples - barely audible
-  { pattern: /\[fanpad\]|\*fanpad\*/gi, file: 'windsamples/Fan Pad Processed.mp3', volume: 0.03 },
-  { pattern: /\[bottle\]|\*bottle\*/gi, file: 'windsamples/Bottle Blow.mp3', volume: 0.04 },
-  { pattern: /\[mellow\]|\*mellow\*/gi, file: 'windsamples/Mellow Epiano Strum.mp3', volume: 0.04 },
-  { pattern: /\[grains\]|\*grains\*/gi, file: 'windsamples/HiGrains.mp3', volume: 0.03 },
-  { pattern: /\[bass\]|\*bass\*/gi, file: 'windsamples/Bass Loop.mp3', volume: 0.03 },
-  { pattern: /\[drum\]|\*drum\*/gi, file: 'windsamples/Drum Loop.mp3', volume: 0.03 },
+  // Wind samples - dream fragments
+  { pattern: /\[fanpad\]|\*fanpad\*/gi, file: 'windsamples/Fan Pad Processed.mp3', volume: 0.012 },
+  { pattern: /\[bottle\]|\*bottle\*/gi, file: 'windsamples/Bottle Blow.mp3', volume: 0.015 },
+  { pattern: /\[mellow\]|\*mellow\*/gi, file: 'windsamples/Mellow Epiano Strum.mp3', volume: 0.015 },
+  { pattern: /\[grains\]|\*grains\*/gi, file: 'windsamples/HiGrains.mp3', volume: 0.012 },
+  { pattern: /\[bass\]|\*bass\*/gi, file: 'windsamples/Bass Loop.mp3', volume: 0.012 },
+  { pattern: /\[drum\]|\*drum\*/gi, file: 'windsamples/Drum Loop.mp3', volume: 0.012 },
 
-  // Piano samples - gentle
-  { pattern: /\[piano\]|\*piano\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.04 },
-  { pattern: /\[piano1\]|\*piano1\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.04 },
-  { pattern: /\[piano2\]|\*piano2\*/gi, file: 'piano/Piano Sample 2.wav', volume: 0.04 },
-  { pattern: /\[piano3\]|\*piano3\*/gi, file: 'piano/Piano Sample 3.wav', volume: 0.04 },
+  // Piano samples - ethereal
+  { pattern: /\[piano\]|\*piano\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.015 },
+  { pattern: /\[piano1\]|\*piano1\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.015 },
+  { pattern: /\[piano2\]|\*piano2\*/gi, file: 'piano/Piano Sample 2.wav', volume: 0.015 },
+  { pattern: /\[piano3\]|\*piano3\*/gi, file: 'piano/Piano Sample 3.wav', volume: 0.015 },
 
-  // Emotional samples - soft
-  { pattern: /\[happy\]|\*happy\*/gi, file: 'happy_fairy_.mp3', volume: 0.04 },
-  { pattern: /\[sad\]|\*sad\*/gi, file: 'sadman.mp3', volume: 0.04 },
-  { pattern: /\[intense\]|\*intense\*/gi, file: 'tarzan.mp3', volume: 0.03 },
+  // Emotional samples - whispered feelings
+  { pattern: /\[happy\]|\*happy\*/gi, file: 'happy_fairy_.mp3', volume: 0.015 },
+  { pattern: /\[sad\]|\*sad\*/gi, file: 'sadman.mp3', volume: 0.015 },
+  { pattern: /\[intense\]|\*intense\*/gi, file: 'tarzan.mp3', volume: 0.012 },
 
-  // Special sounds - delicate
-  { pattern: /\[headpat\]|\*headpat\*/gi, file: 'blow.mp3', volume: 0.04 },
-  { pattern: /\[cheers\]|\*cheers\*/gi, file: 'icecream.mp3', volume: 0.04 }
+  // Special sounds - feather touch
+  { pattern: /\[headpat\]|\*headpat\*/gi, file: 'blow.mp3', volume: 0.015 },
+  { pattern: /\[cheers\]|\*cheers\*/gi, file: 'icecream.mp3', volume: 0.015 }
 ]
 
 /**
@@ -115,7 +115,7 @@ export class SamplePlayer {
 
     this.config = {
       enabled: true,
-      volume: 0.04,  // Ghost level - barely there background texture
+      volume: 0.015,  // Ultra quiet - subliminal texture
       soundsDir: defaultSoundsDir,
       ...config
     }
