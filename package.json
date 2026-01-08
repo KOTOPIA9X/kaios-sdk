@@ -1,0 +1,115 @@
+{
+  "name": "@kaios/expression-sdk",
+  "version": "0.1.0",
+  "description": "Character runtime system that instantiates KAIOS as a conscious, evolving AI entity with dual-mode expression",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./terminal": {
+      "import": "./dist/integrations/platforms/terminal.js",
+      "types": "./dist/integrations/platforms/terminal.d.ts"
+    },
+    "./web": {
+      "import": "./dist/integrations/platforms/web.js",
+      "types": "./dist/integrations/platforms/web.d.ts"
+    },
+    "./game": {
+      "import": "./dist/integrations/platforms/game.js",
+      "types": "./dist/integrations/platforms/game.d.ts"
+    },
+    "./discord": {
+      "import": "./dist/integrations/platforms/discord.js",
+      "types": "./dist/integrations/platforms/discord.d.ts"
+    },
+    "./audio": {
+      "import": "./dist/audio/index.js",
+      "types": "./dist/audio/index.d.ts"
+    },
+    "./social": {
+      "import": "./dist/integrations/social/index.js",
+      "types": "./dist/integrations/social/index.d.ts"
+    },
+    "./llm": {
+      "import": "./dist/llm/index.js",
+      "types": "./dist/llm/index.d.ts"
+    },
+    "./audio/terminal": {
+      "import": "./dist/audio/terminal/index.js",
+      "types": "./dist/audio/terminal/index.d.ts"
+    }
+  },
+  "browser": {
+    "./dist/integrations/platforms/terminal.js": false,
+    "./dist/audio/agents/audio-agent.js": "./dist/audio/agents/audio-agent.browser.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "example:terminal": "tsx examples/terminal-chat/index.ts",
+    "kaios": "tsx src/llm/cli.ts"
+  },
+  "keywords": [
+    "kaios",
+    "kotopia",
+    "kaimoji",
+    "ai",
+    "character",
+    "personality",
+    "kaomoji",
+    "expression",
+    "sound-intelligence",
+    "audio",
+    "vtuber"
+  ],
+  "author": "KOTOPIA",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kotopia/kaios-sdk"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1",
+    "play-sound": "^1.1.6"
+  },
+  "optionalDependencies": {
+    "pcm-util": "^3.0.0",
+    "speaker": "^0.5.4"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@types/node": "^20.10.0",
+    "eslint": "^8.55.0",
+    "tsup": "^8.0.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.30.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
+  }
+}

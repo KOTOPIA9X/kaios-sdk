@@ -1,0 +1,18 @@
+{
+  "name": "@kaios/terminal-chat-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Terminal chat example for KAIOS Expression SDK",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "dependencies": {
+    "@kaios/expression-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
+  }
+}
