@@ -95,6 +95,12 @@ export type {
 // Consciousness exports
 export { MemoryManager } from './consciousness/memory.js'
 export { EvolutionTracker } from './consciousness/evolution.js'
+export { ThoughtEngine, createThoughtEngine, getThoughtJournal } from './consciousness/thought-engine.js'
+export type { ThoughtConfig, ThoughtType, Thought, ThoughtEngineState, ThoughtJournalEntry } from './consciousness/thought-engine.js'
+
+// Dream exports
+export { DreamEngine, createDreamEngine } from './memory/dream-engine.js'
+export type { DreamEngineConfig } from './memory/dream-engine.js'
 
 // Expression exports
 export { VocabularyManager } from './expression/visual/vocabulary-manager.js'
