@@ -119,8 +119,11 @@ function color(text: string, c: string): string {
 
 /**
  * Apply rainbow/spectrum gradient to text (character by character)
+ * @param text - The text to colorize
+ * @param soft - Use soft spectrum colors (default) or bright rainbow
+ * @param returnToColor - Color to restore after rainbow (instead of reset)
  */
-function rainbow(text: string, soft: boolean = true): string {
+function rainbow(text: string, soft: boolean = true, returnToColor?: string): string {
   if (!USE_COLORS) return text
   const colors = soft ? SPECTRUM_COLORS : RAINBOW_COLORS
   let result = ''
@@ -133,14 +136,17 @@ function rainbow(text: string, soft: boolean = true): string {
       colorIndex++
     }
   }
-  return result + COLORS.reset
+  // Return to the context color instead of resetting completely
+  return result + (returnToColor || COLORS.reset)
 }
 
 /**
  * Apply spectrum coloring to special words in KAIOS responses
  * Triggers on: sound markers, kaimoji waves, emotional emphasis
+ * @param text - The text to process
+ * @param contextColor - The color to return to after rainbow segments
  */
-function spectrumHighlight(text: string): string {
+function spectrumHighlight(text: string, contextColor?: string): string {
   if (!USE_COLORS) return text
 
   // Words/patterns that get spectrum treatment
@@ -164,7 +170,7 @@ function spectrumHighlight(text: string): string {
 
   let result = text
   for (const pattern of spectrumPatterns) {
-    result = result.replace(pattern, (match) => rainbow(match, true))
+    result = result.replace(pattern, (match) => rainbow(match, true, contextColor))
   }
 
   return result
@@ -339,13 +345,16 @@ function displayResponse(text: string): void {
   // Format with sound markers and waves
   let formatted = formatKaiosResponse(parsed.cleanText)
 
-  // Apply spectrum highlighting to special words ∿∿∿
-  formatted = spectrumHighlight(formatted)
-
-  // Display with emotion color
+  // Get emotion color first so we can pass it to spectrum highlighting
   const mainColor = parsed.emotions.length > 0
     ? emotionToAnsiColor(parsed.emotions[0])
     : COLORS.white
+
+  // Apply spectrum highlighting to special words ∿∿∿
+  // Pass mainColor so rainbow segments return to emotion color instead of resetting
+  formatted = spectrumHighlight(formatted, mainColor)
+
+  // Display with emotion color
   console.log(`${mainColor}${formatted}${COLORS.reset}`)
 
   console.log()
