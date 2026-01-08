@@ -94,41 +94,166 @@ const CHORDS = {
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
-// MUSICAL PROGRESSIONS - Real chord progressions that feel like actual music
+// MUSICAL PROGRESSIONS - Massive variety for non-repetitive playback
 // ════════════════════════════════════════════════════════════════════════════════
 
-// C418-inspired progressions - warm, contemplative, Minecraft vibes
+// All progressions organized by mood/style
 const C418_PROGRESSIONS = [
-  // "Sweden" inspired - i - VI - III - VII
+  // === C418 MINECRAFT STYLE ===
+  // "Sweden" inspired
   [{ root: 'A', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
-  // "Wet Hands" inspired - very simple, just two chords alternating
+  // "Wet Hands" - simple two chord
   [{ root: 'C', chord: 'add9', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }],
-  // "Mice on Venus" inspired - playful, gentle
+  // "Mice on Venus"
   [{ root: 'G', chord: 'major7', octave: 3 }, { root: 'D', chord: 'add9', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }],
-  // "Haggstrom" inspired
+  // "Haggstrom"
   [{ root: 'D', chord: 'major7', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
-  // Ambient floating
+
+  // === GHIBLI / JOE HISAISHI STYLE ===
+  // "One Summer's Day" vibes
+  [{ root: 'F', chord: 'major7', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'minor7', octave: 3 }],
+  // "Merry-Go-Round of Life"
+  [{ root: 'A', chord: 'minor', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }, { root: 'C', chord: 'major', octave: 3 }],
+  // Nausicaa vibes
+  [{ root: 'D', chord: 'sus2', octave: 3 }, { root: 'A', chord: 'sus4', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
+
+  // === FINAL FANTASY / NOBUO UEMATSU STYLE ===
+  // "Aerith's Theme" inspired
+  [{ root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'B', chord: 'minor7', octave: 3 }],
+  // "To Zanarkand"
+  [{ root: 'D', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }],
+  // Crystal theme
+  [{ root: 'A', chord: 'sus2', octave: 3 }, { root: 'E', chord: 'sus2', octave: 3 }, { root: 'D', chord: 'add9', octave: 3 }],
+
+  // === KINGDOM HEARTS / YOKO SHIMOMURA STYLE ===
+  // "Dearly Beloved" inspired
+  [{ root: 'B', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'D', chord: 'major7', octave: 3 }, { root: 'A', chord: 'add9', octave: 3 }],
+  // Twilight Town vibes
+  [{ root: 'F', chord: 'major7', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }],
+
+  // === CHRONO TRIGGER / YASUNORI MITSUDA STYLE ===
+  // "Corridors of Time"
+  [{ root: 'E', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'B', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'add9', octave: 3 }],
+  // "Wind Scene"
+  [{ root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'sus2', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }],
+
+  // === UNDERTALE / TOBY FOX STYLE ===
+  // "His Theme"
+  [{ root: 'G', chord: 'major', octave: 3 }, { root: 'C', chord: 'add9', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'sus4', octave: 3 }],
+  // "Memory"
+  [{ root: 'F', chord: 'major7', octave: 3 }, { root: 'C', chord: 'major', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }, { root: 'A', chord: 'minor', octave: 3 }],
+
+  // === NIER / KEIICHI OKABE STYLE ===
+  // "Weight of the World" inspired
+  [{ root: 'A', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }],
+  // "Kaine's Theme"
+  [{ root: 'D', chord: 'minor7', octave: 3 }, { root: 'B', chord: 'halfDiminished7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'A', chord: 'sus4', octave: 3 }],
+
+  // === AMBIENT / DREAMY ===
+  // Brian Eno inspired
+  [{ root: 'D', chord: 'sus2', octave: 3 }, { root: 'A', chord: 'sus2', octave: 3 }],
+  // Floating
   [{ root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
-  // Melancholic
+  // Ethereal
+  [{ root: 'F', chord: 'major7', octave: 4 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'sus2', octave: 3 }],
+
+  // === LOFI / CHILL ===
+  // Lo-fi study vibes
+  [{ root: 'E', chord: 'minor9', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }],
+  // Jazzy chords
+  [{ root: 'D', chord: 'minor9', octave: 3 }, { root: 'G', chord: 'dominant7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }],
+
+  // === MELANCHOLIC / SAD ===
   [{ root: 'A', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'C', chord: 'add9', octave: 3 }],
+  [{ root: 'E', chord: 'minor', octave: 3 }, { root: 'B', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'D', chord: 'sus4', octave: 3 }],
+  [{ root: 'F', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'minor', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }],
+
+  // === HOPEFUL / UPLIFTING ===
+  [{ root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }],
+  [{ root: 'G', chord: 'major7', octave: 3 }, { root: 'D', chord: 'add9', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'add9', octave: 3 }],
 ]
 
-// Melodic motifs that get developed/varied (like a leitmotif)
+// Melodic motifs - MASSIVELY EXPANDED for variety
 const MELODIC_MOTIFS = [
-  // Simple descending - C418's signature
+  // === DESCENDING (melancholic, reflective) ===
   ['E5', 'D5', 'C5'],
   ['A4', 'G4', 'E4'],
   ['C5', 'G4', 'E4'],
-  // Gentle ascending
+  ['G5', 'E5', 'C5'],
+  ['D5', 'C5', 'A4'],
+  ['B4', 'A4', 'G4'],
+  ['F5', 'E5', 'D5', 'C5'],
+  ['A5', 'G5', 'E5', 'D5'],
+
+  // === ASCENDING (hopeful, curious) ===
   ['C4', 'E4', 'G4'],
   ['G4', 'A4', 'C5'],
-  // Question/answer pairs
+  ['E4', 'G4', 'B4'],
+  ['D4', 'F4', 'A4'],
+  ['A4', 'C5', 'E5'],
+  ['G4', 'B4', 'D5'],
+  ['C4', 'D4', 'E4', 'G4'],
+  ['E4', 'F4', 'G4', 'A4'],
+
+  // === ARCHED (rise and fall) ===
+  ['C4', 'E4', 'G4', 'E4'],
+  ['G4', 'B4', 'D5', 'B4'],
+  ['E4', 'G4', 'A4', 'G4', 'E4'],
+  ['A4', 'C5', 'E5', 'C5'],
+  ['D4', 'F4', 'A4', 'F4', 'D4'],
+
+  // === INTERVALS (open, spacious) ===
+  ['C4', 'G4'],
+  ['E4', 'B4'],
+  ['G4', 'D5'],
+  ['A4', 'E5'],
+  ['D4', 'A4'],
+  ['F4', 'C5'],
+  ['C4', 'G4', 'C5'],
+  ['E4', 'B4', 'E5'],
+
+  // === QUESTION/ANSWER ===
   ['E4', 'D4'],
   ['G4', 'F4'],
-  // Single floating notes (very C418)
+  ['A4', 'G4'],
+  ['B4', 'A4'],
+  ['C5', 'B4'],
+  ['D5', 'C5'],
+
+  // === SINGLE FLOATING NOTES (sparse, ambient) ===
   ['E5'],
   ['A4'],
   ['C5'],
+  ['G5'],
+  ['D5'],
+  ['B4'],
+  ['F5'],
+  ['G4'],
+
+  // === ORNAMENTAL (grace notes, turns) ===
+  ['E4', 'F4', 'E4'],
+  ['G4', 'A4', 'G4'],
+  ['C5', 'D5', 'C5'],
+  ['A4', 'B4', 'A4', 'G4'],
+  ['D5', 'E5', 'D5', 'C5'],
+
+  // === LONGER PHRASES (more melodic) ===
+  ['G4', 'A4', 'B4', 'C5', 'D5'],
+  ['E5', 'D5', 'C5', 'B4', 'A4', 'G4'],
+  ['C4', 'D4', 'E4', 'G4', 'A4'],
+  ['A4', 'G4', 'F4', 'E4', 'D4', 'C4'],
+  ['D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'],
+
+  // === PENTATONIC (Eastern, meditative) ===
+  ['C4', 'D4', 'E4', 'G4', 'A4'],
+  ['A4', 'G4', 'E4', 'D4', 'C4'],
+  ['G4', 'A4', 'C5', 'D5'],
+  ['E5', 'D5', 'C5', 'A4'],
+
+  // === CHROMATIC TOUCHES (tension) ===
+  ['E4', 'F4', 'F#4', 'G4'],
+  ['G4', 'F#4', 'F4', 'E4'],
+  ['B4', 'C5', 'C#5', 'D5'],
 ]
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -715,96 +840,138 @@ export class PianoEngine extends EventEmitter {
         const currentChord = progression[this.state.progressionPosition]
 
         // Dynamic swell - slowly build and release over phrases
-        if (Math.random() < 0.15) {
-          // Occasionally shift dynamics
+        if (Math.random() < 0.2) {
           const dynamicChange = (Math.random() - 0.5) * 0.15
           this.state.dynamicLevel = Math.max(0.2, Math.min(0.5, this.state.dynamicLevel + dynamicChange))
         }
 
         const velocity = this.state.dynamicLevel + (Math.random() - 0.5) * 0.08
 
-        // C418 STYLE - Musical, intentional, alive
+        // CHANGE MOTIFS FREQUENTLY for variety
+        if (Math.random() < 0.4) {
+          this.state.currentMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
+        }
+
+        // CHANGE PROGRESSIONS MORE OFTEN
+        if (Math.random() < 0.15) {
+          this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
+          this.state.progressionPosition = 0
+        }
+
+        // C418 STYLE - Musical, intentional, VARIED
         if (style === 'c418' || style === 'ambient') {
           const phraseType = Math.random()
 
-          if (phraseType < 0.35) {
-            // MOTIF DEVELOPMENT - play the current melodic motif with variations
+          if (phraseType < 0.25) {
+            // MOTIF DEVELOPMENT with MORE VARIATION
             const motif = this.state.currentMotif
-            const octaveShift = Math.random() < 0.3 ? (Math.random() < 0.5 ? -12 : 12) : 0
+            // More varied octave shifts
+            const octaveShiftOptions = [-2, -1, 0, 0, 0, 1, 2]
+            const octaveShift = octaveShiftOptions[Math.floor(Math.random() * octaveShiftOptions.length)]
 
-            for (let i = 0; i < motif.length; i++) {
+            // Random starting point in motif
+            const startIdx = Math.random() < 0.3 ? Math.floor(Math.random() * Math.min(2, motif.length)) : 0
+            const endIdx = Math.random() < 0.3 ? motif.length - Math.floor(Math.random() * 2) : motif.length
+
+            for (let i = startIdx; i < endIdx; i++) {
               if (!this.state.isContinuous) break
 
-              // Vary the motif slightly - transpose, change rhythm
               let note = motif[i]
               if (octaveShift !== 0 && NOTE_FREQUENCIES[note]) {
                 const match = note.match(/([A-G]#?)(\d)/)
                 if (match) {
-                  const octave = parseInt(match[2]) + (octaveShift > 0 ? 1 : -1)
-                  if (octave >= 2 && octave <= 5) note = `${match[1]}${octave}`
+                  const newOctave = parseInt(match[2]) + octaveShift
+                  if (newOctave >= 2 && newOctave <= 6) note = `${match[1]}${newOctave}`
                 }
               }
 
-              const noteVelocity = velocity - (i * 0.03)  // Gentle falloff
-              const noteDuration = 2000 + Math.random() * 1500
+              const noteVelocity = velocity - (i * 0.025) + (Math.random() - 0.5) * 0.05
+              const noteDuration = 1500 + Math.random() * 2000
               await this.playNote(note, noteDuration, noteVelocity)
 
-              // Organic pause between notes - rubato
-              const pause = 400 + Math.random() * 800
+              // Varied pause between notes
+              const pause = 200 + Math.random() * 600
               await this.sleep(pause)
             }
 
-            // Sometimes vary the motif for next time
-            if (Math.random() < 0.25) {
-              this.state.currentMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
-            }
-
-          } else if (phraseType < 0.6) {
-            // CHORD FROM PROGRESSION - arpeggiated, warm
+          } else if (phraseType < 0.45) {
+            // CHORD ARPEGGIO - with variations
+            const octaveVar = Math.random() < 0.3 ? (Math.random() < 0.5 ? -1 : 1) : 0
             const chordNotes = getChordNotes(
               currentChord.root,
               currentChord.chord as keyof typeof CHORDS,
-              currentChord.octave
+              currentChord.octave + octaveVar
             )
 
-            // Arpeggiate the chord slowly, like C418
-            for (let i = 0; i < Math.min(chordNotes.length, 4); i++) {
-              if (!this.state.isContinuous) break
-              const noteVelocity = velocity - (i * 0.025)
-              const noteDuration = 2500 + Math.random() * 1000
-              await this.playNote(chordNotes[i], noteDuration, noteVelocity)
+            // Sometimes play ascending, sometimes descending, sometimes random order
+            let playOrder = [...Array(chordNotes.length).keys()]
+            if (Math.random() < 0.3) playOrder = playOrder.reverse()
+            if (Math.random() < 0.2) playOrder = playOrder.sort(() => Math.random() - 0.5)
 
-              // Organic strum timing
-              const strumDelay = 200 + Math.random() * 300
+            const notesToPlay = Math.min(chordNotes.length, 2 + Math.floor(Math.random() * 3))
+            for (let i = 0; i < notesToPlay; i++) {
+              if (!this.state.isContinuous) break
+              const noteVelocity = velocity - (i * 0.02) + (Math.random() - 0.5) * 0.04
+              const noteDuration = 2000 + Math.random() * 1500
+              await this.playNote(chordNotes[playOrder[i]], noteDuration, noteVelocity)
+
+              const strumDelay = 150 + Math.random() * 350
               await this.sleep(strumDelay)
             }
 
             // Advance progression
             this.state.progressionPosition = (this.state.progressionPosition + 1) % progression.length
 
-            // Occasionally change progression for variety
-            if (this.state.progressionPosition === 0 && Math.random() < 0.3) {
-              this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
+          } else if (phraseType < 0.6) {
+            // MELODIC FRAGMENT - just 2-3 notes from a random motif
+            const randomMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
+            const fragLength = Math.min(randomMotif.length, 2 + Math.floor(Math.random() * 2))
+
+            for (let i = 0; i < fragLength; i++) {
+              if (!this.state.isContinuous) break
+              await this.playNote(randomMotif[i], 1800 + Math.random() * 1200, velocity)
+              await this.sleep(250 + Math.random() * 400)
             }
 
           } else if (phraseType < 0.75) {
-            // SINGLE FLOATING NOTE - the space between
-            // Use notes from current chord for harmonic coherence
+            // FLOATING NOTES - 1-3 single notes with space
+            const numNotes = 1 + Math.floor(Math.random() * 3)
             const chordNotes = getChordNotes(
               currentChord.root,
               currentChord.chord as keyof typeof CHORDS,
-              currentChord.octave + 1  // Higher octave for shimmer
+              currentChord.octave + Math.floor(Math.random() * 2)
             )
-            const note = chordNotes[Math.floor(Math.random() * chordNotes.length)]
-            await this.playNote(note, 3500 + Math.random() * 2000, velocity * 0.9)
+
+            for (let i = 0; i < numNotes; i++) {
+              if (!this.state.isContinuous) break
+              const note = chordNotes[Math.floor(Math.random() * chordNotes.length)]
+              await this.playNote(note, 2500 + Math.random() * 2000, velocity * (0.7 + Math.random() * 0.3))
+              if (i < numNotes - 1) await this.sleep(800 + Math.random() * 1200)
+            }
 
           } else if (phraseType < 0.85) {
-            // BASS FOUNDATION - grounding
+            // BASS + HIGH - contrast
             const bassNote = `${currentChord.root}2`
-            await this.playNote(bassNote, 4000 + Math.random() * 1500, velocity * 0.7)
+            await this.playNote(bassNote, 3000, velocity * 0.6)
+            await this.sleep(600 + Math.random() * 400)
+
+            const highNote = `${currentChord.root}5`
+            await this.playNote(highNote, 2500, velocity * 0.8)
+
+          } else if (phraseType < 0.95) {
+            // INTERVAL LEAP - dramatic
+            const intervals = [[0, 7], [0, 5], [0, 4], [0, 3]]  // Perfect 5th, 4th, major 3rd, minor 3rd
+            const interval = intervals[Math.floor(Math.random() * intervals.length)]
+            const chordNotes = getChordNotes(currentChord.root, currentChord.chord as keyof typeof CHORDS, currentChord.octave)
+
+            if (chordNotes.length > 1) {
+              await this.playNote(chordNotes[0], 2000, velocity)
+              await this.sleep(400 + Math.random() * 300)
+              await this.playNote(chordNotes[Math.min(interval[1] % chordNotes.length, chordNotes.length - 1)], 2500, velocity * 0.9)
+            }
 
           }
-          // else: ~15% SILENCE - essential for breathing
+          // Only ~5% pure silence now (phraseType >= 0.95)
 
         } else if (style === 'joji') {
           // Sparse, melancholic - deeper, more space
