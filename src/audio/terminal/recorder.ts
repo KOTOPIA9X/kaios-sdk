@@ -1,12 +1,16 @@
 /**
  * KAIOS Audio Recorder
- * Records audio sessions using ffmpeg for later playback and visualization
+ * Records KAIOS audio sessions by logging sound events and reconstructing with ffmpeg
  *
- * Captures system audio and saves it with KAIOS metadata
+ * Uses a log+reconstruct approach:
+ * 1. Start recording: begin logging sound events with timestamps
+ * 2. During session: track samples played and synth notes generated
+ * 3. Stop recording: use ffmpeg to mix all sources at correct time offsets
+ * 4. Output: single audio file with all sounds properly timed
  */
 
-import { spawn, ChildProcess } from 'child_process'
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
+import { spawn, execSync } from 'child_process'
+import { existsSync, mkdirSync, writeFileSync, rmSync } from 'fs'
 import { join } from 'path'
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -38,6 +42,25 @@ export interface RecordingMetadata {
   tags: string[]
 }
 
+/** A sample file that was played during recording */
+export interface SoundEvent {
+  file: string          // Full path to sound file
+  timestamp: number     // ms offset from recording start
+  volume: number        // 0-1
+  duration?: number     // estimated duration ms
+}
+
+/** A synthesized note (from SoX) that was played during recording */
+export interface SynthEvent {
+  type: 'note' | 'pad' | 'chord'
+  note: string
+  freq: number
+  duration: number      // seconds
+  velocity: number
+  timestamp: number     // ms offset from recording start
+  soxArgs: string[]     // exact args used for sox (for perfect reconstruction)
+}
+
 // ════════════════════════════════════════════════════════════════════════════════
 // AUDIO RECORDER
 // ════════════════════════════════════════════════════════════════════════════════
@@ -45,8 +68,12 @@ export interface RecordingMetadata {
 export class AudioRecorder {
   private config: RecorderConfig
   private currentSession: RecordingSession | null = null
-  private ffmpegProcess: ChildProcess | null = null
   private isRecording = false
+
+  // Sound event logs
+  private soundLog: SoundEvent[] = []
+  private synthLog: SynthEvent[] = []
+  private recordingStartTime: number = 0
 
   constructor(config: Partial<RecorderConfig> = {}) {
     this.config = {
@@ -76,7 +103,18 @@ export class AudioRecorder {
   }
 
   /**
-   * Get available audio input devices (macOS)
+   * Check if sox is available (needed for synth reconstruction)
+   */
+  async checkSox(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const proc = spawn('sox', ['--version'])
+      proc.on('close', (code) => resolve(code === 0))
+      proc.on('error', () => resolve(false))
+    })
+  }
+
+  /**
+   * Get available audio input devices (for reference, not used in log+reconstruct)
    */
   async getAudioDevices(): Promise<string[]> {
     return new Promise((resolve) => {
@@ -113,7 +151,7 @@ export class AudioRecorder {
   }
 
   /**
-   * Start recording audio
+   * Start recording - begins logging sound events
    */
   async startRecording(metadata: Partial<RecordingMetadata> = {}): Promise<RecordingSession | null> {
     if (this.isRecording) {
@@ -146,94 +184,249 @@ export class AudioRecorder {
       }
     }
 
-    // Build ffmpeg command for macOS (BlackHole or system audio)
-    // Using avfoundation to capture audio
-    const ffmpegArgs = [
-      '-y',  // Overwrite output
-      '-f', 'avfoundation',
-      '-i', ':0',  // Default audio input (can be changed)
-      '-ar', this.config.sampleRate.toString(),
-      '-ac', this.config.channels.toString(),
-    ]
+    // Initialize logging
+    this.recordingStartTime = Date.now()
+    this.soundLog = []
+    this.synthLog = []
+    this.isRecording = true
 
-    // Add format-specific options
-    if (this.config.format === 'mp3') {
-      ffmpegArgs.push('-codec:a', 'libmp3lame', '-b:a', this.config.bitrate)
-    } else if (this.config.format === 'flac') {
-      ffmpegArgs.push('-codec:a', 'flac')
-    } else {
-      ffmpegArgs.push('-codec:a', 'pcm_s16le')
+    return this.currentSession
+  }
+
+  /**
+   * Log a sample file being played
+   */
+  logSound(file: string, volume: number, duration?: number): void {
+    if (!this.isRecording) return
+
+    this.soundLog.push({
+      file,
+      timestamp: Date.now() - this.recordingStartTime,
+      volume,
+      duration
+    })
+  }
+
+  /**
+   * Log a synthesized note being played
+   */
+  logSynthNote(event: Omit<SynthEvent, 'timestamp'>): void {
+    if (!this.isRecording) return
+
+    this.synthLog.push({
+      ...event,
+      timestamp: Date.now() - this.recordingStartTime
+    })
+  }
+
+  /**
+   * Stop recording and reconstruct the audio file
+   */
+  async stopRecording(): Promise<RecordingSession | null> {
+    if (!this.isRecording || !this.currentSession) {
+      return null
     }
 
-    // Add metadata
-    ffmpegArgs.push(
-      '-metadata', `title=${this.currentSession.metadata.title}`,
-      '-metadata', `artist=${this.currentSession.metadata.artist}`,
-      '-metadata', `album=${this.currentSession.metadata.album}`,
-      outputFile
-    )
+    this.currentSession.endTime = Date.now()
+    this.isRecording = false
+    const session = { ...this.currentSession }
+
+    const totalEvents = this.soundLog.length + this.synthLog.length
+
+    // If no sounds logged, create a note about it but don't fail
+    if (totalEvents === 0) {
+      console.warn('[Recorder] No sounds were recorded during session')
+      this.saveMetadata(session)
+      return session
+    }
 
     try {
-      this.ffmpegProcess = spawn('ffmpeg', ffmpegArgs, {
-        stdio: ['pipe', 'pipe', 'pipe']
-      })
-
-      this.ffmpegProcess.on('error', (err) => {
-        console.error('[Recorder] ffmpeg error:', err.message)
-        this.isRecording = false
-      })
-
-      this.ffmpegProcess.on('close', (code) => {
-        if (code !== 0 && code !== 255) {  // 255 is normal for SIGTERM
-          console.warn(`[Recorder] ffmpeg exited with code ${code}`)
-        }
-        this.isRecording = false
-      })
-
-      this.isRecording = true
-      return this.currentSession
-
+      await this.reconstructAudio()
+      this.saveMetadata(session)
     } catch (error) {
-      console.error('[Recorder] Failed to start recording:', error)
-      return null
+      console.error('[Recorder] Failed to reconstruct audio:', error)
+    }
+
+    // Clean up
+    this.currentSession = null
+    this.soundLog = []
+    this.synthLog = []
+
+    return session
+  }
+
+  /**
+   * Reconstruct the audio from logged events
+   */
+  private async reconstructAudio(): Promise<void> {
+    if (!this.currentSession) return
+
+    const outputFile = this.currentSession.outputFile
+    const tempDir = join(this.config.outputDir, '.temp_' + Date.now())
+
+    try {
+      mkdirSync(tempDir, { recursive: true })
+
+      // Step 1: Generate temp WAV files for synth notes
+      const synthTempFiles: { file: string; timestamp: number; volume: number }[] = []
+
+      for (let i = 0; i < this.synthLog.length; i++) {
+        const event = this.synthLog[i]
+        const tempFile = join(tempDir, `synth_${i}.wav`)
+
+        // Build sox command to generate the audio file
+        // Original args: ['-n', '-d', 'synth', duration, 'sine', freq, ...]
+        // We need: sox -n OUTPUT_FILE synth duration sine freq ...
+        const soxArgs = [...event.soxArgs]
+
+        // Replace '-n', '-d' (null input, default output) with '-n', tempFile
+        const dashNIndex = soxArgs.indexOf('-n')
+        const dashDIndex = soxArgs.indexOf('-d')
+
+        if (dashNIndex !== -1 && dashDIndex !== -1) {
+          // Remove -d, keep -n, insert output file after -n
+          soxArgs.splice(dashDIndex, 1)
+          soxArgs.splice(dashNIndex + 1, 0, tempFile)
+        } else {
+          // Fallback: prepend -n and output file
+          soxArgs.unshift('-n', tempFile)
+        }
+
+        try {
+          execSync(`sox ${soxArgs.join(' ')}`, { stdio: 'ignore' })
+          synthTempFiles.push({
+            file: tempFile,
+            timestamp: event.timestamp,
+            volume: event.velocity
+          })
+        } catch {
+          // Skip failed synth generations
+          console.warn(`[Recorder] Failed to generate synth file ${i}`)
+        }
+      }
+
+      // Step 2: Combine all sources (samples + synth)
+      const allSources: { file: string; timestamp: number; volume: number }[] = [
+        ...this.soundLog.map(s => ({ file: s.file, timestamp: s.timestamp, volume: s.volume })),
+        ...synthTempFiles
+      ]
+
+      // Filter to only existing files
+      const validSources = allSources.filter(s => existsSync(s.file))
+
+      if (validSources.length === 0) {
+        console.warn('[Recorder] No valid source files found')
+        return
+      }
+
+      // Step 3: Build ffmpeg command
+      if (validSources.length === 1) {
+        // Single source - simple copy with delay at start
+        const source = validSources[0]
+        const ffmpegArgs = [
+          '-y',
+          '-i', source.file,
+          '-af', `adelay=${source.timestamp}|${source.timestamp},volume=${source.volume}`,
+          '-ar', this.config.sampleRate.toString(),
+          '-ac', this.config.channels.toString()
+        ]
+
+        if (this.config.format === 'mp3') {
+          ffmpegArgs.push('-codec:a', 'libmp3lame', '-b:a', this.config.bitrate)
+        } else if (this.config.format === 'flac') {
+          ffmpegArgs.push('-codec:a', 'flac')
+        }
+
+        ffmpegArgs.push(outputFile)
+
+        await this.runFfmpeg(ffmpegArgs)
+
+      } else {
+        // Multiple sources - use filter_complex to mix
+        const inputs: string[] = []
+        const filters: string[] = []
+
+        validSources.forEach((source, i) => {
+          inputs.push('-i', source.file)
+          // adelay in ms for left|right channels, then volume adjust
+          filters.push(
+            `[${i}]adelay=${source.timestamp}|${source.timestamp},volume=${source.volume}[a${i}]`
+          )
+        })
+
+        // Mix all streams together
+        const mixInputs = validSources.map((_, i) => `[a${i}]`).join('')
+        const amix = `${mixInputs}amix=inputs=${validSources.length}:duration=longest:normalize=0[out]`
+
+        const ffmpegArgs = [
+          '-y',
+          ...inputs,
+          '-filter_complex', `${filters.join(';')};${amix}`,
+          '-map', '[out]',
+          '-ar', this.config.sampleRate.toString(),
+          '-ac', this.config.channels.toString()
+        ]
+
+        if (this.config.format === 'mp3') {
+          ffmpegArgs.push('-codec:a', 'libmp3lame', '-b:a', this.config.bitrate)
+        } else if (this.config.format === 'flac') {
+          ffmpegArgs.push('-codec:a', 'flac')
+        }
+
+        ffmpegArgs.push(outputFile)
+
+        await this.runFfmpeg(ffmpegArgs)
+      }
+
+    } finally {
+      // Clean up temp directory
+      try {
+        rmSync(tempDir, { recursive: true, force: true })
+      } catch {
+        // Ignore cleanup errors
+      }
     }
   }
 
   /**
-   * Stop recording and save the file
+   * Run ffmpeg with given args
    */
-  async stopRecording(): Promise<RecordingSession | null> {
-    if (!this.isRecording || !this.ffmpegProcess || !this.currentSession) {
-      return null
-    }
+  private runFfmpeg(args: string[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const proc = spawn('ffmpeg', args, {
+        stdio: ['ignore', 'ignore', 'pipe']
+      })
 
-    return new Promise((resolve) => {
-      this.currentSession!.endTime = Date.now()
-      const session = { ...this.currentSession! }
+      let stderr = ''
+      proc.stderr?.on('data', (data) => {
+        stderr += data.toString()
+      })
 
-      // Send quit signal to ffmpeg
-      this.ffmpegProcess!.stdin?.write('q')
-
-      // Give it a moment to finish writing
-      setTimeout(() => {
-        if (this.ffmpegProcess && !this.ffmpegProcess.killed) {
-          this.ffmpegProcess.kill('SIGTERM')
+      proc.on('close', (code) => {
+        if (code === 0) {
+          resolve()
+        } else {
+          reject(new Error(`ffmpeg exited with code ${code}: ${stderr.slice(-500)}`))
         }
+      })
 
-        // Save metadata file alongside the recording
-        const metadataFile = session.outputFile.replace(/\.[^.]+$/, '.json')
-        writeFileSync(metadataFile, JSON.stringify({
-          ...session,
-          duration: session.endTime! - session.startTime
-        }, null, 2))
-
-        this.ffmpegProcess = null
-        this.currentSession = null
-        this.isRecording = false
-
-        resolve(session)
-      }, 500)
+      proc.on('error', (err) => {
+        reject(err)
+      })
     })
+  }
+
+  /**
+   * Save session metadata to JSON file
+   */
+  private saveMetadata(session: RecordingSession): void {
+    const metadataFile = session.outputFile.replace(/\.[^.]+$/, '.json')
+    writeFileSync(metadataFile, JSON.stringify({
+      ...session,
+      duration: (session.endTime || Date.now()) - session.startTime,
+      soundsRecorded: this.soundLog.length,
+      synthNotesRecorded: this.synthLog.length
+    }, null, 2))
   }
 
   /**
@@ -268,6 +461,16 @@ export class AudioRecorder {
   }
 
   /**
+   * Get event counts for status display
+   */
+  getEventCounts(): { sounds: number; synth: number } {
+    return {
+      sounds: this.soundLog.length,
+      synth: this.synthLog.length
+    }
+  }
+
+  /**
    * List all recordings
    */
   listRecordings(): string[] {
@@ -281,6 +484,20 @@ export class AudioRecorder {
       return []
     }
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// GLOBAL INSTANCE (for cross-module recording hooks)
+// ════════════════════════════════════════════════════════════════════════════════
+
+let globalRecorder: AudioRecorder | null = null
+
+export function setGlobalRecorder(recorder: AudioRecorder): void {
+  globalRecorder = recorder
+}
+
+export function getGlobalRecorder(): AudioRecorder | null {
+  return globalRecorder
 }
 
 // ════════════════════════════════════════════════════════════════════════════════

@@ -212,7 +212,7 @@ export function emotionToKaomoji(emotion: EmotionToken): string {
     EMOTE_HAPPY: '(◕‿◕)',
     EMOTE_SAD: '(╥﹏╥)',
     EMOTE_ANGRY: '(╬ಠ益ಠ)',
-    EMOTE_THINK: '(￣ω￣)',
+    EMOTE_THINK: '( ˘ω˘ )',
     EMOTE_SURPRISED: '(⊙ω⊙)',
     EMOTE_AWKWARD: '(・・;)',
     EMOTE_QUESTION: '(・ω・)?',

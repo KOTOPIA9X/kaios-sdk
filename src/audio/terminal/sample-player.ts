@@ -9,6 +9,7 @@
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { getAudioBus } from './audio-bus.js'
+import { getGlobalRecorder } from './recorder.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -208,6 +209,12 @@ export class SamplePlayer {
     const volume = _volume ?? this.config.volume
     const duration = this.estimateDuration(filename)
     audioBus.soundStart(filename, 'sample', volume, duration)
+
+    // Log to recorder if active (for audio reconstruction)
+    const recorder = getGlobalRecorder()
+    if (recorder?.isCurrentlyRecording()) {
+      recorder.logSound(filePath, volume, duration)
+    }
 
     try {
       // play-sound doesn't support volume directly

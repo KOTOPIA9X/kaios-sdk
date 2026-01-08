@@ -198,6 +198,7 @@ export interface ThoughtConfig {
   idleThresholdMs: number      // How long before thoughts start (default: 30s)
   minThoughtIntervalMs: number // Min time between thoughts (default: 15s)
   maxThoughtIntervalMs: number // Max time between thoughts (default: 60s)
+  maxIdleDurationMs: number    // Stop thoughts after this much idle time (default: 60s) - saves API costs
   typingDelayMs: number        // Delay between characters (default: 50ms)
   typingVariance: number       // Random variance in typing speed (default: 30ms)
   maxThoughtLength: number     // Max chars per thought (default: 200)
@@ -354,6 +355,7 @@ export class ThoughtEngine extends EventEmitter {
       idleThresholdMs: 30000,       // 30 seconds
       minThoughtIntervalMs: 15000,  // 15 seconds min between thoughts
       maxThoughtIntervalMs: 60000,  // 60 seconds max between thoughts
+      maxIdleDurationMs: 60000,     // Stop thoughts after 1 minute idle (saves API costs)
       typingDelayMs: 50,            // 50ms per character
       typingVariance: 30,           // +/- 30ms variance
       maxThoughtLength: 200,
@@ -532,6 +534,12 @@ export class ThoughtEngine extends EventEmitter {
 
     // Check if idle long enough
     if (idleTime < this.config.idleThresholdMs) return
+
+    // Stop generating thoughts after maxIdleDurationMs to save API costs
+    // User needs to interact again to resume thoughts
+    if (idleTime > this.config.maxIdleDurationMs) {
+      return
+    }
 
     // Check if enough time since last thought
     if (timeSinceLastThought < this.config.minThoughtIntervalMs) return

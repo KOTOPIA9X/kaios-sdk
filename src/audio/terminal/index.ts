@@ -80,9 +80,13 @@ export {
 export {
   AudioRecorder,
   createAudioRecorder,
+  setGlobalRecorder,
+  getGlobalRecorder,
   type RecorderConfig,
   type RecordingSession,
-  type RecordingMetadata
+  type RecordingMetadata,
+  type SoundEvent as RecordingSoundEvent,
+  type SynthEvent
 } from './recorder.js'
 
 // Audio Bus (for visualizer integration)

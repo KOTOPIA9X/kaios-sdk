@@ -8,6 +8,7 @@
 
 import { spawn } from 'child_process'
 import { getAudioBus } from './audio-bus.js'
+import { getGlobalRecorder } from './recorder.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // 432Hz TUNING - Note frequencies
@@ -120,6 +121,19 @@ export class SoxSynth {
       'gain', '-4'    // Headroom to prevent clipping
     ]
 
+    // Log to recorder if active (for audio reconstruction)
+    const recorder = getGlobalRecorder()
+    if (recorder?.isCurrentlyRecording()) {
+      recorder.logSynthNote({
+        type: 'note',
+        note,
+        freq,
+        duration: durationSec,
+        velocity: vol,
+        soxArgs: args
+      })
+    }
+
     try {
       const proc = spawn('play', args, {
         stdio: ['ignore', 'ignore', 'ignore']
@@ -162,6 +176,19 @@ export class SoxSynth {
       'vol', vol.toFixed(2),
       'gain', '-6'
     ]
+
+    // Log to recorder if active (for audio reconstruction)
+    const recorder = getGlobalRecorder()
+    if (recorder?.isCurrentlyRecording()) {
+      recorder.logSynthNote({
+        type: 'pad',
+        note,
+        freq,
+        duration: durationSec,
+        velocity: vol,
+        soxArgs: args
+      })
+    }
 
     try {
       const proc = spawn('play', args, {

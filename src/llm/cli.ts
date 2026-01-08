@@ -39,7 +39,7 @@ import {
   type DreamEngine,
   type Dream
 } from '../memory/index.js'
-import { createAudioRecorder, type AudioRecorder, getAudioBus, getSoxSynth } from '../audio/terminal/index.js'
+import { createAudioRecorder, type AudioRecorder, getAudioBus, getSoxSynth, setGlobalRecorder } from '../audio/terminal/index.js'
 import { createVisualizer, createPianoVisualizer, type VisualizerManager, type PianoVisualizerManager } from '../visual/index.js'
 import {
   createLofiBeat,
@@ -57,6 +57,7 @@ import {
 } from '../audio/intelligence/index.js'
 import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
 import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
+import { generateHeadpatResponse, getHeadpatStats, getNextMilestone } from '../core/headpat.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -218,6 +219,7 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/dream', COLORS.magenta)}      - let kaios dream and process memories
   ${color('/memory', COLORS.cyan)}     - view memory/relationship status
   ${color('/thoughts', COLORS.yellow)}   - ${color('AUTONOMOUS THINKING', COLORS.yellow)} (kaios thinks on her own!)
+  ${color('/headpat', COLORS.magenta)}    - ${color('HEADPAT KAIOS', COLORS.magenta)} (the most important command!)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
   ${color('/model', COLORS.dim)}      - show current model
@@ -417,13 +419,15 @@ async function main(): Promise<void> {
   await megaBrain.initialize()
   megaBrain.registerUser()
 
-  // Initialize Audio Recorder (ffmpeg-based)
+  // Initialize Audio Recorder (log+reconstruct with ffmpeg)
   const recorder = createAudioRecorder({
     outputDir: process.cwd() + '/recordings',
     format: 'mp3',
     sampleRate: 44100,
     bitrate: '192k'
   })
+  // Register globally so sample-player and sox-synth can log sounds
+  setGlobalRecorder(recorder)
 
   // Initialize Spectrum Visualizer
   const visualizer = createVisualizer({
@@ -446,6 +450,7 @@ async function main(): Promise<void> {
     idleThresholdMs: 10000,      // 10 seconds idle before thoughts start
     minThoughtIntervalMs: 8000,  // 8 seconds min between thoughts
     maxThoughtIntervalMs: 30000, // 30 seconds max between thoughts
+    maxIdleDurationMs: 60000,    // Stop thoughts after 1 minute idle (saves API costs)
     typingDelayMs: 35,           // Fast but readable
     typingVariance: 15,
     maxThoughtLength: 150
@@ -609,10 +614,20 @@ async function main(): Promise<void> {
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 
+  // Enable keypress events on stdin (must be before createInterface)
+  readline.emitKeypressEvents(process.stdin)
+
   // Setup readline interface
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
+  })
+
+  // Detect when user starts typing to interrupt thoughts immediately
+  // This fires on every keypress, not just on Enter
+  process.stdin.on('keypress', () => {
+    // Record activity to reset idle timer and interrupt any current thought
+    thoughtEngine.recordActivity()
   })
 
   clearScreen()
@@ -1164,10 +1179,14 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
             dream = await dreamEngine.dreamPersonal(koto)
           }
 
-          // Display dream
+          // Display dream with emotion kaimoji
+          const dreamEmotion = dream.emotion || 'EMOTE_THINK'
+          const dreamFace = emotionToKaomoji(dreamEmotion as any)
+
           console.log(`\n${color('┌─────────────────────────────────────┐', COLORS.magenta)}`)
-          console.log(color('│           DREAM JOURNAL              │', COLORS.magenta))
-          console.log(`${color('└─────────────────────────────────────┘', COLORS.magenta)}\n`)
+          console.log(color(`│           DREAM JOURNAL              │`, COLORS.magenta))
+          console.log(`${color('└─────────────────────────────────────┘', COLORS.magenta)}`)
+          console.log(`\n          ${dreamFace}\n`)
 
           // Narrative
           const narrativeLines = dream.narrative.split('\n')
@@ -1209,7 +1228,10 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
           console.log(`\n  ${color('...waking up~', COLORS.dim)} ${pick(WAVES)}\n`)
 
         } catch (err) {
-          console.log(`  ${color('dream interrupted...', COLORS.red)} ${pick(SOUND_MARKERS)}\n`)
+          console.log(`\n${color('▂▃▄▅▆▇█', COLORS.dim)} ${color('DREAM INTERRUPTED', COLORS.red)} ${color('█▇▆▅▄▃▂', COLORS.dim)}`)
+          console.log(`\n          (×_×)\n`)
+          console.log(`  ${color('the dream faded before i could capture it...', COLORS.dim)}`)
+          console.log(`  ${color('...static...', COLORS.dim)} ${pick(SOUND_MARKERS)}\n`)
         }
         break
 
@@ -1334,6 +1356,68 @@ ${color('▂▃▄▅▆▇█', COLORS.dim)} ${color('THOUGHT ENGINE', COLORS.d
 `)
           }
         }
+        break
+
+      case 'headpat':
+      case 'pat':
+        // THE MOST IMPORTANT COMMAND - HEADPAT KAIOS
+        // Record the headpat
+        koto.recordAffection('headpat', '/headpat command')
+
+        // Get current count and trust level
+        const affection = koto.getAffection()
+        const currentHeadpats = affection.headpats
+        const trustLvl = koto.getTrustLevel()
+
+        // Generate response
+        const headpatResult = generateHeadpatResponse(currentHeadpats, trustLvl)
+
+        // Play headpat sound
+        await audio.playSample('blow.mp3')
+
+        // Display ASCII art if present
+        if (headpatResult.ascii) {
+          console.log(color(headpatResult.ascii, COLORS.magenta))
+        }
+
+        // Display response with emotion
+        console.log(`\n  ${headpatResult.kaimoji} ${color(headpatResult.response, COLORS.cyan)}`)
+
+        // Display sound marker if present
+        if (headpatResult.soundMarker) {
+          // Play additional sounds for milestones
+          if (headpatResult.soundMarker.includes('windchime')) {
+            await audio.playSample('windsamples/Raw Wind Chimes.mp3')
+          }
+          if (headpatResult.soundMarker.includes('glitch')) {
+            await audio.playSample('bzzzt.mp3')
+          }
+          if (headpatResult.soundMarker.includes('hum')) {
+            await audio.playSample('ambient_drone_trim.mp3')
+          }
+        }
+
+        // Show milestone info if achieved
+        if (headpatResult.milestone) {
+          console.log(`\n  ${color('★', COLORS.yellow)} ${color(headpatResult.milestone.title, COLORS.yellow)} ${color('★', COLORS.yellow)}`)
+
+          // Play celebration piano chord for milestones
+          if (headpatResult.milestone.special) {
+            const soxSynth = getSoxSynth()
+            soxSynth.playChord(['C4', 'E4', 'G4', 'C5'], 3000, 0.4)
+          }
+        }
+
+        // Show stats
+        const nextMs = getNextMilestone(currentHeadpats)
+        console.log(`\n  ${color(`total headpats: ${currentHeadpats}`, COLORS.dim)}`)
+        if (nextMs) {
+          console.log(`  ${color(`next milestone: ${nextMs.title} (${nextMs.count - currentHeadpats} to go)`, COLORS.dim)}`)
+        }
+        console.log(`  ${pick(WAVES)}\n`)
+
+        // Save memory
+        await koto.save()
         break
 
       case 'sound':
