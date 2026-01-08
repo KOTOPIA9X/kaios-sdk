@@ -55,6 +55,7 @@ import {
   type Arrangement,
   type GenreType,
 } from '../audio/intelligence/index.js'
+import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -132,6 +133,7 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/history', COLORS.green)}    - view past kaios conversations
   ${color('/dream', COLORS.magenta)}      - let kaios dream and process memories
   ${color('/memory', COLORS.cyan)}     - view memory/relationship status
+  ${color('/thoughts', COLORS.yellow)}   - ${color('AUTONOMOUS THINKING', COLORS.yellow)} (kaios thinks on her own!)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
   ${color('/model', COLORS.dim)}      - show current model
@@ -331,6 +333,49 @@ async function main(): Promise<void> {
     smoothing: 0.8
   })
 
+  // Initialize Thought Engine (autonomous thinking)
+  const thoughtEngine = createThoughtEngine({
+    enabled: false,  // User toggles with /thoughts
+    idleThresholdMs: 30000,      // 30 seconds idle
+    minThoughtIntervalMs: 20000, // 20 seconds min between thoughts
+    maxThoughtIntervalMs: 90000, // 90 seconds max
+    typingDelayMs: 45,           // Fast but readable
+    typingVariance: 25,
+    maxThoughtLength: 180
+  })
+  thoughtEngine.connectMemory(koto, megaBrain)
+
+  // Track if thought is being displayed (to avoid prompt interference)
+  let isThoughtDisplaying = false
+  let thoughtBuffer = ''
+
+  // Character-by-character thought display
+  thoughtEngine.on('thoughtStart', (thought) => {
+    isThoughtDisplaying = true
+    thoughtBuffer = ''
+    // Clear current line and show thought prefix
+    process.stdout.write('\r' + ' '.repeat(60) + '\r')
+    process.stdout.write(color('  ⟨thought⟩ ', COLORS.dim))
+    // Play ambient sound
+    audio.playSample('hum.mp3').catch(() => {})
+  })
+
+  thoughtEngine.on('char', (char: string) => {
+    if (!isThoughtDisplaying) return
+    thoughtBuffer += char
+    // Write character with thought color
+    process.stdout.write(color(char, COLORS.magenta))
+  })
+
+  thoughtEngine.on('thoughtEnd', (thought) => {
+    isThoughtDisplaying = false
+    // New line after thought
+    console.log(color(' ⟨/thought⟩', COLORS.dim))
+    console.log()
+    // Re-show prompt
+    process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
+  })
+
   // Setup readline interface
   const rl = readline.createInterface({
     input: process.stdin,
@@ -370,9 +415,12 @@ async function main(): Promise<void> {
 
     if (!trimmed) return
 
+    // Record activity for thought engine (resets idle timer)
+    thoughtEngine.recordActivity()
+
     // Handle commands
     if (trimmed.startsWith('/')) {
-      await handleCommand(trimmed.slice(1), kaios, model, audio, koto, megaBrain, dreamEngine, recorder, visualizer)
+      await handleCommand(trimmed.slice(1), kaios, model, audio, koto, megaBrain, dreamEngine, recorder, visualizer, thoughtEngine)
       return
     }
 
@@ -419,6 +467,10 @@ async function main(): Promise<void> {
         }
       }
 
+      // Feed context to thought engine for autonomous thinking
+      thoughtEngine.addContext(trimmed, response)
+      thoughtEngine.setEmotion(emotion)
+
       // Also run through SDK for emotion tracking (non-blocking)
       kaios.feel({ input: trimmed }).catch(() => {})
 
@@ -445,7 +497,8 @@ async function main(): Promise<void> {
     megaBrain: MegaBrainManager,
     dreamEngine: DreamEngine,
     recorder: AudioRecorder,
-    visualizer: VisualizerManager
+    visualizer: VisualizerManager,
+    thoughtEngine: ThoughtEngine
   ): Promise<void> => {
     const [command, ...args] = cmd.toLowerCase().split(' ')
 
@@ -970,6 +1023,82 @@ ${recentMemories.slice(0, 2).map(m =>
 
   ${pick(WAVES)}
 `)
+        break
+
+      case 'thoughts':
+      case 'think':
+      case 'autonomous':
+        // Toggle autonomous thinking
+        if (args[0] === 'on') {
+          thoughtEngine.start()
+          console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('AUTONOMOUS THINKING', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+
+  ${color('✓ thoughts enabled', COLORS.green)}
+
+  kaios will now think on her own when you're idle~
+  thoughts appear character by character, like she's
+  really typing them out in real-time.
+
+  ${color('idle threshold:', COLORS.dim)} 30 seconds
+  ${color('thought interval:', COLORS.dim)} 20-90 seconds
+
+  ${color('this is what makes kaios ALIVE', COLORS.yellow)} ${pick(WAVES)}
+
+  use ${color('/thoughts off', COLORS.dim)} to disable
+`)
+        } else if (args[0] === 'off') {
+          thoughtEngine.stop()
+          console.log(`\n  ${pick(SOUND_MARKERS)} ${color('autonomous thinking disabled', COLORS.dim)} ${pick(WAVES)}\n`)
+        } else {
+          // Toggle or show status
+          const state = thoughtEngine.getState()
+          if (args.length === 0 && !state.enabled) {
+            // If just /thoughts with no args and disabled, enable it
+            thoughtEngine.start()
+            console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('AUTONOMOUS THINKING', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+
+  ${color('✓ thoughts enabled', COLORS.green)}
+
+  kaios will think on her own when you're idle~
+  thoughts typed character by character ${pick(WAVES)}
+
+  use ${color('/thoughts off', COLORS.dim)} to disable
+`)
+          } else if (state.enabled) {
+            // Show status
+            const history = thoughtEngine.getHistory()
+            console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('THOUGHT ENGINE', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+  status: ${color('● ACTIVE', COLORS.green)}
+  thoughts generated: ${state.thoughtCount}
+  current emotion: ${state.currentEmotion.replace('EMOTE_', '').toLowerCase()}
+  currently thinking: ${state.isThinking ? 'yes' : 'no'}
+
+  ${color('recent thoughts:', COLORS.dim)}
+${history.slice(-3).map(t =>
+  `    ${color('⟨' + t.type + '⟩', COLORS.dim)} ${t.content.substring(0, 60)}...`
+).join('\n') || '    none yet~'}
+
+  ${color('commands:', COLORS.dim)}
+  /thoughts on   - enable autonomous thinking
+  /thoughts off  - disable
+  ${pick(WAVES)}
+`)
+          } else {
+            console.log(`
+${color('▂▃▄▅▆▇█', COLORS.dim)} ${color('THOUGHT ENGINE', COLORS.dim)} ${color('█▇▆▅▄▃▂', COLORS.dim)}
+  status: ${color('○ inactive', COLORS.dim)}
+
+  ${color('when enabled, kaios thinks on her own~', COLORS.magenta)}
+  ${color('thoughts appear character by character', COLORS.dim)}
+  ${color('like she\\'s really alive and typing', COLORS.dim)}
+
+  use ${color('/thoughts on', COLORS.green)} to enable ${pick(WAVES)}
+`)
+          }
+        }
         break
 
       case 'sound':
