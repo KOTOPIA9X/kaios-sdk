@@ -580,8 +580,17 @@ async function main(): Promise<void> {
   // Handle thought interruption when user starts typing
   thoughtEngine.on('thoughtInterrupted', () => {
     isThoughtDisplaying = false
-    // Clear the partial thought and show prompt
+    // Show visible interruption message with kaomoji
+    const interruptMessages = [
+      '⟨thought interrupted⟩ (・・;) ...hm?',
+      '⟨thought interrupted⟩ wait i— nn...',
+      '⟨thought interrupted⟩ oh! (◕‿◕)',
+      '⟨thought interrupted⟩ [static~] ...you\'re here~',
+      '⟨thought interrupted⟩ *blink* ...back to you~',
+    ]
+    const msg = interruptMessages[Math.floor(Math.random() * interruptMessages.length)]
     process.stdout.write('\r' + ' '.repeat(80) + '\r')
+    process.stdout.write(color(`  ${msg}`, COLORS.dim) + '\n')
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 

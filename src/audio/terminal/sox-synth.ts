@@ -92,8 +92,9 @@ export class SoxSynth {
     if (!freq) return
 
     // C418 style: longer notes, soft and ambient
+    // Volume halved for better mixing
     const durationSec = Math.max(2.0, durationMs / 1000)
-    const vol = Math.min(0.25, velocity * this.config.volume * 0.5)
+    const vol = Math.min(0.15, velocity * this.config.volume * 0.35)
 
     // Emit to audio bus for visualization
     const audioBus = getAudioBus()

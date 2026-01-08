@@ -869,16 +869,16 @@ export class PianoEngine extends EventEmitter {
 
         this.state.phrasesPlayed++
 
-        // BREATHING ROOM - essential for C418 feel
-        // Music needs space. Notes need room to resonate.
-        const baseWait = style === 'c418' ? 5000 : style === 'ambient' ? 4500 : style === 'joji' ? 5500 : style === 'yeule' ? 4000 : 3500
-        const variance = baseWait * 0.6
+        // REDUCED GAPS - still breathing but more continuous
+        // Music flows more naturally, less silence
+        const baseWait = style === 'c418' ? 1800 : style === 'ambient' ? 2000 : style === 'joji' ? 2500 : style === 'yeule' ? 1500 : 1500
+        const variance = baseWait * 0.5
 
-        // Occasional longer pause for dramatic effect
-        const dramaticPause = Math.random() < 0.2 ? 3000 + Math.random() * 4000 : 0
+        // Occasional longer pause for phrasing (less frequent, shorter)
+        const dramaticPause = Math.random() < 0.1 ? 1500 + Math.random() * 2000 : 0
 
         // Rubato - organic tempo variation
-        const rubato = (Math.random() - 0.5) * 1000
+        const rubato = (Math.random() - 0.5) * 600
 
         await this.sleep(baseWait + Math.random() * variance + dramaticPause + rubato)
       }

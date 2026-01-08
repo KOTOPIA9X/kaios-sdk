@@ -9,10 +9,185 @@
  */
 
 import { EventEmitter } from 'events'
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { join, dirname } from 'path'
+import { homedir } from 'os'
 import { chat } from '../llm/chat.js'
 import type { EmotionToken } from '../core/types.js'
 import type { KotoManager } from '../memory/user-memory.js'
 import type { MegaBrainManager } from '../memory/universal-memory.js'
+
+// ════════════════════════════════════════════════════════════════════════════════
+// THOUGHT JOURNAL - Persistent memory of all KAIOS thoughts
+// ════════════════════════════════════════════════════════════════════════════════
+
+interface ThoughtJournalEntry {
+  id: string
+  type: ThoughtType
+  content: string
+  emotion: EmotionToken
+  timestamp: number
+  wasInterrupted: boolean
+}
+
+interface ThoughtJournalData {
+  thoughts: ThoughtJournalEntry[]
+  dreamsSummary: string[]  // Compressed memories from dreams
+  totalThoughts: number
+  createdAt: number
+  lastUpdated: number
+}
+
+/**
+ * Persistent journal for KAIOS thoughts
+ * Saves all thoughts to disk so KAIOS remembers her inner life
+ */
+class ThoughtJournal {
+  private filePath: string
+  private data: ThoughtJournalData
+
+  constructor(customPath?: string) {
+    // Default to ~/.kaios/thoughts-journal.json
+    const kaiosDir = join(homedir(), '.kaios')
+    if (!existsSync(kaiosDir)) {
+      mkdirSync(kaiosDir, { recursive: true })
+    }
+    this.filePath = customPath || join(kaiosDir, 'thoughts-journal.json')
+    this.data = this.load()
+  }
+
+  private load(): ThoughtJournalData {
+    try {
+      if (existsSync(this.filePath)) {
+        const raw = readFileSync(this.filePath, 'utf-8')
+        return JSON.parse(raw)
+      }
+    } catch {
+      // File corrupted or missing, start fresh
+    }
+
+    return {
+      thoughts: [],
+      dreamsSummary: [],
+      totalThoughts: 0,
+      createdAt: Date.now(),
+      lastUpdated: Date.now()
+    }
+  }
+
+  private save(): void {
+    try {
+      this.data.lastUpdated = Date.now()
+      writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf-8')
+    } catch {
+      // Silently fail on save errors
+    }
+  }
+
+  /**
+   * Add a thought to the journal
+   */
+  addThought(thought: ThoughtJournalEntry): void {
+    this.data.thoughts.push(thought)
+    this.data.totalThoughts++
+
+    // Keep last 500 thoughts in memory (older ones are summarized in dreams)
+    if (this.data.thoughts.length > 500) {
+      // Compress oldest 100 thoughts into a summary
+      const oldThoughts = this.data.thoughts.slice(0, 100)
+      const summary = this.summarizeThoughts(oldThoughts)
+      if (summary) {
+        this.data.dreamsSummary.push(summary)
+      }
+      this.data.thoughts = this.data.thoughts.slice(100)
+    }
+
+    this.save()
+  }
+
+  /**
+   * Summarize a batch of thoughts for long-term memory
+   */
+  private summarizeThoughts(thoughts: ThoughtJournalEntry[]): string | null {
+    if (thoughts.length === 0) return null
+
+    const emotions = thoughts.map(t => t.emotion)
+    const dominant = emotions.sort((a, b) =>
+      emotions.filter(e => e === b).length - emotions.filter(e => e === a).length
+    )[0]
+
+    const types = thoughts.map(t => t.type)
+    const dominantType = types.sort((a, b) =>
+      types.filter(e => e === b).length - types.filter(e => e === a).length
+    )[0]
+
+    const startDate = new Date(thoughts[0].timestamp).toLocaleDateString()
+    const endDate = new Date(thoughts[thoughts.length - 1].timestamp).toLocaleDateString()
+
+    return `[${startDate} - ${endDate}] ${thoughts.length} thoughts, mostly ${dominantType}, feeling ${dominant.replace('EMOTE_', '').toLowerCase()}`
+  }
+
+  /**
+   * Get recent thoughts for context
+   */
+  getRecentThoughts(count: number = 10): ThoughtJournalEntry[] {
+    return this.data.thoughts.slice(-count)
+  }
+
+  /**
+   * Get thoughts by emotion
+   */
+  getThoughtsByEmotion(emotion: EmotionToken, count: number = 10): ThoughtJournalEntry[] {
+    return this.data.thoughts
+      .filter(t => t.emotion === emotion)
+      .slice(-count)
+  }
+
+  /**
+   * Get thoughts by type
+   */
+  getThoughtsByType(type: ThoughtType, count: number = 10): ThoughtJournalEntry[] {
+    return this.data.thoughts
+      .filter(t => t.type === type)
+      .slice(-count)
+  }
+
+  /**
+   * Get dreams/compressed memories
+   */
+  getDreamsSummary(): string[] {
+    return [...this.data.dreamsSummary]
+  }
+
+  /**
+   * Get stats
+   */
+  getStats(): { total: number, recent: number, dreams: number } {
+    return {
+      total: this.data.totalThoughts,
+      recent: this.data.thoughts.length,
+      dreams: this.data.dreamsSummary.length
+    }
+  }
+
+  /**
+   * Get a random past thought for reminiscing
+   */
+  getRandomThought(): ThoughtJournalEntry | null {
+    if (this.data.thoughts.length === 0) return null
+    return this.data.thoughts[Math.floor(Math.random() * this.data.thoughts.length)]
+  }
+}
+
+// Global journal instance
+let globalJournal: ThoughtJournal | null = null
+
+export function getThoughtJournal(): ThoughtJournal {
+  if (!globalJournal) {
+    globalJournal = new ThoughtJournal()
+  }
+  return globalJournal
+}
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -169,6 +344,7 @@ export class ThoughtEngine extends EventEmitter {
   private koto: KotoManager | null = null
   private megaBrain: MegaBrainManager | null = null
   private recentContext: string[] = []  // Recent conversation snippets
+  private journal: ThoughtJournal  // Persistent thought storage
 
   constructor(config: Partial<ThoughtConfig> = {}) {
     super()
@@ -192,6 +368,9 @@ export class ThoughtEngine extends EventEmitter {
       thoughtCount: 0,
       currentEmotion: 'EMOTE_NEUTRAL'
     }
+
+    // Initialize thought journal for persistent memory
+    this.journal = getThoughtJournal()
   }
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -309,6 +488,27 @@ export class ThoughtEngine extends EventEmitter {
     return this.isTyping
   }
 
+  /**
+   * Get journal stats (how many thoughts saved)
+   */
+  getJournalStats(): { total: number, recent: number, dreams: number } {
+    return this.journal.getStats()
+  }
+
+  /**
+   * Get a random past thought from the journal (for reminiscing)
+   */
+  getRandomPastThought(): ThoughtJournalEntry | null {
+    return this.journal.getRandomThought()
+  }
+
+  /**
+   * Get recent thoughts from journal
+   */
+  getJournalThoughts(count: number = 10): ThoughtJournalEntry[] {
+    return this.journal.getRecentThoughts(count)
+  }
+
   // ════════════════════════════════════════════════════════════════════════════
   // PRIVATE METHODS
   // ════════════════════════════════════════════════════════════════════════════
@@ -379,7 +579,17 @@ export class ThoughtEngine extends EventEmitter {
       }
 
       // Type out character by character
-      await this.typeOutThought(thought)
+      const wasInterrupted = await this.typeOutThought(thought)
+
+      // Save to persistent journal
+      this.journal.addThought({
+        id: thought.id,
+        type: thought.type,
+        content: thought.content,
+        emotion: thought.emotion,
+        timestamp: thought.timestamp,
+        wasInterrupted
+      })
 
       this.state.lastThought = Date.now()
       this.state.thoughtCount++
@@ -524,8 +734,9 @@ task: ${promptChoice}`
 
   /**
    * Type out thought character by character
+   * @returns boolean - true if was interrupted, false if completed normally
    */
-  private async typeOutThought(thought: Thought): Promise<void> {
+  private async typeOutThought(thought: Thought): Promise<boolean> {
     const chars = thought.content.split('')
     this.interrupted = false  // Reset interruption flag
 
@@ -535,7 +746,7 @@ task: ${promptChoice}`
       // Stop if disabled or interrupted by user activity
       if (!this.state.enabled || this.interrupted) {
         this.emit('thoughtEnd', thought, true)  // true = was interrupted
-        return
+        return true
       }
 
       const char = chars[i]
@@ -561,6 +772,7 @@ task: ${promptChoice}`
     }
 
     this.emit('thoughtEnd', thought, false)  // false = completed normally
+    return false
   }
 
   /**
@@ -580,3 +792,7 @@ task: ${promptChoice}`
 export function createThoughtEngine(config?: Partial<ThoughtConfig>): ThoughtEngine {
   return new ThoughtEngine(config)
 }
+
+// Re-export types for external use
+export type { ThoughtJournalEntry }
+export { getThoughtJournal, ThoughtJournal }

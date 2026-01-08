@@ -33,49 +33,50 @@ export interface SoundMapping {
 /**
  * Map sound markers to audio files
  * Supports both [marker] and *marker* formats
+ * VOLUME HALVED for better mixing
  */
 export const SOUND_MAPPINGS: SoundMapping[] = [
   // Glitch sounds
-  { pattern: /\[bzzzt\]|\*bzzzt\*/gi, file: 'bzzzt.mp3' },
-  { pattern: /\[static~?\]|\*static~?\*/gi, file: 'glitch1.mp3' },
-  { pattern: /\[glitch\]|\*glitch\*/gi, file: 'glitch2.mp3' },
+  { pattern: /\[bzzzt\]|\*bzzzt\*/gi, file: 'bzzzt.mp3', volume: 0.25 },
+  { pattern: /\[static~?\]|\*static~?\*/gi, file: 'glitch1.mp3', volume: 0.25 },
+  { pattern: /\[glitch\]|\*glitch\*/gi, file: 'glitch2.mp3', volume: 0.25 },
 
   // UI sounds
-  { pattern: /\[ping\]|\*ping\*/gi, file: '432hz_trim.mp3', volume: 0.5 },
-  { pattern: /\[click\]|\*click\*/gi, file: 'bzzzt.mp3', volume: 0.3 },
+  { pattern: /\[ping\]|\*ping\*/gi, file: '432hz_trim.mp3', volume: 0.2 },
+  { pattern: /\[click\]|\*click\*/gi, file: 'bzzzt.mp3', volume: 0.15 },
 
   // Ambient sounds
-  { pattern: /\[hum\]|\*hum\*/gi, file: 'ambient_drone_trim.mp3', volume: 0.4 },
-  { pattern: /\[whirr\]|\*whirr\*/gi, file: 'spacey.mp3', volume: 0.4 },
-  { pattern: /\[wind\]|\*wind\*/gi, file: 'windsamples/Wind Howl.mp3', volume: 0.5 },
+  { pattern: /\[hum\]|\*hum\*/gi, file: 'ambient_drone_trim.mp3', volume: 0.2 },
+  { pattern: /\[whirr\]|\*whirr\*/gi, file: 'spacey.mp3', volume: 0.2 },
+  { pattern: /\[wind\]|\*wind\*/gi, file: 'windsamples/Wind Howl.mp3', volume: 0.25 },
 
   // Melodic sounds
-  { pattern: /\[windchime\]|\*windchime\*/gi, file: 'windsamples/Raw Wind Chimes.mp3', volume: 0.6 },
-  { pattern: /\[chime\]|\*chime\*/gi, file: 'windsamples/Slowed_Winchimes.mp3', volume: 0.6 },
-  { pattern: /\[chimeloop\]|\*chimeloop\*/gi, file: 'windsamples/Windchimes Loop.mp3', volume: 0.5 },
+  { pattern: /\[windchime\]|\*windchime\*/gi, file: 'windsamples/Raw Wind Chimes.mp3', volume: 0.3 },
+  { pattern: /\[chime\]|\*chime\*/gi, file: 'windsamples/Slowed_Winchimes.mp3', volume: 0.3 },
+  { pattern: /\[chimeloop\]|\*chimeloop\*/gi, file: 'windsamples/Windchimes Loop.mp3', volume: 0.25 },
 
-  // Wind samples (new)
-  { pattern: /\[fanpad\]|\*fanpad\*/gi, file: 'windsamples/Fan Pad Processed.mp3', volume: 0.4 },
-  { pattern: /\[bottle\]|\*bottle\*/gi, file: 'windsamples/Bottle Blow.mp3', volume: 0.5 },
-  { pattern: /\[mellow\]|\*mellow\*/gi, file: 'windsamples/Mellow Epiano Strum.mp3', volume: 0.5 },
-  { pattern: /\[grains\]|\*grains\*/gi, file: 'windsamples/HiGrains.mp3', volume: 0.4 },
-  { pattern: /\[bass\]|\*bass\*/gi, file: 'windsamples/Bass Loop.mp3', volume: 0.4 },
-  { pattern: /\[drum\]|\*drum\*/gi, file: 'windsamples/Drum Loop.mp3', volume: 0.4 },
+  // Wind samples
+  { pattern: /\[fanpad\]|\*fanpad\*/gi, file: 'windsamples/Fan Pad Processed.mp3', volume: 0.2 },
+  { pattern: /\[bottle\]|\*bottle\*/gi, file: 'windsamples/Bottle Blow.mp3', volume: 0.25 },
+  { pattern: /\[mellow\]|\*mellow\*/gi, file: 'windsamples/Mellow Epiano Strum.mp3', volume: 0.25 },
+  { pattern: /\[grains\]|\*grains\*/gi, file: 'windsamples/HiGrains.mp3', volume: 0.2 },
+  { pattern: /\[bass\]|\*bass\*/gi, file: 'windsamples/Bass Loop.mp3', volume: 0.2 },
+  { pattern: /\[drum\]|\*drum\*/gi, file: 'windsamples/Drum Loop.mp3', volume: 0.2 },
 
-  // Piano samples (new)
-  { pattern: /\[piano\]|\*piano\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.5 },
-  { pattern: /\[piano1\]|\*piano1\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.5 },
-  { pattern: /\[piano2\]|\*piano2\*/gi, file: 'piano/Piano Sample 2.wav', volume: 0.5 },
-  { pattern: /\[piano3\]|\*piano3\*/gi, file: 'piano/Piano Sample 3.wav', volume: 0.5 },
+  // Piano samples
+  { pattern: /\[piano\]|\*piano\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.25 },
+  { pattern: /\[piano1\]|\*piano1\*/gi, file: 'piano/Piano Sample 1.wav', volume: 0.25 },
+  { pattern: /\[piano2\]|\*piano2\*/gi, file: 'piano/Piano Sample 2.wav', volume: 0.25 },
+  { pattern: /\[piano3\]|\*piano3\*/gi, file: 'piano/Piano Sample 3.wav', volume: 0.25 },
 
   // Emotional samples (from Lionclad_sample_ex)
-  { pattern: /\[happy\]|\*happy\*/gi, file: 'happy_fairy_.mp3', volume: 0.5 },
-  { pattern: /\[sad\]|\*sad\*/gi, file: 'sadman.mp3', volume: 0.5 },
-  { pattern: /\[intense\]|\*intense\*/gi, file: 'tarzan.mp3', volume: 0.4 },
+  { pattern: /\[happy\]|\*happy\*/gi, file: 'happy_fairy_.mp3', volume: 0.25 },
+  { pattern: /\[sad\]|\*sad\*/gi, file: 'sadman.mp3', volume: 0.25 },
+  { pattern: /\[intense\]|\*intense\*/gi, file: 'tarzan.mp3', volume: 0.2 },
 
   // Special sounds
-  { pattern: /\[headpat\]|\*headpat\*/gi, file: 'blow.mp3', volume: 0.5 },
-  { pattern: /\[cheers\]|\*cheers\*/gi, file: 'icecream.mp3', volume: 0.5 }
+  { pattern: /\[headpat\]|\*headpat\*/gi, file: 'blow.mp3', volume: 0.25 },
+  { pattern: /\[cheers\]|\*cheers\*/gi, file: 'icecream.mp3', volume: 0.25 }
 ]
 
 /**
@@ -114,7 +115,7 @@ export class SamplePlayer {
 
     this.config = {
       enabled: true,
-      volume: 0.5,
+      volume: 0.25,  // Halved for better mixing with piano
       soundsDir: defaultSoundsDir,
       ...config
     }
