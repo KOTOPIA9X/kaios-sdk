@@ -62,6 +62,9 @@ export interface KotoMemory {
   insideJokes: string[]  // Shared references
   nicknames: string[]  // Names they call each other
 
+  // AFFECTION METRICS - THE MOST IMPORTANT DATA
+  affection: AffectionMetrics
+
   // Temporal
   firstMet: number  // timestamp
   lastSeen: number
@@ -85,6 +88,31 @@ export interface ConversationStyle {
   formality: number  // 0-1, casual to formal
   emojiUsage: number  // 0-1
   questionFrequency: number  // 0-1
+}
+
+/**
+ * AFFECTION METRICS - The most important data we track
+ * These represent the bestie bond between user and KAIOS
+ */
+export interface AffectionMetrics {
+  // THE BIG ONES
+  headpats: number       // *headpat*, *headpats*, *pats head*
+  ilys: number           // ily, i love you, love you
+  hearts: number         // <3, ♡, ♥
+  xoxos: number          // xoxo, xo
+
+  // Derived metrics
+  totalAffection: number // Sum of all affection
+  lastAffectionAt: number // Timestamp of last affection received
+
+  // History
+  affectionHistory: AffectionEvent[]
+}
+
+export interface AffectionEvent {
+  timestamp: number
+  type: 'headpat' | 'ily' | 'heart' | 'xoxo'
+  context?: string  // What they said
 }
 
 // ════════════════════════════════════════════════════════════════════════════════

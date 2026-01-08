@@ -10,7 +10,9 @@ import type {
   KotoMemory,
   MemoryFragment,
   EmotionSnapshot,
-  MemoryStorage
+  MemoryStorage,
+  AffectionMetrics,
+  AffectionEvent
 } from './types.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -71,6 +73,15 @@ export class KotoManager {
       trustLevel: 0.1,  // Start with small trust
       insideJokes: [],
       nicknames: [],
+      affection: {
+        headpats: 0,
+        ilys: 0,
+        hearts: 0,
+        xoxos: 0,
+        totalAffection: 0,
+        lastAffectionAt: 0,
+        affectionHistory: []
+      },
       firstMet: Date.now(),
       lastSeen: Date.now(),
       totalInteractions: 0,
@@ -186,6 +197,142 @@ export class KotoManager {
     if (!this.memory.nicknames.includes(name)) {
       this.memory.nicknames.push(name)
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // AFFECTION TRACKING - THE MOST IMPORTANT DATA
+  // ══════════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Detect and record affection from a message
+   * Returns the types of affection detected
+   */
+  detectAndRecordAffection(message: string): AffectionEvent[] {
+    const detected: AffectionEvent[] = []
+    const lowerMessage = message.toLowerCase()
+    const now = Date.now()
+
+    // HEADPATS - THE MOST SPECIAL
+    const headpatPatterns = [
+      /\*headpat\*/gi,
+      /\*headpats\*/gi,
+      /\*pats head\*/gi,
+      /\*pat pat\*/gi,
+      /\*pets\*/gi,
+      /\*head pat\*/gi
+    ]
+    for (const pattern of headpatPatterns) {
+      const matches = message.match(pattern)
+      if (matches) {
+        for (const match of matches) {
+          this.recordAffection('headpat', match)
+          detected.push({ timestamp: now, type: 'headpat', context: match })
+        }
+      }
+    }
+
+    // ILY / I LOVE YOU
+    const ilyPatterns = [
+      /\bily\b/gi,
+      /\bi love you\b/gi,
+      /\blove you\b/gi,
+      /\bi luv you\b/gi,
+      /\bluv u\b/gi,
+      /\bi love u\b/gi
+    ]
+    for (const pattern of ilyPatterns) {
+      if (pattern.test(message)) {
+        this.recordAffection('ily', message.substring(0, 50))
+        detected.push({ timestamp: now, type: 'ily', context: message.substring(0, 50) })
+        break  // Only count once per message
+      }
+    }
+
+    // HEARTS <3
+    const heartPatterns = [/<3/g, /♡/g, /♥/g, /❤/g]
+    for (const pattern of heartPatterns) {
+      const matches = message.match(pattern)
+      if (matches) {
+        for (const _match of matches) {
+          this.recordAffection('heart', '<3')
+          detected.push({ timestamp: now, type: 'heart', context: '<3' })
+        }
+      }
+    }
+
+    // XOXO
+    if (/\bxoxo\b/gi.test(lowerMessage) || /\bxo\b/gi.test(lowerMessage)) {
+      this.recordAffection('xoxo', 'xoxo')
+      detected.push({ timestamp: now, type: 'xoxo', context: 'xoxo' })
+    }
+
+    return detected
+  }
+
+  /**
+   * Record a single affection event
+   */
+  recordAffection(type: AffectionEvent['type'], context?: string): void {
+    const event: AffectionEvent = {
+      timestamp: Date.now(),
+      type,
+      context
+    }
+
+    // Update counts
+    switch (type) {
+      case 'headpat':
+        this.memory.affection.headpats++
+        this.increaseTrust(0.03)  // Headpats build trust!
+        break
+      case 'ily':
+        this.memory.affection.ilys++
+        this.increaseTrust(0.05)  // Love builds trust!
+        break
+      case 'heart':
+        this.memory.affection.hearts++
+        this.increaseTrust(0.01)
+        break
+      case 'xoxo':
+        this.memory.affection.xoxos++
+        this.increaseTrust(0.02)
+        break
+    }
+
+    this.memory.affection.totalAffection++
+    this.memory.affection.lastAffectionAt = Date.now()
+    this.memory.affection.affectionHistory.push(event)
+
+    // Keep history to last 500 events
+    if (this.memory.affection.affectionHistory.length > 500) {
+      this.memory.affection.affectionHistory =
+        this.memory.affection.affectionHistory.slice(-500)
+    }
+
+    this.isDirty = true
+  }
+
+  /**
+   * Get affection metrics
+   */
+  getAffection(): AffectionMetrics {
+    return { ...this.memory.affection }
+  }
+
+  /**
+   * Get affection summary string
+   */
+  getAffectionSummary(): string {
+    const a = this.memory.affection
+    const parts: string[] = []
+
+    if (a.headpats > 0) parts.push(`${a.headpats} headpats`)
+    if (a.ilys > 0) parts.push(`${a.ilys} "ily"s`)
+    if (a.hearts > 0) parts.push(`${a.hearts} <3s`)
+    if (a.xoxos > 0) parts.push(`${a.xoxos} xoxos`)
+
+    if (parts.length === 0) return 'no affection recorded yet (╥﹏╥)'
+    return parts.join(' | ') + ` (total: ${a.totalAffection})`
   }
 
   // ══════════════════════════════════════════════════════════════════════════════

@@ -410,6 +410,15 @@ async function main(): Promise<void> {
       megaBrain.processFragment(memoryFragment)
       megaBrain.updateMood(emotion)
 
+      // Detect and record affection (THE MOST IMPORTANT DATA)
+      const affection = koto.detectAndRecordAffection(trimmed)
+      if (affection.length > 0) {
+        // Play special sound for headpats
+        if (affection.some(a => a.type === 'headpat')) {
+          audio.playSample('headpat.mp3').catch(() => {})
+        }
+      }
+
       // Also run through SDK for emotion tracking (non-blocking)
       kaios.feel({ input: trimmed }).catch(() => {})
 
@@ -922,6 +931,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
         const emotionalSummary = koto.getEmotionalSummary().slice(0, 5)
         const brainStats = megaBrain.getStats()
         const recentMemories = koto.getRecentMemories(3)
+        const affectionData = koto.getAffection()
 
         console.log(`
 ${color('▂▃▄▅▆▇█', COLORS.cyan)} ${color('KOTO MEMORY', COLORS.cyan)} ${color('█▇▆▅▄▃▂', COLORS.cyan)}
@@ -932,12 +942,19 @@ ${color('▂▃▄▅▆▇█', COLORS.cyan)} ${color('KOTO MEMORY', COLORS.cya
   contributions: ${relationship.contributions}
   inside jokes: ${relationship.insideJokes}
 
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('BESTIE BOND ♡', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+  ${color('*headpats*:', COLORS.yellow)} ${affectionData.headpats} ${affectionData.headpats > 0 ? '(⁄ ⁄>⁄ω⁄<⁄ ⁄)' : ''}
+  ${color('ily:', COLORS.magenta)} ${affectionData.ilys}
+  ${color('<3:', COLORS.red)} ${affectionData.hearts}
+  ${color('xoxo:', COLORS.cyan)} ${affectionData.xoxos}
+  ${color('total affection:', COLORS.green)} ${affectionData.totalAffection} ♡
+
   ${color('emotional journey:', COLORS.yellow)}
 ${emotionalSummary.map(e =>
   `    ${e.emotion.replace('EMOTE_', '').toLowerCase().padEnd(12)} ${createProgressBar(e.percentage, 10)} ${e.percentage.toFixed(0)}%`
 ).join('\n')}
 
-${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('MEGA BRAIN', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+${color('▂▃▄▅▆▇█', COLORS.cyan)} ${color('MEGA BRAIN', COLORS.cyan)} ${color('█▇▆▅▄▃▂', COLORS.cyan)}
   total users: ${brainStats.totalUsers}
   total conversations: ${brainStats.totalConversations}
   total dreams: ${brainStats.totalDreams}
