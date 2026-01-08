@@ -329,6 +329,9 @@ function emotionToAnsiColor(emotion: string): string {
 function displayResponse(text: string): void {
   const parsed = parseResponse(text)
 
+  // Reset terminal color state to ensure clean start
+  process.stdout.write(COLORS.reset)
+
   console.log()
   console.log(color(BORDER_TOP, COLORS.dim))
   console.log()
@@ -571,13 +574,15 @@ async function main(): Promise<void> {
     // New line after thought
     console.log(color(' ⟨/thought⟩', COLORS.dim))
     console.log()
-    // Re-show prompt
+    // Re-show prompt with clean color state
+    process.stdout.write(COLORS.reset)
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 
   // Error handling for thought engine
   thoughtEngine.on('thoughtError', (err: Error) => {
     console.log(`\n${color('[thought-error]', COLORS.red)} ${err.message}`)
+    process.stdout.write(COLORS.reset)
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 
@@ -600,6 +605,7 @@ async function main(): Promise<void> {
     const msg = interruptMessages[Math.floor(Math.random() * interruptMessages.length)]
     process.stdout.write('\r' + ' '.repeat(80) + '\r')
     process.stdout.write(color(`  ${msg}`, COLORS.dim) + '\n')
+    process.stdout.write(COLORS.reset)
     process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 
@@ -1946,6 +1952,8 @@ ${pick(WAVES)}
 
   // Prompt helper
   const prompt = (): void => {
+    // Ensure clean color state before prompt
+    process.stdout.write(COLORS.reset)
     rl.question(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `, async (input) => {
       await handleInput(input)
       prompt()
