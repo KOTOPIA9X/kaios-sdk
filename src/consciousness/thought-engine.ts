@@ -164,6 +164,7 @@ export class ThoughtEngine extends EventEmitter {
   private idleCheckInterval: NodeJS.Timeout | null = null
   private currentThoughtTimeout: NodeJS.Timeout | null = null
   private isTyping = false
+  private interrupted = false  // User activity interrupts current thought
   private thoughtHistory: Thought[] = []
   private koto: KotoManager | null = null
   private megaBrain: MegaBrainManager | null = null
@@ -247,13 +248,16 @@ export class ThoughtEngine extends EventEmitter {
   }
 
   /**
-   * Record user activity (resets idle timer)
+   * Record user activity (resets idle timer and interrupts current thought)
    */
   recordActivity(): void {
     this.state.lastUserActivity = Date.now()
 
-    // If currently typing a thought, we can optionally interrupt
-    // For now, let the thought finish naturally
+    // Interrupt current thought if typing
+    if (this.isTyping) {
+      this.interrupted = true
+      this.emit('thoughtInterrupted')
+    }
   }
 
   /**
@@ -523,11 +527,16 @@ task: ${promptChoice}`
    */
   private async typeOutThought(thought: Thought): Promise<void> {
     const chars = thought.content.split('')
+    this.interrupted = false  // Reset interruption flag
 
     this.emit('thoughtStart', thought)
 
     for (let i = 0; i < chars.length; i++) {
-      if (!this.state.enabled) break  // Stop if disabled mid-thought
+      // Stop if disabled or interrupted by user activity
+      if (!this.state.enabled || this.interrupted) {
+        this.emit('thoughtEnd', thought, true)  // true = was interrupted
+        return
+      }
 
       const char = chars[i]
 
@@ -551,7 +560,7 @@ task: ${promptChoice}`
       await this.sleep(Math.max(10, delay))
     }
 
-    this.emit('thoughtEnd', thought)
+    this.emit('thoughtEnd', thought, false)  // false = completed normally
   }
 
   /**

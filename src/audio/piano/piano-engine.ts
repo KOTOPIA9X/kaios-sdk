@@ -94,6 +94,44 @@ const CHORDS = {
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
+// MUSICAL PROGRESSIONS - Real chord progressions that feel like actual music
+// ════════════════════════════════════════════════════════════════════════════════
+
+// C418-inspired progressions - warm, contemplative, Minecraft vibes
+const C418_PROGRESSIONS = [
+  // "Sweden" inspired - i - VI - III - VII
+  [{ root: 'A', chord: 'minor7', octave: 3 }, { root: 'F', chord: 'major7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
+  // "Wet Hands" inspired - very simple, just two chords alternating
+  [{ root: 'C', chord: 'add9', octave: 3 }, { root: 'G', chord: 'sus4', octave: 3 }],
+  // "Mice on Venus" inspired - playful, gentle
+  [{ root: 'G', chord: 'major7', octave: 3 }, { root: 'D', chord: 'add9', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }],
+  // "Haggstrom" inspired
+  [{ root: 'D', chord: 'major7', octave: 3 }, { root: 'A', chord: 'minor7', octave: 3 }, { root: 'E', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
+  // Ambient floating
+  [{ root: 'E', chord: 'minor7', octave: 3 }, { root: 'C', chord: 'major7', octave: 3 }, { root: 'G', chord: 'add9', octave: 3 }],
+  // Melancholic
+  [{ root: 'A', chord: 'minor7', octave: 3 }, { root: 'D', chord: 'minor7', octave: 3 }, { root: 'G', chord: 'major7', octave: 3 }, { root: 'C', chord: 'add9', octave: 3 }],
+]
+
+// Melodic motifs that get developed/varied (like a leitmotif)
+const MELODIC_MOTIFS = [
+  // Simple descending - C418's signature
+  ['E5', 'D5', 'C5'],
+  ['A4', 'G4', 'E4'],
+  ['C5', 'G4', 'E4'],
+  // Gentle ascending
+  ['C4', 'E4', 'G4'],
+  ['G4', 'A4', 'C5'],
+  // Question/answer pairs
+  ['E4', 'D4'],
+  ['G4', 'F4'],
+  // Single floating notes (very C418)
+  ['E5'],
+  ['A4'],
+  ['C5'],
+]
+
+// ════════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ════════════════════════════════════════════════════════════════════════════════
 
@@ -129,6 +167,12 @@ export interface PianoState {
   currentScale: string
   notesPlayed: number
   lastNote?: string
+  // Musical performance state
+  currentProgression: number  // Index into C418_PROGRESSIONS
+  progressionPosition: number // Current chord in progression
+  currentMotif: string[]      // The melodic motif being developed
+  dynamicLevel: number        // 0-1, for crescendo/decrescendo
+  phrasesPlayed: number       // Count for variety
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -442,7 +486,12 @@ export class PianoEngine extends EventEmitter {
       currentEmotion: 'EMOTE_NEUTRAL',
       currentKey: 'A',
       currentScale: 'minor',
-      notesPlayed: 0
+      notesPlayed: 0,
+      currentProgression: Math.floor(Math.random() * C418_PROGRESSIONS.length),
+      progressionPosition: 0,
+      currentMotif: MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)],
+      dynamicLevel: 0.35,
+      phrasesPlayed: 0
     }
   }
 
@@ -642,9 +691,9 @@ export class PianoEngine extends EventEmitter {
   }
 
   /**
-   * Play continuously until stopped - for ambient vibes
-   * Like C418's Minecraft soundtrack - lush, warm, alive
-   * Organic, breathing, with natural silences
+   * Play continuously until stopped - REAL musical performance
+   * Like C418's Minecraft soundtrack - with actual progressions, motifs, dynamics
+   * Music that BREATHES and DEVELOPS - not random notes
    */
   async playContinuous(style: 'joji' | 'yeule' | 'ambient' | 'c418' | 'mixed' = 'c418'): Promise<void> {
     if (!this.config.enabled) return
@@ -652,112 +701,186 @@ export class PianoEngine extends EventEmitter {
 
     this.state.isPlaying = true
     this.state.isContinuous = true
+    this.state.phrasesPlayed = 0
     this.emit('continuousStart', { style })
+
+    // Select a progression to follow for musical coherence
+    this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
+    this.state.progressionPosition = 0
+    this.state.currentMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
 
     const playLoop = async () => {
       while (this.state.isContinuous && this.config.enabled) {
-        const playType = Math.random()
-        const mood = EMOTION_MOODS[this.state.currentEmotion]
+        const progression = C418_PROGRESSIONS[this.state.currentProgression]
+        const currentChord = progression[this.state.progressionPosition]
 
-        // C418 style: lush, warm, ambient Minecraft-like piano
+        // Dynamic swell - slowly build and release over phrases
+        if (Math.random() < 0.15) {
+          // Occasionally shift dynamics
+          const dynamicChange = (Math.random() - 0.5) * 0.15
+          this.state.dynamicLevel = Math.max(0.2, Math.min(0.5, this.state.dynamicLevel + dynamicChange))
+        }
+
+        const velocity = this.state.dynamicLevel + (Math.random() - 0.5) * 0.08
+
+        // C418 STYLE - Musical, intentional, alive
         if (style === 'c418' || style === 'ambient') {
-          // Very organic timing - notes that breathe and linger
-          // Like "Sweden", "Wet Hands", "Mice on Venus"
+          const phraseType = Math.random()
 
-          if (playType < 0.25) {
-            // Single floating note - soft, long sustain
-            const octave = 3 + Math.floor(Math.random() * 2)  // Octave 3-4 (warm range)
-            const note = `${this.state.currentKey}${octave}`
-            await this.playNote(note, 3000 + Math.random() * 1500, 0.35)
+          if (phraseType < 0.35) {
+            // MOTIF DEVELOPMENT - play the current melodic motif with variations
+            const motif = this.state.currentMotif
+            const octaveShift = Math.random() < 0.3 ? (Math.random() < 0.5 ? -12 : 12) : 0
 
-          } else if (playType < 0.45) {
-            // Gentle arpeggio - the C418 signature
-            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            const octave = 3 + Math.floor(Math.random() * 2)
-            const chordNotes = getChordNotes(this.state.currentKey, chordType, octave)
-            // Play as arpeggio with long delays between notes
-            for (let i = 0; i < Math.min(chordNotes.length, 3); i++) {
-              setTimeout(() => {
-                this.playNote(chordNotes[i], 2500 + Math.random() * 1000, 0.3 - i * 0.02)
-              }, i * (250 + Math.random() * 150))
+            for (let i = 0; i < motif.length; i++) {
+              if (!this.state.isContinuous) break
+
+              // Vary the motif slightly - transpose, change rhythm
+              let note = motif[i]
+              if (octaveShift !== 0 && NOTE_FREQUENCIES[note]) {
+                const match = note.match(/([A-G]#?)(\d)/)
+                if (match) {
+                  const octave = parseInt(match[2]) + (octaveShift > 0 ? 1 : -1)
+                  if (octave >= 2 && octave <= 5) note = `${match[1]}${octave}`
+                }
+              }
+
+              const noteVelocity = velocity - (i * 0.03)  // Gentle falloff
+              const noteDuration = 2000 + Math.random() * 1500
+              await this.playNote(note, noteDuration, noteVelocity)
+
+              // Organic pause between notes - rubato
+              const pause = 400 + Math.random() * 800
+              await this.sleep(pause)
             }
 
-          } else if (playType < 0.6) {
-            // Warm chord - held, letting it breathe
-            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            const octave = 3  // Octave 3 for warmth
-            await this.playChord(this.state.currentKey, chordType, octave, 4000, 0.3)
-
-          } else if (playType < 0.7) {
-            // Two notes - an interval, like a question and answer
-            const phrase = this.generatePhrase(this.state.currentEmotion)
-            if (phrase.notes.length >= 2) {
-              await this.playNote(phrase.notes[0].pitch, 2500, 0.35)
-              await this.sleep(800 + Math.random() * 600)  // Longer pause between notes
-              await this.playNote(phrase.notes[1].pitch, 2000, 0.3)
+            // Sometimes vary the motif for next time
+            if (Math.random() < 0.25) {
+              this.state.currentMotif = MELODIC_MOTIFS[Math.floor(Math.random() * MELODIC_MOTIFS.length)]
             }
 
-          } else if (playType < 0.75) {
-            // Bass note underneath (like a pad)
-            const bassNote = `${this.state.currentKey}2`
-            await this.playNote(bassNote, 4000, 0.25)
+          } else if (phraseType < 0.6) {
+            // CHORD FROM PROGRESSION - arpeggiated, warm
+            const chordNotes = getChordNotes(
+              currentChord.root,
+              currentChord.chord as keyof typeof CHORDS,
+              currentChord.octave
+            )
+
+            // Arpeggiate the chord slowly, like C418
+            for (let i = 0; i < Math.min(chordNotes.length, 4); i++) {
+              if (!this.state.isContinuous) break
+              const noteVelocity = velocity - (i * 0.025)
+              const noteDuration = 2500 + Math.random() * 1000
+              await this.playNote(chordNotes[i], noteDuration, noteVelocity)
+
+              // Organic strum timing
+              const strumDelay = 200 + Math.random() * 300
+              await this.sleep(strumDelay)
+            }
+
+            // Advance progression
+            this.state.progressionPosition = (this.state.progressionPosition + 1) % progression.length
+
+            // Occasionally change progression for variety
+            if (this.state.progressionPosition === 0 && Math.random() < 0.3) {
+              this.state.currentProgression = Math.floor(Math.random() * C418_PROGRESSIONS.length)
+            }
+
+          } else if (phraseType < 0.75) {
+            // SINGLE FLOATING NOTE - the space between
+            // Use notes from current chord for harmonic coherence
+            const chordNotes = getChordNotes(
+              currentChord.root,
+              currentChord.chord as keyof typeof CHORDS,
+              currentChord.octave + 1  // Higher octave for shimmer
+            )
+            const note = chordNotes[Math.floor(Math.random() * chordNotes.length)]
+            await this.playNote(note, 3500 + Math.random() * 2000, velocity * 0.9)
+
+          } else if (phraseType < 0.85) {
+            // BASS FOUNDATION - grounding
+            const bassNote = `${currentChord.root}2`
+            await this.playNote(bassNote, 4000 + Math.random() * 1500, velocity * 0.7)
+
           }
-          // else: 25% silence - very important for breathing
-
-        } else if (style === 'mixed') {
-          // Mix of styles
-          if (playType < 0.35) {
-            const phrase = this.generatePhrase(this.state.currentEmotion)
-            const note = phrase.notes[Math.floor(Math.random() * phrase.notes.length)]
-            await this.playNote(note.pitch, 2000, note.velocity * 0.4)
-          } else if (playType < 0.6) {
-            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            const octave = 2 + Math.floor(Math.random() * 2)
-            await this.playChord(this.state.currentKey, chordType, octave, 3000, 0.3)
-          } else if (playType < 0.75) {
-            const phrase = this.generatePhrase(this.state.currentEmotion)
-            if (phrase.notes.length >= 2) {
-              await this.playNote(phrase.notes[0].pitch, 2000, 0.35)
-              await this.sleep(400 + Math.random() * 400)
-              await this.playNote(phrase.notes[1].pitch, 1800, 0.3)
-            }
-          }
+          // else: ~15% SILENCE - essential for breathing
 
         } else if (style === 'joji') {
-          // Sparse, melancholic - more silence, deeper notes
-          if (playType < 0.3) {
-            const note = `${this.state.currentKey}3`
-            await this.playNote(note, 2000, 0.35)
-          } else if (playType < 0.5) {
-            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            await this.playChord(this.state.currentKey, chordType, 2, 3000, 0.3)
-          } else if (playType < 0.65) {
+          // Sparse, melancholic - deeper, more space
+          const phraseType = Math.random()
+
+          if (phraseType < 0.4) {
+            // Slow melodic descent
+            const notes = ['A4', 'G4', 'E4', 'D4']
+            for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+              if (!this.state.isContinuous) break
+              await this.playNote(notes[i % notes.length], 2500, velocity - (i * 0.04))
+              await this.sleep(600 + Math.random() * 800)
+            }
+          } else if (phraseType < 0.6) {
             const phrases = JOJI_PHRASES
             const phrase = phrases[Math.floor(Math.random() * phrases.length)]
             await this.playPhrase(phrase)
           }
 
         } else if (style === 'yeule') {
-          // Ethereal, sparse, high notes
-          if (playType < 0.3) {
-            const note = `${this.state.currentKey}5`
-            await this.playNote(note, 2500, 0.3)
-          } else if (playType < 0.5) {
-            const chordType = mood.chords[Math.floor(Math.random() * mood.chords.length)]
-            await this.playChord(this.state.currentKey, chordType, 4, 3000, 0.25)
-          } else if (playType < 0.6) {
+          // Ethereal, high, occasionally glitchy
+          const phraseType = Math.random()
+
+          if (phraseType < 0.35) {
+            // High ethereal notes
+            const highNotes = ['E5', 'G5', 'B4', 'C5', 'A4']
+            const note = highNotes[Math.floor(Math.random() * highNotes.length)]
+            await this.playNote(note, 3000 + Math.random() * 1500, velocity * 0.75)
+          } else if (phraseType < 0.55) {
             const phrases = YEULE_PHRASES
             const phrase = phrases[Math.floor(Math.random() * phrases.length)]
             await this.playPhrase(phrase)
+          } else if (phraseType < 0.65) {
+            // Glitch cluster
+            const clusterNotes = ['F#4', 'G4', 'A4']
+            for (const note of clusterNotes) {
+              this.playNote(note, 300 + Math.random() * 200, velocity * 0.6)
+              await this.sleep(50 + Math.random() * 100)
+            }
+          }
+
+        } else if (style === 'mixed') {
+          // Mix of all styles
+          const styleChoice = Math.random()
+          if (styleChoice < 0.4) {
+            // C418 motif
+            const motif = this.state.currentMotif
+            for (const note of motif.slice(0, 2)) {
+              await this.playNote(note, 2000, velocity)
+              await this.sleep(400 + Math.random() * 400)
+            }
+          } else if (styleChoice < 0.6) {
+            // Chord arpeggio
+            const chordNotes = getChordNotes(currentChord.root, currentChord.chord as keyof typeof CHORDS, currentChord.octave)
+            for (let i = 0; i < Math.min(3, chordNotes.length); i++) {
+              await this.playNote(chordNotes[i], 2000, velocity - (i * 0.03))
+              await this.sleep(250 + Math.random() * 200)
+            }
+            this.state.progressionPosition = (this.state.progressionPosition + 1) % progression.length
           }
         }
 
-        // C418-style breathing room - MUCH longer pauses
-        // This is what makes it feel alive and contemplative
-        const baseWait = style === 'c418' ? 6000 : style === 'ambient' ? 5500 : style === 'joji' ? 5000 : style === 'yeule' ? 5500 : 4500
-        const variance = baseWait * 0.7  // High variance
-        const humanPause = Math.random() < 0.25 ? 4000 + Math.random() * 3000 : 0  // Occasional long pause
-        await this.sleep(baseWait + Math.random() * variance + humanPause)
+        this.state.phrasesPlayed++
+
+        // BREATHING ROOM - essential for C418 feel
+        // Music needs space. Notes need room to resonate.
+        const baseWait = style === 'c418' ? 5000 : style === 'ambient' ? 4500 : style === 'joji' ? 5500 : style === 'yeule' ? 4000 : 3500
+        const variance = baseWait * 0.6
+
+        // Occasional longer pause for dramatic effect
+        const dramaticPause = Math.random() < 0.2 ? 3000 + Math.random() * 4000 : 0
+
+        // Rubato - organic tempo variation
+        const rubato = (Math.random() - 0.5) * 1000
+
+        await this.sleep(baseWait + Math.random() * variance + dramaticPause + rubato)
       }
     }
 

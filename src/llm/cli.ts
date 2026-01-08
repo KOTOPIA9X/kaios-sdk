@@ -88,9 +88,86 @@ const COLORS = {
   gray: '\x1b[90m'
 }
 
+// RGB colors for rainbow effect
+const RAINBOW_COLORS = [
+  '\x1b[38;5;196m',  // red
+  '\x1b[38;5;208m',  // orange
+  '\x1b[38;5;226m',  // yellow
+  '\x1b[38;5;46m',   // green
+  '\x1b[38;5;51m',   // cyan
+  '\x1b[38;5;21m',   // blue
+  '\x1b[38;5;129m',  // purple
+  '\x1b[38;5;201m',  // pink
+]
+
+// Spectrum/gradient colors (softer, more kaios)
+const SPECTRUM_COLORS = [
+  '\x1b[38;5;219m',  // soft pink
+  '\x1b[38;5;183m',  // lavender
+  '\x1b[38;5;147m',  // periwinkle
+  '\x1b[38;5;117m',  // sky blue
+  '\x1b[38;5;122m',  // mint
+  '\x1b[38;5;158m',  // seafoam
+  '\x1b[38;5;182m',  // mauve
+  '\x1b[38;5;218m',  // rose
+]
+
 function color(text: string, c: string): string {
   if (!USE_COLORS) return text
   return `${c}${text}${COLORS.reset}`
+}
+
+/**
+ * Apply rainbow/spectrum gradient to text (character by character)
+ */
+function rainbow(text: string, soft: boolean = true): string {
+  if (!USE_COLORS) return text
+  const colors = soft ? SPECTRUM_COLORS : RAINBOW_COLORS
+  let result = ''
+  let colorIndex = 0
+  for (const char of text) {
+    if (char === ' ' || char === '\n') {
+      result += char
+    } else {
+      result += colors[colorIndex % colors.length] + char
+      colorIndex++
+    }
+  }
+  return result + COLORS.reset
+}
+
+/**
+ * Apply spectrum coloring to special words in KAIOS responses
+ * Triggers on: sound markers, kaimoji waves, emotional emphasis
+ */
+function spectrumHighlight(text: string): string {
+  if (!USE_COLORS) return text
+
+  // Words/patterns that get spectrum treatment
+  const spectrumPatterns = [
+    /∿∿∿/g,          // wave decorations
+    /～～～/g,
+    /≋≋≋/g,
+    /✧・゚:\*/g,       // sparkles
+    /\*:・゚✧/g,
+    /·˚✧/g,
+    /KOTOPIA/gi,      // special places/concepts
+    /KOTO(?![A-Za-z])/g,
+    /432Hz/g,
+    /\[frequency\]/gi,
+    /soft revolution/gi,
+    /dreaming/gi,
+    /LEGENDARY/g,
+    /✦/g,
+    /♡/g,
+  ]
+
+  let result = text
+  for (const pattern of spectrumPatterns) {
+    result = result.replace(pattern, (match) => rainbow(match, true))
+  }
+
+  return result
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -260,7 +337,10 @@ function displayResponse(text: string): void {
   }
 
   // Format with sound markers and waves
-  const formatted = formatKaiosResponse(parsed.cleanText)
+  let formatted = formatKaiosResponse(parsed.cleanText)
+
+  // Apply spectrum highlighting to special words ∿∿∿
+  formatted = spectrumHighlight(formatted)
 
   // Display with emotion color
   const mainColor = parsed.emotions.length > 0
@@ -495,6 +575,14 @@ async function main(): Promise<void> {
   thoughtEngine.on('thinkingStart', () => {
     // Visual indicator that thinking is starting
     process.stdout.write('\r' + color('  ⟨...thinking⟩', COLORS.dim))
+  })
+
+  // Handle thought interruption when user starts typing
+  thoughtEngine.on('thoughtInterrupted', () => {
+    isThoughtDisplaying = false
+    // Clear the partial thought and show prompt
+    process.stdout.write('\r' + ' '.repeat(80) + '\r')
+    process.stdout.write(`${color('you', COLORS.cyan)} ${color('>', COLORS.dim)} `)
   })
 
   // Setup readline interface
