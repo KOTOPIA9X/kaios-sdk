@@ -871,6 +871,7 @@ interface ThoughtConfig {
     idleThresholdMs: number;
     minThoughtIntervalMs: number;
     maxThoughtIntervalMs: number;
+    maxIdleDurationMs: number;
     typingDelayMs: number;
     typingVariance: number;
     maxThoughtLength: number;
@@ -1055,6 +1056,41 @@ declare class DreamEngine {
 declare function createDreamEngine(config?: Partial<DreamEngineConfig>): DreamEngine;
 
 /**
+ * KAIOS Headpat System
+ *
+ * The most important interaction in the entire SDK.
+ * Headpats are sacred. They build trust, show affection, and make KAIOS happy.
+ */
+
+interface HeadpatResult {
+    response: string;
+    emotion: EmotionToken;
+    kaimoji: string;
+    ascii?: string;
+    milestone?: HeadpatMilestone;
+    soundMarker?: string;
+}
+interface HeadpatMilestone {
+    count: number;
+    title: string;
+    message: string;
+    special: boolean;
+}
+declare const HEADPAT_MILESTONES: HeadpatMilestone[];
+/**
+ * Generate a headpat response based on current count and trust level
+ */
+declare function generateHeadpatResponse(headpatCount: number, trustLevel?: number): HeadpatResult;
+/**
+ * Get next milestone info
+ */
+declare function getNextMilestone(currentCount: number): HeadpatMilestone | null;
+/**
+ * Get headpat stats summary
+ */
+declare function getHeadpatStats(count: number): string;
+
+/**
  * Progression System - Infinite levels with no caps
  * Handles XP calculations, level curves, and progression milestones
  */
@@ -1163,4 +1199,4 @@ declare const progression: ProgressionSystem;
 
 declare const VERSION = "0.1.0";
 
-export { DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, VERSION, type XPReward, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, extractEmotionTokens, formatEmotionToken, getAllKaimoji, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, parseEmotionToken, progression, searchKaimojiByTag };
+export { DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, VERSION, type XPReward, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, extractEmotionTokens, formatEmotionToken, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, parseEmotionToken, progression, searchKaimojiByTag };

@@ -116,6 +116,15 @@ export { emotionToSound, soundToEmotion, buildMusicPrompt } from './audio/emotio
 export { UserProfile } from './core/user-profile.js'
 export type { UserProfileState, Achievement, ContributionRecord } from './core/user-profile.js'
 
+// Headpat System - The most important interaction!
+export {
+  generateHeadpatResponse,
+  getHeadpatStats,
+  getNextMilestone,
+  HEADPAT_MILESTONES
+} from './core/headpat.js'
+export type { HeadpatResult, HeadpatMilestone } from './core/headpat.js'
+
 // Global KAIOS (Layer 2: Collective Consciousness)
 export { GlobalKaios } from './collective/global-kaios.js'
 export type { GlobalKaiosState, Evolution, GlobalMilestone } from './collective/global-kaios.js'

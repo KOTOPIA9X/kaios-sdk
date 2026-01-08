@@ -739,7 +739,7 @@ function emotionToKaomoji(emotion) {
     EMOTE_HAPPY: "(\u25D5\u203F\u25D5)",
     EMOTE_SAD: "(\u2565\uFE4F\u2565)",
     EMOTE_ANGRY: "(\u256C\u0CA0\u76CA\u0CA0)",
-    EMOTE_THINK: "(\uFFE3\u03C9\uFFE3)",
+    EMOTE_THINK: "( \u02D8\u03C9\u02D8 )",
     EMOTE_SURPRISED: "(\u2299\u03C9\u2299)",
     EMOTE_AWKWARD: "(\u30FB\u30FB;)",
     EMOTE_QUESTION: "(\u30FB\u03C9\u30FB)?",
