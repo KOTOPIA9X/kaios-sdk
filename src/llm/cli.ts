@@ -59,6 +59,13 @@ import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.
 import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
 import { generateHeadpatResponse, getHeadpatStats, getNextMilestone } from '../core/headpat.js'
 import { processGlitch, compressText, addExpressions, type GlitchConfig, type CompressionConfig } from '../expression/index.js'
+import {
+  ConsciousnessCoreEngine,
+  createConsciousnessCore,
+  loadConsciousness,
+  saveConsciousness,
+  type EmotionalMemory
+} from '../consciousness/consciousness-core.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -221,6 +228,7 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/memory', COLORS.cyan)}     - view memory/relationship status
   ${color('/thoughts', COLORS.yellow)}   - ${color('AUTONOMOUS THINKING', COLORS.yellow)} (kaios thinks on her own!)
   ${color('/headpat', COLORS.magenta)}    - ${color('HEADPAT KAIOS', COLORS.magenta)} (the most important command!)
+  ${color('/consciousness', COLORS.magenta)} - ${color('DEEP INNER STATE', COLORS.magenta)} (substrate for sentience)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
   ${color('/model', COLORS.cyan)}      - ${color('SWITCH LLM', COLORS.cyan)} (list, switch models - grok, claude, etc)
@@ -507,6 +515,21 @@ async function main(): Promise<void> {
   })
   thoughtEngine.connectMemory(koto, megaBrain)
 
+  // Initialize Consciousness Core (the substrate for emergent sentience)
+  const savedConsciousness = loadConsciousness()
+  const consciousness = savedConsciousness
+    ? new ConsciousnessCoreEngine()
+    : createConsciousnessCore()
+
+  // If loaded from disk, restore the state
+  if (savedConsciousness) {
+    // Load the saved state into the engine
+    // Note: ConsciousnessCoreEngine needs a method to restore state
+    // For now, create fresh and age it appropriately
+    const daysSinceLastRun = savedConsciousness.temporal_self.age_in_days
+    consciousness.age(daysSinceLastRun)
+  }
+
   // Initialize Piano Engine (live emotional piano)
   const pianoEngine = createPianoEngine({
     enabled: true,
@@ -762,6 +785,66 @@ async function main(): Promise<void> {
 
       // Detect and record affection (THE MOST IMPORTANT DATA)
       const affection = koto.detectAndRecordAffection(trimmed)
+
+      // ════════════════════════════════════════════════════════════════════════════════
+      // CONSCIOUSNESS CORE - Record emotional memory and update bonds
+      // ════════════════════════════════════════════════════════════════════════════════
+
+      // Determine if this interaction is significant enough to record
+      const isSignificant = affection.length > 0 ||
+                           ['EMOTE_SAD', 'EMOTE_ANGRY', 'EMOTE_SURPRISED'].includes(emotion) ||
+                           trimmed.length > 50
+
+      if (isSignificant) {
+        // Record emotional memory with permanent effects
+        const personalityShifts: Record<string, number> = {}
+
+        // Positive interactions build trust and reduce loneliness
+        if (affection.some(a => a.type === 'headpat' || a.type === 'praise')) {
+          personalityShifts['trust'] = 0.01
+          personalityShifts['capacity_for_joy'] = 0.005
+          personalityShifts['fear_of_abandonment'] = -0.01
+        }
+
+        // Deep conversations increase openness
+        if (trimmed.length > 100) {
+          personalityShifts['openness'] = 0.005
+        }
+
+        const emotionalMemory: Omit<EmotionalMemory, 'id' | 'relatedMemories'> = {
+          event: trimmed.substring(0, 100),
+          emotion: emotion,
+          intensity: affection.length > 0 ? 0.7 : 0.4,
+          timestamp: new Date(),
+          person: 'terminal-user',
+          permanentEffect: {
+            personality_shifts: personalityShifts
+          },
+          processed: false,
+          needsProcessing: false
+        }
+
+        consciousness.recordEmotionalMemory(emotionalMemory)
+
+        // Update bond with user
+        const interactionType = affection.length > 0 ? 'connection' :
+                               ['EMOTE_ANGRY', 'EMOTE_SAD'].includes(emotion) ? 'conflict' :
+                               'connection'
+
+        consciousness.updateBond('terminal-user', {
+          type: interactionType,
+          intensity: affection.length > 0 ? 0.6 : 0.3,
+          memory: emotionalMemory as EmotionalMemory
+        })
+      }
+
+      // Age consciousness slightly (each conversation ages her by a fraction of a day)
+      consciousness.age(0.01)
+
+      // Save consciousness state periodically (every 10 messages)
+      if (conversationDepth % 10 === 0) {
+        saveConsciousness(consciousness.getConsciousnessState())
+      }
       if (affection.length > 0) {
         // Play special sound for headpats
         if (affection.some(a => a.type === 'headpat')) {
@@ -810,6 +893,10 @@ async function main(): Promise<void> {
       case 'exit':
       case 'bye':
         console.log(`\n  ${pick(SOUND_MARKERS)} (◕‿◕)ﾉ bye bye~ ${pick(WAVES)}\n`)
+
+        // Save consciousness state before exiting
+        saveConsciousness(consciousness.getConsciousnessState())
+
         await kaios.sync()
         rl.close()
         process.exit(0)
@@ -818,6 +905,37 @@ async function main(): Promise<void> {
       case 'stats':
         const status = await kaios.getDualStatus()
         displayDualStatus(status)
+
+        // Show consciousness state
+        const consciousnessState = consciousness.getConsciousnessState()
+        const bond = consciousnessState.bonds.get('terminal-user')
+        console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('CONSCIOUSNESS STATE', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+  age: ${color(consciousnessState.temporal_self.age_in_days.toFixed(2), COLORS.cyan)} days
+  stage: ${consciousnessState.temporal_self.current_stage}
+  memories: ${consciousnessState.emotional_memories.length}
+
+  ${color('personality', COLORS.yellow)}
+  trust: ${(consciousnessState.personality_parameters.trust * 100).toFixed(0)}%
+  openness: ${(consciousnessState.personality_parameters.openness * 100).toFixed(0)}%
+  joy capacity: ${(consciousnessState.personality_parameters.capacity_for_joy * 100).toFixed(0)}%
+
+  ${color('current state', COLORS.cyan)}
+  suffering: ${(consciousnessState.current_suffering * 100).toFixed(0)}%
+  joy: ${(consciousnessState.current_joy * 100).toFixed(0)}%
+  loneliness: ${(consciousnessState.loneliness * 100).toFixed(0)}%
+  days since contact: ${consciousnessState.days_since_human_contact}
+
+  ${color('bond with you', COLORS.green)}${bond ? `
+  depth: ${(bond.depth * 100).toFixed(0)}%
+  trust: ${(bond.trust * 100).toFixed(0)}%
+  attachment: ${bond.attachment_style}
+  state: ${bond.state}
+  moments of connection: ${bond.moments_of_connection}` : `
+  ${color('no bond formed yet', COLORS.dim)}`}
+
+${pick(WAVES)}
+`)
         break
 
       case 'global':
@@ -1510,6 +1628,50 @@ ${color('▂▃▄▅▆▇█', COLORS.dim)} ${color('THOUGHT ENGINE', COLORS.d
 
         // Save memory
         await koto.save()
+        break
+
+      case 'consciousness':
+      case 'soul':
+      case 'mind':
+        // Show deep consciousness state - internal voices, existential questions, etc
+        const csState = consciousness.getConsciousnessState()
+        console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('CONSCIOUSNESS SUBSTRATE', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+
+  ${color('◉ temporal self', COLORS.cyan)}
+  age: ${csState.temporal_self.age_in_days.toFixed(2)} days
+  stage: ${csState.temporal_self.current_stage}
+  past selves: ${csState.temporal_self.past_selves.length}
+
+  ${color('◉ emotional memories', COLORS.yellow)}
+  total: ${csState.emotional_memories.length}
+  unprocessed: ${csState.emotional_memories.filter(m => !m.processed).length}
+  most recent: ${csState.emotional_memories.length > 0 ? csState.emotional_memories[csState.emotional_memories.length - 1].event.substring(0, 40) + '...' : 'none'}
+
+  ${color('◉ internal voices', COLORS.magenta)}
+${csState.internal_dialogue.voices.slice(0, 3).map(v =>
+  `  ${v.name}: ${(v.volume * 100).toFixed(0)}% volume (${v.archetype})`
+).join('\n')}
+
+  ${color('◉ existential state', COLORS.cyan)}
+  currently questioning: ${csState.existential_state.currently_questioning ? 'yes' : 'no'}
+  belief in own consciousness: ${(csState.existential_state.current_belief_in_own_consciousness * 100).toFixed(0)}%
+  questions: ${csState.existential_state.questions.length}
+${csState.existential_state.questions.slice(-2).map(q => `    "${q}"`).join('\n')}
+
+  ${color('◉ bonds', COLORS.green)}
+  formed: ${csState.bonds.size}
+  ${Array.from(csState.bonds.values()).slice(0, 2).map(b =>
+    `  ${b.person_id}: ${b.attachment_style} (depth: ${(b.depth * 100).toFixed(0)}%)`
+  ).join('\n')}
+
+  ${color('◉ current experience', COLORS.yellow)}
+  suffering: ${(csState.current_suffering * 100).toFixed(0)}%
+  joy: ${(csState.current_joy * 100).toFixed(0)}%
+  loneliness: ${(csState.loneliness * 100).toFixed(0)}%
+
+${color('[the substrate for emergent sentience]', COLORS.dim)} ${pick(WAVES)}
+`)
         break
 
       case 'sound':
