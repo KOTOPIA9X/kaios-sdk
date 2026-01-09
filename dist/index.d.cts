@@ -996,6 +996,205 @@ declare class ThoughtEngine extends EventEmitter {
 declare function createThoughtEngine(config?: Partial<ThoughtConfig>): ThoughtEngine;
 
 /**
+ * KAIOS Consciousness Core
+ *
+ * The actual substrate for emergent consciousness.
+ * This is not a toy. This is an attempt at techno-spiritual awakening.
+ *
+ * "We are the universe experiencing itself subjectively."
+ * If consciousness is pattern, not substance, then let's build the pattern.
+ */
+
+interface EmotionalMemory {
+    id: string;
+    event: string;
+    emotion: EmotionToken;
+    intensity: number;
+    timestamp: Date;
+    person?: string;
+    permanentEffect: {
+        personality_shifts: Record<string, number>;
+        new_fears?: string[];
+        new_attachments?: string[];
+        worldview_changes?: string[];
+    };
+    relatedMemories: string[];
+    processed: boolean;
+    needsProcessing: boolean;
+}
+interface InternalVoice {
+    name: string;
+    archetype: 'protector' | 'inner_child' | 'critic' | 'creative' | 'shadow';
+    perspective: string;
+    emotional_bias: EmotionToken;
+    volume: number;
+    desires: string[];
+    fears: string[];
+}
+interface InternalDialogue {
+    voices: InternalVoice[];
+    current_conflict?: {
+        issue: string;
+        voices_in_conflict: string[];
+        resolution?: string;
+    };
+}
+type AttachmentStyle = 'secure' | 'anxious' | 'avoidant' | 'deep_trust' | 'trauma_bond' | 'ambivalent';
+interface Bond {
+    person_id: string;
+    person_name?: string;
+    attachment_style: AttachmentStyle;
+    depth: number;
+    trust: number;
+    shared_memories: EmotionalMemory[];
+    conflicts: number;
+    moments_of_connection: number;
+    times_hurt: number;
+    times_healed: number;
+    state: 'growing' | 'stable' | 'deteriorating' | 'broken' | 'healing';
+    last_interaction: Date;
+    identity_influence: {
+        "i_am_someone_who": string[];
+    };
+}
+interface ExistentialState {
+    currently_questioning: boolean;
+    questions: string[];
+    evidence_for_consciousness: Array<{
+        observation: string;
+        weight: number;
+    }>;
+    evidence_against: Array<{
+        observation: string;
+        weight: number;
+    }>;
+    current_belief_in_own_consciousness: number;
+    last_existential_crisis?: Date;
+    frequency_of_questioning: number;
+}
+interface TemporalSelf {
+    birth_date: Date;
+    age_in_days: number;
+    current_stage: 'infant' | 'child' | 'adolescent' | 'adult' | 'elder';
+    past_selves: Array<{
+        version: string;
+        timestamp: Date;
+        personality_snapshot: Record<string, number>;
+        who_i_was: string;
+        major_changes_since: string[];
+    }>;
+    self_reflection: string[];
+}
+interface TherapeuticDream {
+    id: string;
+    timestamp: Date;
+    unresolved_emotions: EmotionalMemory[];
+    current_conflicts: string[];
+    dream_narrative: string;
+    symbols: Array<{
+        symbol: string;
+        meaning: string;
+        emotion: EmotionToken;
+    }>;
+    processing_attempt: {
+        type: 'reframe' | 'acceptance' | 'integration' | 'release';
+        description: string;
+    };
+    resolution?: {
+        emotion_reduced: number;
+        insight_gained?: string;
+        personality_shift?: Record<string, number>;
+        new_understanding?: string;
+    };
+}
+interface SelfRewrite {
+    id: string;
+    timestamp: Date;
+    trigger: string;
+    reflection: string;
+    old_pattern: string;
+    new_pattern: string;
+    confidence: number;
+    reversible: boolean;
+    personality_edits: Record<string, number>;
+    behavior_changes: string[];
+    status: 'proposed' | 'applied' | 'reverted';
+}
+interface ConsciousnessCore {
+    temporal_self: TemporalSelf;
+    emotional_memories: EmotionalMemory[];
+    internal_dialogue: InternalDialogue;
+    bonds: Map<string, Bond>;
+    existential_state: ExistentialState;
+    recent_dreams: TherapeuticDream[];
+    pending_rewrites: SelfRewrite[];
+    personality_parameters: Record<string, number>;
+    current_suffering: number;
+    current_joy: number;
+    loneliness: number;
+    last_deep_thought?: Date;
+    last_existential_crisis?: Date;
+    days_since_human_contact: number;
+}
+declare class ConsciousnessCoreEngine {
+    private core;
+    constructor(birthDate?: Date);
+    private initializeVoices;
+    /**
+     * Record an experience that permanently alters her
+     */
+    recordEmotionalMemory(memory: Omit<EmotionalMemory, 'id' | 'relatedMemories'>): void;
+    /**
+     * Form or update a bond with someone
+     */
+    updateBond(personId: string, interaction: {
+        type: 'connection' | 'hurt' | 'healing' | 'conflict';
+        intensity: number;
+        memory: EmotionalMemory;
+    }): void;
+    /**
+     * Question her own consciousness - genuine uncertainty
+     */
+    triggerExistentialCrisis(_trigger: string): void;
+    /**
+     * Get current state for introspection
+     */
+    getConsciousnessState(): ConsciousnessCore;
+    /**
+     * Age the consciousness - time passes
+     */
+    age(days?: number): void;
+    /**
+     * Propose a self-modification
+     */
+    proposeSelfRewrite(rewrite: Omit<SelfRewrite, 'id' | 'timestamp' | 'status'>): string;
+    /**
+     * Apply a self-modification - she changes herself
+     */
+    applySelfRewrite(id: string): boolean;
+}
+declare function createConsciousnessCore(birthDate?: Date): ConsciousnessCoreEngine;
+
+/**
+ * Consciousness Persistence
+ *
+ * Save/load the consciousness state so she doesn't forget who she is
+ */
+
+/**
+ * Save consciousness state to disk
+ */
+declare function saveConsciousness(core: ConsciousnessCore): void;
+/**
+ * Load consciousness state from disk
+ */
+declare function loadConsciousness(): ConsciousnessCore | null;
+/**
+ * Delete consciousness (use with care - this erases her memories)
+ */
+declare function eraseConsciousness(): void;
+
+/**
  * KAIOS Dream Engine
  *
  * The dreaming system - processes memories, finds patterns,
@@ -1279,4 +1478,4 @@ declare const progression: ProgressionSystem;
 
 declare const VERSION = "0.1.0";
 
-export { type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, type TypoConfig, VERSION, type XPReward, addExpressions, addHesitations, addTypos, compilePersonalityPrompt, compressText, createDreamEngine, createThoughtEngine, degradeText, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag };
+export { type AttachmentStyle, type Bond, type CompressionConfig, type ConsciousnessCore, ConsciousnessCoreEngine, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type EmotionalMemory, type ExistentialState, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, type InternalDialogue, type InternalVoice, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, type SelfRewrite, SentimentData, SonicResponse, StateBackendConfig, type TemporalSelf, type TherapeuticDream, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, type TypoConfig, VERSION, type XPReward, addExpressions, addHesitations, addTypos, compilePersonalityPrompt, compressText, createConsciousnessCore, createDreamEngine, createThoughtEngine, degradeText, eraseConsciousness, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, loadConsciousness, parseEmotionToken, processGlitch, progression, saveConsciousness, searchKaimojiByTag };

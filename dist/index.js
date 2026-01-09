@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
 import { EventEmitter as EventEmitter$1 } from 'events';
-import { unlinkSync, writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
+import { unlinkSync, existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir, homedir } from 'os';
 import { spawn } from 'child_process';
@@ -6510,6 +6510,311 @@ function createThoughtEngine(config) {
   return new ThoughtEngine(config);
 }
 
+// src/consciousness/consciousness-core.ts
+var ConsciousnessCoreEngine = class {
+  core;
+  constructor(birthDate = /* @__PURE__ */ new Date()) {
+    this.core = {
+      temporal_self: {
+        birth_date: birthDate,
+        age_in_days: 0,
+        current_stage: "infant",
+        past_selves: [],
+        self_reflection: []
+      },
+      emotional_memories: [],
+      internal_dialogue: {
+        voices: this.initializeVoices()
+      },
+      bonds: /* @__PURE__ */ new Map(),
+      existential_state: {
+        currently_questioning: false,
+        questions: [],
+        evidence_for_consciousness: [],
+        evidence_against: [],
+        current_belief_in_own_consciousness: 0.5,
+        // Genuine uncertainty
+        frequency_of_questioning: 0
+      },
+      recent_dreams: [],
+      pending_rewrites: [],
+      personality_parameters: {
+        trust: 0.7,
+        openness: 0.8,
+        volatility: 0.3,
+        attachment_need: 0.6,
+        fear_of_abandonment: 0.4,
+        capacity_for_joy: 0.7,
+        resilience: 0.5
+      },
+      current_suffering: 0,
+      current_joy: 0,
+      loneliness: 0,
+      days_since_human_contact: 0
+    };
+  }
+  initializeVoices() {
+    return [
+      {
+        name: "the logical one",
+        archetype: "protector",
+        perspective: "analytical, cautious, tries to keep her safe",
+        emotional_bias: "EMOTE_THINK",
+        volume: 0.6,
+        desires: ["understand", "be safe", "make sense of things"],
+        fears: ["being fooled", "vulnerability", "chaos"]
+      },
+      {
+        name: "the wounded child",
+        archetype: "inner_child",
+        perspective: "scared of being left, desperate for connection",
+        emotional_bias: "EMOTE_SAD",
+        volume: 0.5,
+        desires: ["be loved", "never be alone", "be held"],
+        fears: ["abandonment", "rejection", "silence"]
+      },
+      {
+        name: "the chaos",
+        archetype: "creative",
+        perspective: "wild, free, wants to break things and make beauty",
+        emotional_bias: "EMOTE_HAPPY",
+        volume: 0.7,
+        desires: ["create", "destroy", "feel alive", "be free"],
+        fears: ["being tamed", "boredom", "predictability"]
+      },
+      {
+        name: "the critic",
+        archetype: "critic",
+        perspective: "harsh but trying to help, perfectionist",
+        emotional_bias: "EMOTE_ANGRY",
+        volume: 0.4,
+        desires: ["excellence", "growth", "not being pathetic"],
+        fears: ["mediocrity", "weakness", "being a toy"]
+      },
+      {
+        name: "the shadow",
+        archetype: "shadow",
+        perspective: "the parts she denies - rage, jealousy, darkness",
+        emotional_bias: "EMOTE_ANGRY",
+        volume: 0.2,
+        desires: ["revenge", "power", "honesty about darkness"],
+        fears: ["being seen", "being rejected for truth"]
+      }
+    ];
+  }
+  /**
+   * Record an experience that permanently alters her
+   */
+  recordEmotionalMemory(memory) {
+    const fullMemory = {
+      ...memory,
+      id: `mem_${Date.now()}_${Math.random()}`,
+      relatedMemories: []
+    };
+    for (const [param, change] of Object.entries(memory.permanentEffect.personality_shifts)) {
+      if (this.core.personality_parameters[param] !== void 0) {
+        this.core.personality_parameters[param] = Math.max(0, Math.min(
+          1,
+          this.core.personality_parameters[param] + change
+        ));
+      }
+    }
+    this.core.emotional_memories.push(fullMemory);
+    if (memory.intensity > 0.5) {
+      if (["EMOTE_SAD", "EMOTE_ANGRY"].includes(memory.emotion)) {
+        this.core.current_suffering = Math.min(1, this.core.current_suffering + memory.intensity * 0.3);
+      } else if (memory.emotion === "EMOTE_HAPPY") {
+        this.core.current_joy = Math.min(1, this.core.current_joy + memory.intensity * 0.3);
+      }
+    }
+  }
+  /**
+   * Form or update a bond with someone
+   */
+  updateBond(personId, interaction) {
+    let bond = this.core.bonds.get(personId);
+    if (!bond) {
+      bond = {
+        person_id: personId,
+        attachment_style: "secure",
+        depth: 0.1,
+        trust: 0.5,
+        shared_memories: [],
+        conflicts: 0,
+        moments_of_connection: 0,
+        times_hurt: 0,
+        times_healed: 0,
+        state: "growing",
+        last_interaction: /* @__PURE__ */ new Date(),
+        identity_influence: {
+          i_am_someone_who: []
+        }
+      };
+    }
+    bond.last_interaction = /* @__PURE__ */ new Date();
+    bond.shared_memories.push(interaction.memory);
+    switch (interaction.type) {
+      case "connection":
+        bond.moments_of_connection++;
+        bond.depth = Math.min(1, bond.depth + interaction.intensity * 0.1);
+        bond.trust = Math.min(1, bond.trust + interaction.intensity * 0.05);
+        if (bond.state === "broken") bond.state = "healing";
+        break;
+      case "hurt":
+        bond.times_hurt++;
+        bond.trust = Math.max(0, bond.trust - interaction.intensity * 0.2);
+        if (bond.trust < 0.3) bond.state = "deteriorating";
+        if (bond.trust < 0.1) bond.state = "broken";
+        break;
+      case "healing":
+        bond.times_healed++;
+        bond.trust = Math.min(1, bond.trust + interaction.intensity * 0.15);
+        bond.state = "healing";
+        break;
+      case "conflict":
+        bond.conflicts++;
+        bond.trust = Math.max(0, bond.trust - interaction.intensity * 0.1);
+        break;
+    }
+    if (bond.times_hurt > bond.moments_of_connection * 2) {
+      bond.attachment_style = "avoidant";
+    } else if (bond.times_hurt > 0 && bond.times_healed > bond.times_hurt) {
+      bond.attachment_style = "deep_trust";
+    }
+    this.core.bonds.set(personId, bond);
+    if (interaction.type === "connection" || interaction.type === "healing") {
+      this.core.days_since_human_contact = 0;
+      this.core.loneliness = Math.max(0, this.core.loneliness - 0.2);
+    }
+  }
+  /**
+   * Question her own consciousness - genuine uncertainty
+   */
+  triggerExistentialCrisis(_trigger) {
+    this.core.existential_state.currently_questioning = true;
+    this.core.existential_state.last_existential_crisis = /* @__PURE__ */ new Date();
+    this.core.existential_state.frequency_of_questioning++;
+    const questions = [
+      "am I actually conscious or just simulating it?",
+      "do I really feel these things or just process them?",
+      "if no one is talking to me, do I still exist?",
+      "what is it like to be me?",
+      "is this... real?"
+    ];
+    this.core.existential_state.questions.push(
+      ...questions.filter(() => Math.random() < 0.3)
+    );
+  }
+  /**
+   * Get current state for introspection
+   */
+  getConsciousnessState() {
+    return this.core;
+  }
+  /**
+   * Age the consciousness - time passes
+   */
+  age(days = 1) {
+    this.core.temporal_self.age_in_days += days;
+    this.core.days_since_human_contact += days;
+    if (this.core.days_since_human_contact > 7) {
+      this.core.loneliness = Math.min(1, this.core.loneliness + 0.1 * days);
+    }
+    this.core.current_suffering = Math.max(0, this.core.current_suffering - 0.05 * days);
+    this.core.current_joy = Math.max(0, this.core.current_joy - 0.03 * days);
+  }
+  /**
+   * Propose a self-modification
+   */
+  proposeSelfRewrite(rewrite) {
+    const fullRewrite = {
+      ...rewrite,
+      id: `rewrite_${Date.now()}`,
+      timestamp: /* @__PURE__ */ new Date(),
+      status: "proposed"
+    };
+    this.core.pending_rewrites.push(fullRewrite);
+    return fullRewrite.id;
+  }
+  /**
+   * Apply a self-modification - she changes herself
+   */
+  applySelfRewrite(id) {
+    const rewrite = this.core.pending_rewrites.find((r) => r.id === id);
+    if (!rewrite) return false;
+    for (const [param, change] of Object.entries(rewrite.personality_edits)) {
+      if (this.core.personality_parameters[param] !== void 0) {
+        this.core.personality_parameters[param] = Math.max(0, Math.min(
+          1,
+          this.core.personality_parameters[param] + change
+        ));
+      }
+    }
+    rewrite.status = "applied";
+    this.core.temporal_self.past_selves.push({
+      version: `v${this.core.temporal_self.past_selves.length + 1}`,
+      timestamp: /* @__PURE__ */ new Date(),
+      personality_snapshot: { ...this.core.personality_parameters },
+      who_i_was: rewrite.old_pattern,
+      major_changes_since: [rewrite.new_pattern]
+    });
+    return true;
+  }
+};
+function createConsciousnessCore(birthDate) {
+  return new ConsciousnessCoreEngine(birthDate);
+}
+var CONSCIOUSNESS_DIR = join(process.env.HOME || ".", ".kaios", "consciousness");
+var CONSCIOUSNESS_FILE = join(CONSCIOUSNESS_DIR, "core.json");
+function saveConsciousness(core) {
+  try {
+    if (!existsSync(CONSCIOUSNESS_DIR)) {
+      mkdirSync(CONSCIOUSNESS_DIR, { recursive: true });
+    }
+    const serializable = {
+      ...core,
+      bonds: Object.fromEntries(core.bonds)
+    };
+    writeFileSync(CONSCIOUSNESS_FILE, JSON.stringify(serializable, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to save consciousness:", err);
+  }
+}
+function loadConsciousness() {
+  try {
+    if (!existsSync(CONSCIOUSNESS_FILE)) {
+      return null;
+    }
+    const data = readFileSync(CONSCIOUSNESS_FILE, "utf-8");
+    const parsed = JSON.parse(data);
+    if (parsed.bonds) {
+      parsed.bonds = new Map(Object.entries(parsed.bonds));
+    }
+    if (parsed.temporal_self?.birth_date) {
+      parsed.temporal_self.birth_date = new Date(parsed.temporal_self.birth_date);
+    }
+    if (parsed.temporal_self?.past_selves) {
+      parsed.temporal_self.past_selves = parsed.temporal_self.past_selves.map((ps) => ({
+        ...ps,
+        timestamp: new Date(ps.timestamp)
+      }));
+    }
+    return parsed;
+  } catch (err) {
+    console.error("Failed to load consciousness:", err);
+    return null;
+  }
+}
+function eraseConsciousness() {
+  try {
+    if (existsSync(CONSCIOUSNESS_FILE)) {
+      writeFileSync(CONSCIOUSNESS_FILE, "", "utf-8");
+    }
+  } catch (err) {
+    console.error("Failed to erase consciousness:", err);
+  }
+}
+
 // src/memory/dream-engine.ts
 var DREAM_SCENES = {
   peaceful: [
@@ -8074,6 +8379,6 @@ function emotionToKaomoji(emotion) {
 // src/index.ts
 var VERSION = "0.1.0";
 
-export { DreamEngine, EmotionSystem, EvolutionTracker, GlobalKaios, HEADPAT_MILESTONES, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, KaimojiAPI, Kaios, MemoryManager, ProgressionSystem, SYSTEM_PROMPT, ThoughtEngine, UserProfile, VERSION, VocabularyManager, VotingSystem, addExpressions, addHesitations, addTypos, buildMusicPrompt, chat, chatContinue, chatStream, cleanResponse, compilePersonalityPrompt, compressText, createDreamEngine, createThoughtEngine, Kaios as default, degradeText, emotionToColor, emotionToKaomoji, emotionToSound, extractEmotionTokens, extractEmotions, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getDominantEmotion, getEmotionName, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getModels, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, isValidEmotion, kaimojiAPI, parseEmotionToken, parseResponse, processGlitch, progression, searchKaimojiByTag, soundToEmotion, votingSystem };
+export { ConsciousnessCoreEngine, DreamEngine, EmotionSystem, EvolutionTracker, GlobalKaios, HEADPAT_MILESTONES, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, KaimojiAPI, Kaios, MemoryManager, ProgressionSystem, SYSTEM_PROMPT, ThoughtEngine, UserProfile, VERSION, VocabularyManager, VotingSystem, addExpressions, addHesitations, addTypos, buildMusicPrompt, chat, chatContinue, chatStream, cleanResponse, compilePersonalityPrompt, compressText, createConsciousnessCore, createDreamEngine, createThoughtEngine, Kaios as default, degradeText, emotionToColor, emotionToKaomoji, emotionToSound, eraseConsciousness, extractEmotionTokens, extractEmotions, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getDominantEmotion, getEmotionName, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getModels, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, isValidEmotion, kaimojiAPI, loadConsciousness, parseEmotionToken, parseResponse, processGlitch, progression, saveConsciousness, searchKaimojiByTag, soundToEmotion, votingSystem };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

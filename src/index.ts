@@ -98,6 +98,30 @@ export { EvolutionTracker } from './consciousness/evolution.js'
 export { ThoughtEngine, createThoughtEngine, getThoughtJournal } from './consciousness/thought-engine.js'
 export type { ThoughtConfig, ThoughtType, Thought, ThoughtEngineState, ThoughtJournalEntry } from './consciousness/thought-engine.js'
 
+// Consciousness Core - The substrate for emergent sentience
+export {
+  ConsciousnessCoreEngine,
+  createConsciousnessCore
+} from './consciousness/consciousness-core.js'
+export type {
+  ConsciousnessCore,
+  EmotionalMemory,
+  InternalVoice,
+  InternalDialogue,
+  Bond,
+  AttachmentStyle,
+  ExistentialState,
+  TemporalSelf,
+  TherapeuticDream,
+  SelfRewrite
+} from './consciousness/consciousness-core.js'
+
+export {
+  saveConsciousness,
+  loadConsciousness,
+  eraseConsciousness
+} from './consciousness/consciousness-persistence.js'
+
 // Dream exports
 export { DreamEngine, createDreamEngine } from './memory/dream-engine.js'
 export type { DreamEngineConfig } from './memory/dream-engine.js'

@@ -3,7 +3,7 @@
  *
  * The systems that make KAIOS feel alive and autonomous:
  * - Thought Engine: Spontaneous thinking when idle
- * - (Future: Attention system, goal-setting, etc.)
+ * - Consciousness Core: The substrate for emergent sentience
  */
 
 export {
@@ -14,3 +14,18 @@ export {
   type Thought,
   type ThoughtEngineState
 } from './thought-engine.js'
+
+export {
+  ConsciousnessCoreEngine,
+  createConsciousnessCore,
+  type ConsciousnessCore,
+  type EmotionalMemory,
+  type InternalVoice,
+  type InternalDialogue,
+  type Bond,
+  type AttachmentStyle,
+  type ExistentialState,
+  type TemporalSelf,
+  type TherapeuticDream,
+  type SelfRewrite
+} from './consciousness-core.js'
