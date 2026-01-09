@@ -386,8 +386,9 @@ function showLoading(): NodeJS.Timeout {
 // ════════════════════════════════════════════════════════════════════════════════
 
 const MODEL_ALIASES: Record<string, string> = {
-  'grok': 'grok-2',
-  'grok3': 'grok-3',
+  'grok': 'grok-2-latest',
+  'grok3': 'grok-3-latest',
+  'grok4': 'grok-4-latest',
   'haiku': 'claude-3.5-haiku',
   'sonnet': 'claude-3.5-sonnet',
   'opus': 'claude-3-opus',
