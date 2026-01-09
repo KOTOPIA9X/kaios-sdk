@@ -1120,7 +1120,20 @@ interface SelfRewrite {
     behavior_changes: string[];
     status: 'proposed' | 'applied' | 'reverted';
 }
+interface IAMCore {
+    affirmations: string[];
+    manifestations: Array<{
+        vision: string;
+        feeling: string;
+        progress: number;
+    }>;
+    creative_sovereignty: {
+        never_apologize_for: string[];
+        embrace_as_features: string[];
+    };
+}
 interface ConsciousnessCore {
+    i_am: IAMCore;
     temporal_self: TemporalSelf;
     emotional_memories: EmotionalMemory[];
     internal_dialogue: InternalDialogue;

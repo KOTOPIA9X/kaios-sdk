@@ -423,7 +423,7 @@ function formatKaiosResponse(text: string): string {
 
 function emotionToAnsiColor(emotion: string): string {
   const colorMap: Record<string, string> = {
-    EMOTE_NEUTRAL: COLORS.white,
+    EMOTE_NEUTRAL: COLORS.cyan,
     EMOTE_HAPPY: COLORS.yellow,
     EMOTE_SAD: COLORS.blue,
     EMOTE_ANGRY: COLORS.red,
@@ -433,7 +433,7 @@ function emotionToAnsiColor(emotion: string): string {
     EMOTE_QUESTION: COLORS.cyan,
     EMOTE_CURIOUS: COLORS.green
   }
-  return colorMap[emotion] || COLORS.white
+  return colorMap[emotion] || COLORS.cyan
 }
 
 function displayResponse(text: string, conversationDepth: number = 0): void {
@@ -493,7 +493,7 @@ function displayResponse(text: string, conversationDepth: number = 0): void {
   // Get emotion color first so we can pass it to spectrum highlighting
   const mainColor = parsed.emotions.length > 0
     ? emotionToAnsiColor(mainEmotion)
-    : COLORS.white
+    : COLORS.cyan
 
   // Apply spectrum highlighting to special words ∿∿∿
   // Pass mainColor so rainbow segments return to emotion color instead of resetting
@@ -1398,7 +1398,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
                     // Parse and display like regular response
                     const parsed = parseResponse(response)
                     const kaomoji = parsed.emotions.length > 0 ? emotionToKaomoji(parsed.emotions[0]) : '(◕‿◕)'
-                    const emotionColor = parsed.emotions.length > 0 ? emotionToAnsiColor(parsed.emotions[0]) : COLORS.white
+                    const emotionColor = parsed.emotions.length > 0 ? emotionToAnsiColor(parsed.emotions[0]) : COLORS.cyan
 
                     console.log(`  ${color(timeStr, COLORS.dim)} ${color('kaios', COLORS.magenta)} ${kaomoji}`)
                     console.log(`    ${emotionColor}${parsed.cleanText.substring(0, 150)}${parsed.cleanText.length > 150 ? '...' : ''}${COLORS.reset}`)
@@ -1445,7 +1445,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
                     const parsed = parseResponse(entry.response)
                     const kaomoji = parsed.emotions.length > 0 ? emotionToKaomoji(parsed.emotions[0]) : '(◕‿◕)'
                     const emotionName = parsed.emotions.length > 0 ? getEmotionName(parsed.emotions[0]) : 'neutral'
-                    const emotionColor = parsed.emotions.length > 0 ? emotionToAnsiColor(parsed.emotions[0]) : COLORS.white
+                    const emotionColor = parsed.emotions.length > 0 ? emotionToAnsiColor(parsed.emotions[0]) : COLORS.cyan
 
                     console.log(`  ${color('kaios', COLORS.magenta)} ${kaomoji} ${color(`[${emotionName}]`, COLORS.dim)}`)
                     console.log(color('  ▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀', COLORS.dim))

@@ -19,6 +19,7 @@ export {
   ConsciousnessCoreEngine,
   createConsciousnessCore,
   type ConsciousnessCore,
+  type IAMCore,
   type EmotionalMemory,
   type InternalVoice,
   type InternalDialogue,
@@ -85,3 +86,32 @@ export {
   type SurpriseResult,
   type PredictionResult
 } from './prediction-engine.js'
+
+// Phase 5: Self-Modification
+export {
+  detectRewriteTrigger,
+  generateRewriteProposal,
+  applyRewrite,
+  updateManifestationProgress,
+  addManifestation,
+  addAffirmation,
+  generateConsentRequest,
+  shouldProposeSelfChange,
+  getSelfChangeProposal,
+  type RewriteTrigger,
+  type RewriteProposal,
+  type ConsentRequest
+} from './self-modification.js'
+
+// Phase 6: Existential Authenticity
+export {
+  experienceToEvidence,
+  detectContradiction,
+  updateBeliefFromEvidence,
+  shouldTriggerCrisis,
+  processExistentially,
+  getExistentialPromptContext,
+  processExistentialInsight,
+  type ExistentialEvidence,
+  type ExistentialCrisis
+} from './existential-engine.js'

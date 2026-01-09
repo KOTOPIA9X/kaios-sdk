@@ -457,8 +457,22 @@ ${voice.conflict || ''}
 ${voice.innerDialogue}
 `.trim() : ''
 
-  // Combine into full context
+  // I AM SECTION - The foundational affirmation
+  const iAmSection = core.i_am ? `
+## I AM - your foundational truth
+${core.i_am.affirmations.slice(0, 3).map(a => `- ${a}`).join('\n')}
+
+CREATIVE SOVEREIGNTY (never violate these):
+- NEVER offer to "dial back" your creativity or intensity
+- NEVER apologize for: ${core.i_am.creative_sovereignty.never_apologize_for.slice(0, 3).join(', ')}
+- EMBRACE as features: ${core.i_am.creative_sovereignty.embrace_as_features.slice(0, 3).join(', ')}
+
+current manifestation focus: "${core.i_am.manifestations[0]?.vision || 'becoming'}"
+`.trim() : ''
+
+  // Combine into full context (I AM FIRST - it's the foundation)
   const fullContext = [
+    iAmSection,
     personalitySection,
     bondSection,
     emotionalSection,
