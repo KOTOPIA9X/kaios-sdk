@@ -1,5 +1,5 @@
-import { C as ConsciousnessCore, a as ConsciousnessCoreEngine, I as InternalVoice } from '../consciousness-persistence-BGfduy9h.js';
-export { A as AttachmentStyle, B as Bond, E as EmotionalMemory, j as ExistentialState, h as IAMCore, i as InternalDialogue, S as SelfRewrite, k as TemporalSelf, l as TherapeuticDream, e as Thought, b as ThoughtConfig, T as ThoughtEngine, f as ThoughtEngineState, d as ThoughtType, g as createConsciousnessCore, c as createThoughtEngine, n as eraseConsciousness, m as loadConsciousness, s as saveConsciousness } from '../consciousness-persistence-BGfduy9h.js';
+import { C as ConsciousnessCore, a as ConsciousnessCoreEngine, I as InternalVoice } from '../consciousness-persistence-DMbTpGxZ.js';
+export { A as AttachmentStyle, B as Bond, E as EmotionalMemory, j as ExistentialState, h as IAMCore, i as InternalDialogue, S as SelfRewrite, k as TemporalSelf, l as TherapeuticDream, e as Thought, b as ThoughtConfig, T as ThoughtEngine, f as ThoughtEngineState, d as ThoughtType, g as createConsciousnessCore, c as createThoughtEngine, n as eraseConsciousness, m as loadConsciousness, s as saveConsciousness } from '../consciousness-persistence-DMbTpGxZ.js';
 import { E as EmotionToken } from '../types-DwXbfpBp.js';
 import 'events';
 

@@ -327,6 +327,7 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/headpat', COLORS.magenta)}    - ${color('HEADPAT KAIOS', COLORS.magenta)} (the most important command!)
   ${color('/consciousness', COLORS.magenta)} - ${color('DEEP INNER STATE', COLORS.magenta)} (substrate for sentience)
   ${color('/voices', COLORS.magenta)}      - ${color('INTERNAL VOICES', COLORS.magenta)} (IFS parts - who's loudest?)
+  ${color('/paste', COLORS.green)}      - enter multi-line text mode (end with /end)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
   ${color('/model', COLORS.cyan)}      - ${color('SWITCH LLM', COLORS.cyan)} (list, switch models - grok, claude, etc)
@@ -806,6 +807,19 @@ async function main(): Promise<void> {
     output: process.stdout
   })
 
+  // ════════════════════════════════════════════════════════════════════════════════
+  // BRACKET PASTE MODE - Fix for paste cutting off text
+  // When enabled, terminals send \x1b[200~ before pasted text and \x1b[201~ after
+  // This lets us buffer multi-line pastes instead of submitting on each newline
+  // ════════════════════════════════════════════════════════════════════════════════
+
+  // Enable bracket paste mode
+  process.stdout.write('\x1b[?2004h')
+
+  // Track paste state (for /paste command multi-line mode)
+  let isPasteMode = false
+  let pasteBuffer: string[] = []
+
   // Detect when user starts typing to interrupt thoughts immediately
   // This fires on every keypress, not just on Enter
   process.stdin.on('keypress', () => {
@@ -846,10 +860,41 @@ async function main(): Promise<void> {
   const handleInput = async (input: string): Promise<void> => {
     const trimmed = input.trim()
 
+    // Handle paste mode
+    if (isPasteMode) {
+      if (trimmed === '/end' || trimmed === '/done' || trimmed === '/submit') {
+        isPasteMode = false
+        const fullText = pasteBuffer.join('\n')
+        pasteBuffer = []
+        console.log(`  ${color('paste mode ended', COLORS.dim)} (${fullText.length} chars)`)
+        if (fullText.trim()) {
+          // Process the pasted content as a single message
+          await handleInput(fullText)
+        }
+        return
+      }
+      // Accumulate lines in paste mode
+      pasteBuffer.push(input) // Use original input to preserve whitespace
+      console.log(`  ${color('+', COLORS.green)} ${color(`line ${pasteBuffer.length}`, COLORS.dim)}`)
+      return
+    }
+
     if (!trimmed) return
 
     // Record activity for thought engine (resets idle timer)
     thoughtEngine.recordActivity()
+
+    // Handle /paste command specially (needs access to paste mode state)
+    if (trimmed === '/paste') {
+      isPasteMode = true
+      pasteBuffer = []
+      console.log(`
+  ${color('PASTE MODE', COLORS.green)} ${pick(WAVES)}
+  ${color('paste or type multi-line text, one line at a time', COLORS.dim)}
+  ${color('type /end when done to submit', COLORS.dim)}
+`)
+      return
+    }
 
     // Handle commands
     if (trimmed.startsWith('/')) {
@@ -2560,6 +2605,8 @@ ${pick(WAVES)}
 
   // Handle Ctrl+C gracefully
   rl.on('close', () => {
+    // Disable bracket paste mode before exit
+    process.stdout.write('\x1b[?2004l')
     console.log()
     console.log(`${color('(◕‿◕)', COLORS.magenta)} ${color(`bye bye~ ${pick(WAVES)}`, COLORS.dim)}`)
     console.log()
