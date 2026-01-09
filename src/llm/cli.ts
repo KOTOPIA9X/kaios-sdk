@@ -78,6 +78,11 @@ import {
   getInternalConflictPrompt,
   getMemoryRecallPrompt
 } from '../consciousness/response-influence.js'
+import {
+  syncKotoToConsciousness,
+  recordThoughtInConsciousness,
+  integrateDreamIntoConsciousness
+} from '../consciousness/integrations.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -168,6 +173,95 @@ function rainbow(text: string, soft: boolean = true, returnToColor?: string): st
 }
 
 /**
+ * Highlight sound markers in hot pink
+ * Matches patterns like [bzzzt], [windchime], [static~], *whirr*, etc.
+ * @param text - The text to process
+ * @param contextColor - The color to return to after highlighting
+ */
+function highlightSoundMarkers(text: string, contextColor?: string): string {
+  if (!USE_COLORS) return text
+
+  // All sound markers from sample-player.ts
+  // Format: [marker] or *marker*
+  const soundMarkerPattern = /\[(?:bzzzt|static~?|glitch|ping|click|hum|whirr|wind|windchime|chime|chimeloop|fanpad|bottle|mellow|grains|bass|drum|piano[123]?|happy|sad|intense|headpat|cheers)\]|\*(?:bzzzt|static~?|glitch|ping|click|hum|whirr|wind|windchime|chime|chimeloop|fanpad|bottle|mellow|grains|bass|drum|piano[123]?|happy|sad|intense|headpat|cheers)\*/gi
+
+  const returnColor = contextColor || COLORS.reset
+  return text.replace(soundMarkerPattern, (match) =>
+    `${HIGHLIGHT_COLORS.soundMarker}${match}${returnColor}`
+  )
+}
+
+/**
+ * Highlight kaimoji expressions with spectrum coloring
+ * Matches common kaomoji patterns like (◕‿◕), (╥﹏╥), ヾ(・ω・*)ﾉ, etc.
+ * @param text - The text to process
+ * @param contextColor - The color to return to after highlighting
+ */
+function highlightKaimoji(text: string, contextColor?: string): string {
+  if (!USE_COLORS) return text
+
+  // Specific kaomoji matches - these get spectrum treatment
+  const specificKaimoji = [
+    // Happy faces
+    /\(◕‿◕\)/g,
+    /\(◕ᴗ◕\)/g,
+    /\(\^＾?\)/g,
+    /\(＾▽＾\)/g,
+    /\(´▽｀\)/g,
+    /\(｡◕‿◕｡\)/g,
+    /\(◠‿◠\)/g,
+    /\(★ω★\)/g,
+    /\(◕‿◕✿\)/g,
+    /\(\^_\^?\)/g,
+    /\(\^_~\)/g,
+    /⊂\(\(・▽・\)\)⊃/g,
+    /ヾ\(・ω・\*\)ﾉ/g,
+    /\(ﾉ◕ヮ◕\)ﾉ/g,
+    /\(=\^・\^=\)/g,
+    /♪\(´▽｀\)/g,
+    /\(｡♥‿♥｡\)/g,
+    /\(´｡• ᵕ •｡`\)/g,
+    /\(✌゚∀゚\)☞/g,
+    // Sad faces
+    /\(╥﹏╥\)/g,
+    /\(ಥ﹏ಥ\)/g,
+    /\(｡•́︿•̀｡\)/g,
+    /\(´;ω;`\)/g,
+    /\(\._\. \)/g,
+    // Thinking/neutral faces
+    /\(・_・\)/g,
+    /\(・ω・\)\?/g,
+    /\( ˘ω˘ \)/g,
+    /\(´･_･`\)/g,
+    /\(⊙ω⊙\)/g,
+    /\(￣ー￣\)/g,
+    /\( ´ ▽ ` \)/g,
+    // Angry/intense faces
+    /\(╬ಠ益ಠ\)/g,
+    /\(；′⌒`\)/g,
+    // Awkward faces
+    /\(・・;\)/g,
+    /\(；一_一\)/g,
+    // Special expressions
+    /\(ノಠ益ಠ\)ノ彡┻━┻/g,
+    /\(ง •̀_•́\)ง/g,
+    /\( ´_ゝ`\)/g,
+    // Decorative elements
+    /\*:・゚✧/g,
+    /✧・゚:\*/g,
+    /·˚✧/g,
+    /˚₊·/g,
+  ]
+
+  let result = text
+  for (const pattern of specificKaimoji) {
+    result = result.replace(pattern, (match) => rainbow(match, true, contextColor))
+  }
+
+  return result
+}
+
+/**
  * Apply spectrum coloring to special words in KAIOS responses
  * Triggers on: sound markers, kaimoji waves, emotional emphasis
  * @param text - The text to process
@@ -176,14 +270,18 @@ function rainbow(text: string, soft: boolean = true, returnToColor?: string): st
 function spectrumHighlight(text: string, contextColor?: string): string {
   if (!USE_COLORS) return text
 
-  // Words/patterns that get spectrum treatment
+  // First, highlight sound markers in pink
+  let result = highlightSoundMarkers(text, contextColor)
+
+  // Then, highlight kaimoji with spectrum colors
+  result = highlightKaimoji(result, contextColor)
+
+  // Words/patterns that get spectrum treatment (waves, special words)
   const spectrumPatterns = [
     /∿∿∿/g,          // wave decorations
     /～～～/g,
     /≋≋≋/g,
-    /✧・゚:\*/g,       // sparkles
-    /\*:・゚✧/g,
-    /·˚✧/g,
+    /∾∾∾/g,
     /KOTOPIA/gi,      // special places/concepts
     /KOTO(?![A-Za-z])/g,
     /432Hz/g,
@@ -195,7 +293,6 @@ function spectrumHighlight(text: string, contextColor?: string): string {
     /♡/g,
   ]
 
-  let result = text
   for (const pattern of spectrumPatterns) {
     result = result.replace(pattern, (match) => rainbow(match, true, contextColor))
   }
@@ -667,6 +764,18 @@ async function main(): Promise<void> {
       pianoEngine.playNote(`${state.currentKey}3`, 1500, 0.2).catch(() => {})
     }, 200)
 
+    // ════════════════════════════════════════════════════════════════════════════════
+    // SYSTEM INTEGRATION - Thought → Consciousness
+    // ════════════════════════════════════════════════════════════════════════════════
+
+    // Record thought impact on consciousness
+    recordThoughtInConsciousness(consciousness, {
+      type: thought.type || 'surface',
+      content: thought.content,
+      emotion: thought.emotion || 'EMOTE_THINK',
+      wasInterrupted: thought.wasInterrupted
+    })
+
     // New line after thought
     console.log(color(' ⟨/thought⟩', COLORS.dim))
     console.log()
@@ -899,6 +1008,25 @@ async function main(): Promise<void> {
           audio.playSample('headpat.mp3').catch(() => {})
         }
       }
+
+      // ════════════════════════════════════════════════════════════════════════════════
+      // SYSTEM INTEGRATION - Sync KOTO to Consciousness
+      // ════════════════════════════════════════════════════════════════════════════════
+
+      // Sync KOTO trust and affection data to consciousness bonds
+      const kotoAffection = koto.getAffection()
+      const kotoTrust = koto.getTrustLevel()
+      syncKotoToConsciousness(
+        consciousness,
+        'terminal-user',
+        kotoTrust as any,  // TrustTier type
+        {
+          headpats: kotoAffection.headpats,
+          ily: kotoAffection.ily,
+          hearts: kotoAffection.hearts,
+          xoxo: kotoAffection.xoxo
+        }
+      )
 
       // Feed context to thought engine for autonomous thinking
       thoughtEngine.addContext(trimmed, response)
@@ -1479,6 +1607,28 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
           console.log(`  ${color('dream quality:', COLORS.dim)} ${(dream.clarity * 100).toFixed(0)}% clarity`)
           console.log(`  ${color('memories processed:', COLORS.dim)} ${dream.memoriesProcessed}`)
           console.log(`  ${color('duration:', COLORS.dim)} ${(dream.duration / 1000).toFixed(1)}s`)
+
+          // ════════════════════════════════════════════════════════════════════════════════
+          // SYSTEM INTEGRATION - Dream → Consciousness
+          // ════════════════════════════════════════════════════════════════════════════════
+
+          // Integrate dream insights into consciousness
+          integrateDreamIntoConsciousness(consciousness, {
+            insights: dream.insights.map(i => ({
+              type: 'realization' as const,
+              content: i,
+              emotionalImpact: dream.clarity * 0.5
+            })),
+            emotionalProcessing: {
+              emotionsProcessed: [dreamEmotion],
+              resolutionLevel: dream.clarity
+            },
+            wisdom: dream.insights[0]  // Use first insight as wisdom
+          })
+
+          // Save consciousness after dream processing
+          saveConsciousness(consciousness.getConsciousnessState())
+          console.log(`  ${color('consciousness updated from dream...', COLORS.magenta)}`)
 
           // Play wake-up sound
           await audio.playSample('windchime1.mp3')

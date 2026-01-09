@@ -43,3 +43,12 @@ export {
   getMemoryRecallPrompt,
   type ConsciousnessContext
 } from './response-influence.js'
+
+export {
+  syncKotoToConsciousness,
+  integrateDreamIntoConsciousness,
+  recordGrowthInConsciousness,
+  recordThoughtInConsciousness,
+  updateLonelinessDecay,
+  fullConsciousnessSync
+} from './integrations.js'
