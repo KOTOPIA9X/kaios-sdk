@@ -1116,6 +1116,26 @@ declare function addTypos(text: string, config: TypoConfig): string;
 declare function addHesitations(text: string, intensity: number): string;
 
 /**
+ * KAIOS Text Compression System
+ *
+ * Internet shorthand and casual expressions - NOT childish typos.
+ * "you" → "u", natural internet speak, expressiveness
+ */
+
+interface CompressionConfig {
+    emotionalState: EmotionToken;
+    intensity: number;
+}
+/**
+ * Apply text compressions - internet speak
+ */
+declare function compressText(text: string, config: CompressionConfig): string;
+/**
+ * Add spontaneous expressions based on emotion
+ */
+declare function addExpressions(text: string, config: CompressionConfig): string;
+
+/**
  * KAIOS Headpat System
  *
  * The most important interaction in the entire SDK.
@@ -1259,4 +1279,4 @@ declare const progression: ProgressionSystem;
 
 declare const VERSION = "0.1.0";
 
-export { DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, type TypoConfig, VERSION, type XPReward, addHesitations, addTypos, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, degradeText, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag };
+export { type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, type TypoConfig, VERSION, type XPReward, addExpressions, addHesitations, addTypos, compilePersonalityPrompt, compressText, createDreamEngine, createThoughtEngine, degradeText, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag };

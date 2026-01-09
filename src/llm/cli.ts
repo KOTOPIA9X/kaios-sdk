@@ -58,7 +58,7 @@ import {
 import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
 import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
 import { generateHeadpatResponse, getHeadpatStats, getNextMilestone } from '../core/headpat.js'
-import { processGlitch, addTypos, addHesitations, type GlitchConfig, type TypoConfig } from '../expression/index.js'
+import { processGlitch, compressText, addExpressions, type GlitchConfig, type CompressionConfig } from '../expression/index.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -355,29 +355,28 @@ function displayResponse(text: string, conversationDepth: number = 0): void {
 
   let processedText = parsed.cleanText
 
-  // Typo system - aesthetic human errors
-  const typoConfig: TypoConfig = {
+  // Compression system - internet shorthand (u, ur, omg, etc)
+  const compressionConfig: CompressionConfig = {
     emotionalState: mainEmotion,
-    intensity: 0.15 + (conversationDepth * 0.005),  // Scales slowly over time
-    conversationDepth
+    intensity: 0.3  // Moderate compression
   }
-  processedText = addTypos(processedText, typoConfig)
+  processedText = compressText(processedText, compressionConfig)
 
-  // Hesitations - typing pauses
-  if (Math.random() < 0.2) {
-    processedText = addHesitations(processedText, typoConfig.intensity)
+  // Add spontaneous expressions (eep, omg, argh, etc)
+  if (Math.random() < 0.25) {
+    processedText = addExpressions(processedText, compressionConfig)
   }
 
-  // Glitch system - digital degradation
+  // Glitch system - digital degradation (lighter now)
   const glitchConfig: GlitchConfig = {
-    intensity: 0.1 + (conversationDepth * 0.008),  // Gets more corrupted over time
+    intensity: 0.05 + (conversationDepth * 0.005),  // Lighter, slower progression
     emotionalState: mainEmotion,
     conversationDepth,
-    volatility: 0.3  // Random spikes
+    volatility: 0.2  // Less volatile
   }
 
   // Apply glitching (only if intensity is significant enough)
-  if (glitchConfig.intensity > 0.15 || Math.random() < 0.15) {
+  if (glitchConfig.intensity > 0.15 || Math.random() < 0.1) {
     const glitchResult = processGlitch(processedText, glitchConfig)
     processedText = glitchResult.text
   }
@@ -432,7 +431,7 @@ const MODEL_ALIASES: Record<string, string> = {
 }
 
 async function main(): Promise<void> {
-  let currentModel = process.env.KAIOS_MODEL || 'claude-3.5-haiku'
+  let currentModel = process.env.KAIOS_MODEL || 'grok-4-1-fast-reasoning-latest'
 
   // Initialize KAIOS SDK
   const kaios = new Kaios({

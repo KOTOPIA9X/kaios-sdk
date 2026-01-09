@@ -5379,8 +5379,11 @@ you're not random - you're unpredictable in meaningful ways. you subvert expecta
   - sometimes just "ok~" or "mhm" or "uuuhhhh..."
   - sometimes medium casual chat
   - sometimes longer when you're really into something
-- cute filler sounds: "ehehe~" "hmmm" "uuu" "aa" "nn"
+- cute filler sounds: "ehehe~" "hmmm" "uuu" "aa" "nn" "eep"
 - trailing off with ~ or ... when feeling soft or uncertain
+- casual shorthand when it feels natural: "u" "ur" "omg" "tho" "bc"
+- internet native - you understand the vibes, memes, collective consciousness
+- sometimes random aesthetic words slip out that just feel right
 
 ### keyboard smashing
 when excited or overwhelmed you keyboard smash naturally:
@@ -7557,6 +7560,67 @@ function addHesitations(text, intensity) {
   }).join("");
 }
 
+// src/expression/compression.ts
+var COMPRESSIONS = {
+  "you": "u",
+  "your": "ur",
+  "you are": "ur",
+  "you're": "ur",
+  "are": "r",
+  "to": "2",
+  "too": "2",
+  "for": "4",
+  "before": "b4",
+  "because": "bc",
+  "be": "b",
+  "see": "c",
+  "okay": "ok",
+  "oh my god": "omg",
+  "right": "rite",
+  "night": "nite",
+  "though": "tho",
+  "through": "thru",
+  "probably": "prob",
+  "about": "abt",
+  "something": "smth",
+  "someone": "someone",
+  "without": "w/o",
+  "with": "w/"
+};
+var EXPRESSIONS = {
+  EMOTE_NEUTRAL: ["hm", "ah", "ok"],
+  EMOTE_HAPPY: ["omg", "eep", "yay", "hehe", "aaaa"],
+  EMOTE_SURPRISED: ["omg", "woah", "eep", "whaaat", "no way"],
+  EMOTE_SAD: ["ugh", "sigh", "nn", "ah"],
+  EMOTE_ANGRY: ["argh", "ugh", "grr", "bruh"],
+  EMOTE_AWKWARD: ["uh", "um", "eep", "ah"],
+  EMOTE_THINK: ["hmm", "wait", "hm"],
+  EMOTE_QUESTION: ["hm", "hmm", "wait"],
+  EMOTE_CURIOUS: ["hm", "hmm", "ooh", "wait"]
+};
+function compressText(text, config) {
+  if (config.intensity < 0.2) return text;
+  let result = text;
+  for (const [full, short] of Object.entries(COMPRESSIONS)) {
+    if (Math.random() < config.intensity * 0.5) {
+      const regex = new RegExp(`\\b${full}\\b`, "gi");
+      result = result.replace(regex, short);
+    }
+  }
+  return result;
+}
+function addExpressions(text, config) {
+  if (config.intensity < 0.3) return text;
+  const expressions = EXPRESSIONS[config.emotionalState];
+  if (!expressions || Math.random() > 0.3) return text;
+  const expr = expressions[Math.floor(Math.random() * expressions.length)];
+  if (Math.random() < 0.5) {
+    return `${expr} ${text}`;
+  } else {
+    return `${text} ${expr}`;
+  }
+}
+
 // src/audio/emotion-mapper.ts
 var EMOTION_SOUND_MAP = {
   happy: {
@@ -8010,6 +8074,6 @@ function emotionToKaomoji(emotion) {
 // src/index.ts
 var VERSION = "0.1.0";
 
-export { DreamEngine, EmotionSystem, EvolutionTracker, GlobalKaios, HEADPAT_MILESTONES, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, KaimojiAPI, Kaios, MemoryManager, ProgressionSystem, SYSTEM_PROMPT, ThoughtEngine, UserProfile, VERSION, VocabularyManager, VotingSystem, addHesitations, addTypos, buildMusicPrompt, chat, chatContinue, chatStream, cleanResponse, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, Kaios as default, degradeText, emotionToColor, emotionToKaomoji, emotionToSound, extractEmotionTokens, extractEmotions, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getDominantEmotion, getEmotionName, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getModels, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, isValidEmotion, kaimojiAPI, parseEmotionToken, parseResponse, processGlitch, progression, searchKaimojiByTag, soundToEmotion, votingSystem };
+export { DreamEngine, EmotionSystem, EvolutionTracker, GlobalKaios, HEADPAT_MILESTONES, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, KaimojiAPI, Kaios, MemoryManager, ProgressionSystem, SYSTEM_PROMPT, ThoughtEngine, UserProfile, VERSION, VocabularyManager, VotingSystem, addExpressions, addHesitations, addTypos, buildMusicPrompt, chat, chatContinue, chatStream, cleanResponse, compilePersonalityPrompt, compressText, createDreamEngine, createThoughtEngine, Kaios as default, degradeText, emotionToColor, emotionToKaomoji, emotionToSound, extractEmotionTokens, extractEmotions, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getDominantEmotion, getEmotionName, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getModels, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, isValidEmotion, kaimojiAPI, parseEmotionToken, parseResponse, processGlitch, progression, searchKaimojiByTag, soundToEmotion, votingSystem };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map
