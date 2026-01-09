@@ -18,6 +18,10 @@
  *   KAIOS_MODEL - LLM model to use (default: claude-3.5-haiku)
  */
 
+// Load .env file for API keys
+import { config } from 'dotenv'
+config()
+
 import * as readline from 'readline'
 import { chat, chatContinue, getModels } from './chat.js'
 import {
@@ -441,7 +445,7 @@ const MODEL_ALIASES: Record<string, string> = {
 }
 
 async function main(): Promise<void> {
-  let currentModel = process.env.KAIOS_MODEL || 'grok-4-1-fast-reasoning-latest'
+  let currentModel = process.env.KAIOS_MODEL || 'claude-3.5-haiku'
 
   // Initialize KAIOS SDK
   const kaios = new Kaios({

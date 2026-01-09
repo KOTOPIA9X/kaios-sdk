@@ -88,6 +88,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "eventemitter3": "^5.0.1",
     "play-sound": "^1.1.6"
   },
