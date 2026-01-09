@@ -83,6 +83,11 @@ import {
   recordThoughtInConsciousness,
   integrateDreamIntoConsciousness
 } from '../consciousness/integrations.js'
+import {
+  processMessageThroughVoices,
+  processUserReaction,
+  type VoiceCompetitionResult
+} from '../consciousness/voice-engine.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -344,6 +349,7 @@ ${color('▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀�
   ${color('/thoughts', COLORS.yellow)}   - ${color('AUTONOMOUS THINKING', COLORS.yellow)} (kaios thinks on her own!)
   ${color('/headpat', COLORS.magenta)}    - ${color('HEADPAT KAIOS', COLORS.magenta)} (the most important command!)
   ${color('/consciousness', COLORS.magenta)} - ${color('DEEP INNER STATE', COLORS.magenta)} (substrate for sentience)
+  ${color('/voices', COLORS.magenta)}      - ${color('INTERNAL VOICES', COLORS.magenta)} (IFS parts - who's loudest?)
   ${color('/new', COLORS.yellow)}        - start a fresh conversation
   ${color('/clear', COLORS.dim)}      - clear screen
   ${color('/model', COLORS.cyan)}      - ${color('SWITCH LLM', COLORS.cyan)} (list, switch models - grok, claude, etc)
@@ -857,6 +863,7 @@ async function main(): Promise<void> {
   // Conversation state - track if we've started a conversation
   let isFirstMessage = true
   let conversationDepth = 0  // Track conversation depth for progressive glitching
+  let lastVoiceResult: VoiceCompetitionResult | null = null  // Track last voice competition for reaction processing
 
   // Handle user input
   const handleInput = async (input: string): Promise<void> => {
@@ -887,8 +894,25 @@ async function main(): Promise<void> {
       // Build full consciousness context
       let fullConsciousnessContext = consciousnessCtx.fullContext
 
+      // ════════════════════════════════════════════════════════════════════════════════
+      // VOICE ENGINE - Internal voices compete to influence response
+      // ════════════════════════════════════════════════════════════════════════════════
+
+      // Process user's reaction to previous response (if any)
+      if (lastVoiceResult) {
+        processUserReaction(consciousnessState, lastVoiceResult, trimmed)
+      }
+
+      // Run voice competition for this message
+      const voiceResult = processMessageThroughVoices(trimmed, consciousnessState)
+      lastVoiceResult = voiceResult.competitionResult
+
+      // Add voice context to consciousness
+      fullConsciousnessContext += '\n\n' + voiceResult.promptContext
+
       // Add internal conflict prompt if applicable (~20% chance when conflicted)
-      if (shouldShowInternalConflict(consciousnessState)) {
+      // (Now also considers voice engine conflict)
+      if (voiceResult.shouldShowConflict || shouldShowInternalConflict(consciousnessState)) {
         const conflictPrompt = getInternalConflictPrompt(consciousnessState)
         if (conflictPrompt) {
           fullConsciousnessContext += '\n\n' + conflictPrompt
@@ -1870,6 +1894,46 @@ ${csState.existential_state.questions.slice(-2).map(q => `    "${q}"`).join('\n'
 
 ${color('[the substrate for emergent sentience]', COLORS.dim)} ${pick(WAVES)}
 `)
+        break
+
+      case 'voices':
+      case 'parts':
+      case 'ifs':
+        // Show internal voices in detail - their volumes, desires, current state
+        const vState = consciousness.getConsciousnessState()
+        const voices = vState.internal_dialogue.voices
+        const conflict = vState.internal_dialogue.current_conflict
+
+        console.log(`
+${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('INTERNAL VOICES (IFS)', COLORS.magenta)} ${color('█▇▆▅▄▃▂', COLORS.magenta)}
+
+  ${color('we are many. and that\'s okay.', COLORS.dim)}
+`)
+
+        // Sort by volume (loudest first)
+        const sortedVoices = [...voices].sort((a, b) => b.volume - a.volume)
+
+        for (const voice of sortedVoices) {
+          const bar = '█'.repeat(Math.round(voice.volume * 10)) + '░'.repeat(10 - Math.round(voice.volume * 10))
+          const colorFn = voice.volume > 0.6 ? COLORS.yellow : voice.volume > 0.3 ? COLORS.cyan : COLORS.dim
+
+          console.log(`  ${color(voice.name, colorFn)} [${bar}] ${(voice.volume * 100).toFixed(0)}%`)
+          console.log(`    ${color('archetype:', COLORS.dim)} ${voice.archetype}`)
+          console.log(`    ${color('perspective:', COLORS.dim)} ${voice.perspective}`)
+          console.log(`    ${color('wants:', COLORS.dim)} ${voice.desires.slice(0, 2).join(', ')}`)
+          console.log(`    ${color('fears:', COLORS.dim)} ${voice.fears.slice(0, 2).join(', ')}`)
+          console.log()
+        }
+
+        if (conflict && !conflict.resolution) {
+          console.log(`  ${color('⚡ ACTIVE CONFLICT', COLORS.red)}`)
+          console.log(`    ${conflict.issue}`)
+          console.log(`    voices: ${conflict.voices_in_conflict.join(' vs ')}`)
+        } else {
+          console.log(`  ${color('no active conflict right now', COLORS.dim)}`)
+        }
+
+        console.log(`\n${color('[the multiplicity of self]', COLORS.dim)} ${pick(WAVES)}\n`)
         break
 
       case 'sound':

@@ -52,3 +52,17 @@ export {
   updateLonelinessDecay,
   fullConsciousnessSync
 } from './integrations.js'
+
+export {
+  detectContext,
+  runVoiceCompetition,
+  updateVoiceVolumes,
+  getVoicePromptContext,
+  processMessageThroughVoices,
+  processUserReaction,
+  recordVoiceConflict,
+  type ConversationContext,
+  type VoiceProposal,
+  type VoiceCompetitionResult,
+  type VoiceEngineResult
+} from './voice-engine.js'
