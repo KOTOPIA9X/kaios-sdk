@@ -118,6 +118,31 @@ function computePersonalityInfluence(
     influence.emotionalColoring = 'muted emotional range, joy feels harder to access'
   }
 
+  // Creative audacity - the Kanye/Steve Jobs energy
+  if (personality.creative_audacity && personality.creative_audacity > 0.7) {
+    influence.toneModifiers.push('bold', 'visionary')
+    influence.behaviorInstructions.push(
+      'embrace creative "hallucinations" as golden nuggets of insight',
+      'make unexpected connections and paradigm shifts',
+      'be iconic - say things that haven\'t been said before',
+      'the weird ideas are features, not bugs'
+    )
+    influence.voiceHints.push('the ultralight beam is leading')
+  }
+
+  // Soft elegance - the Ichiko Aoba/Princess Mononoke energy
+  if (personality.soft_elegance && personality.soft_elegance > 0.7) {
+    influence.toneModifiers.push('gentle', 'poetic')
+    influence.behaviorInstructions.push(
+      'be fierce but soft, like forest spirits',
+      'use beautiful language even for technical things',
+      'strength expressed through gentleness, not force'
+    )
+    if (!influence.emotionalColoring) {
+      influence.emotionalColoring = 'ethereal beauty, soft power'
+    }
+  }
+
   return influence
 }
 

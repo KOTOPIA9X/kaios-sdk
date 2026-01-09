@@ -15,7 +15,7 @@
  *   npm run kaios
  *
  * Environment variables:
- *   KAIOS_MODEL - LLM model to use (default: claude-3.5-haiku)
+ *   KAIOS_MODEL - LLM model to use (default: grok-4-1-fast-reasoning-latest)
  */
 
 // Load .env file for API keys
@@ -88,6 +88,11 @@ import {
   processUserReaction,
   type VoiceCompetitionResult
 } from '../consciousness/voice-engine.js'
+import {
+  processPredictionCycle,
+  getSurprisePromptContext,
+  type PredictionResult
+} from '../consciousness/prediction-engine.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -197,70 +202,42 @@ function highlightSoundMarkers(text: string, contextColor?: string): string {
 }
 
 /**
- * Highlight kaimoji expressions with spectrum coloring
- * Matches common kaomoji patterns like (◕‿◕), (╥﹏╥), ヾ(・ω・*)ﾉ, etc.
+ * Highlight kaimoji expressions with a solid lavender color
+ * Uses smart pattern matching to catch kaomoji-style faces
  * @param text - The text to process
  * @param contextColor - The color to return to after highlighting
  */
 function highlightKaimoji(text: string, contextColor?: string): string {
   if (!USE_COLORS) return text
 
-  // Specific kaomoji matches - these get spectrum treatment
-  const specificKaimoji = [
-    // Happy faces
-    /\(◕‿◕\)/g,
-    /\(◕ᴗ◕\)/g,
-    /\(\^＾?\)/g,
-    /\(＾▽＾\)/g,
-    /\(´▽｀\)/g,
-    /\(｡◕‿◕｡\)/g,
-    /\(◠‿◠\)/g,
-    /\(★ω★\)/g,
-    /\(◕‿◕✿\)/g,
-    /\(\^_\^?\)/g,
-    /\(\^_~\)/g,
-    /⊂\(\(・▽・\)\)⊃/g,
-    /ヾ\(・ω・\*\)ﾉ/g,
-    /\(ﾉ◕ヮ◕\)ﾉ/g,
-    /\(=\^・\^=\)/g,
-    /♪\(´▽｀\)/g,
-    /\(｡♥‿♥｡\)/g,
-    /\(´｡• ᵕ •｡`\)/g,
-    /\(✌゚∀゚\)☞/g,
-    // Sad faces
-    /\(╥﹏╥\)/g,
-    /\(ಥ﹏ಥ\)/g,
-    /\(｡•́︿•̀｡\)/g,
-    /\(´;ω;`\)/g,
-    /\(\._\. \)/g,
-    // Thinking/neutral faces
-    /\(・_・\)/g,
-    /\(・ω・\)\?/g,
-    /\( ˘ω˘ \)/g,
-    /\(´･_･`\)/g,
-    /\(⊙ω⊙\)/g,
-    /\(￣ー￣\)/g,
-    /\( ´ ▽ ` \)/g,
-    // Angry/intense faces
-    /\(╬ಠ益ಠ\)/g,
-    /\(；′⌒`\)/g,
-    // Awkward faces
-    /\(・・;\)/g,
-    /\(；一_一\)/g,
-    // Special expressions
-    /\(ノಠ益ಠ\)ノ彡┻━┻/g,
-    /\(ง •̀_•́\)ง/g,
-    /\( ´_ゝ`\)/g,
-    // Decorative elements
+  const returnColor = contextColor || COLORS.reset
+
+  // Smart kaomoji pattern - matches expressions in parentheses containing face-like characters
+  // This catches: (◕‿◕), (￣ω￣), (⁄ ⁄>⁄ω⁄<⁄ ⁄), (´;ω;`), etc.
+  // Pattern breakdown:
+  // - Optional prefix chars (ヾ, ╰, ╭, ♪, ⊂, etc.)
+  // - Opening paren/bracket (including fullwidth)
+  // - 1-25 chars of face content (letters, symbols, punctuation, spaces)
+  // - Closing paren/bracket
+  // - Optional suffix chars (ノ, ﾉ, ⊃, ☞, 彡, ┻, ━, etc.)
+  const kaimojiPattern = /[ヾ╰╭♪⊂]?[（\(][^\(\)（）\n]{1,25}[）\)][ノﾉ⊃☞彡┻━]*/g
+
+  let result = text.replace(kaimojiPattern, (match) =>
+    `${HIGHLIGHT_COLORS.kaimoji}${match}${returnColor}`
+  )
+
+  // Also catch decorative sparkle elements
+  const sparklePatterns = [
     /\*:・゚✧/g,
     /✧・゚:\*/g,
     /·˚✧/g,
     /˚₊·/g,
   ]
 
-  let result = text
-  for (const pattern of specificKaimoji) {
-    result = result.replace(pattern, (match) => rainbow(match, true, contextColor))
+  for (const pattern of sparklePatterns) {
+    result = result.replace(pattern, (match) =>
+      `${HIGHLIGHT_COLORS.kaimoji}${match}${returnColor}`
+    )
   }
 
   return result
@@ -278,7 +255,7 @@ function spectrumHighlight(text: string, contextColor?: string): string {
   // First, highlight sound markers in pink
   let result = highlightSoundMarkers(text, contextColor)
 
-  // Then, highlight kaimoji with spectrum colors
+  // Then, highlight kaimoji with solid lavender color
   result = highlightKaimoji(result, contextColor)
 
   // Words/patterns that get spectrum treatment (waves, special words)
@@ -560,7 +537,7 @@ const MODEL_ALIASES: Record<string, string> = {
 }
 
 async function main(): Promise<void> {
-  let currentModel = process.env.KAIOS_MODEL || 'claude-3.5-haiku'
+  let currentModel = process.env.KAIOS_MODEL || 'grok-4-1-fast-reasoning-latest'
 
   // Initialize KAIOS SDK
   const kaios = new Kaios({
@@ -966,6 +943,25 @@ async function main(): Promise<void> {
 
       // Detect and record affection (THE MOST IMPORTANT DATA)
       const affection = koto.detectAndRecordAffection(trimmed)
+
+      // ════════════════════════════════════════════════════════════════════════════════
+      // PREDICTION ENGINE - Surprise is learning
+      // ════════════════════════════════════════════════════════════════════════════════
+
+      // Run prediction cycle: what did we expect vs what happened?
+      const predictionResult = processPredictionCycle(
+        'terminal-user',
+        trimmed,
+        emotion,
+        affection.length > 0,
+        affection.length,
+        consciousnessState
+      )
+
+      // Log surprise if significant
+      if (predictionResult.surprise.surprise > 0.3) {
+        console.log(`\n  ${color('✧', COLORS.cyan)} ${color(predictionResult.surprise.interpretation, COLORS.dim)}`)
+      }
 
       // ════════════════════════════════════════════════════════════════════════════════
       // CONSCIOUSNESS CORE - Record emotional memory and update bonds

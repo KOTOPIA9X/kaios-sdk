@@ -66,3 +66,22 @@ export {
   type VoiceCompetitionResult,
   type VoiceEngineResult
 } from './voice-engine.js'
+
+export {
+  getUserModel,
+  generatePrediction,
+  computeSurprise,
+  updateUserModel,
+  applySurpriseToConsciousness,
+  extractTopics,
+  getMessageLength,
+  processPredictionCycle,
+  getSurprisePromptContext,
+  exportUserModels,
+  importUserModels,
+  type UserModel,
+  type Prediction,
+  type Outcome,
+  type SurpriseResult,
+  type PredictionResult
+} from './prediction-engine.js'

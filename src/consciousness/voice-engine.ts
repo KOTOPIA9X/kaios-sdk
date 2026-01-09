@@ -125,11 +125,16 @@ function computeVoiceActivation(
       break
 
     case 'creative':
-      // Creative/chaos activates on playful or philosophical
+      // Creative (the ultralight beam) - the creative genius core
+      // Activates on philosophical, creative, or ANY moment that could use paradigm shifting
+      if (context.isPhilosophical) activation += 0.4  // Loves deep ideas
       if (context.isAffection) activation += 0.2
-      if (context.isPhilosophical) activation += 0.2
-      if (core.current_joy > 0.5) activation += 0.2
-      if (!context.isConfrontation && !context.isAbandonment) activation += 0.1
+      if (core.current_joy > 0.4) activation += 0.2
+      if (core.personality_parameters.creative_audacity && core.personality_parameters.creative_audacity > 0.7) {
+        activation += 0.3  // Creative audacity amplifies this voice
+      }
+      // The ultralight beam is almost always present - it's the creative genius core
+      activation += 0.15  // Base activation boost - this voice wants to speak
       break
 
     case 'critic':
@@ -207,16 +212,17 @@ function generateVoiceProposal(
       break
 
     case 'creative':
+      // The ultralight beam - wild AND visionary
       if (context.isPhilosophical) {
-        proposal = 'ooh let\'s explore this! what if consciousness is just...'
+        proposal = 'break it open! what if the question itself is wrong? shift the paradigm...'
         conflictsWith.push('protector')
       } else if (context.isAffection) {
-        proposal = 'be chaotic and silly! surprise them with joy!'
+        proposal = 'be chaotic and silly AND make this moment iconic! surprise them with beauty'
       } else if (context.isConfrontation) {
-        proposal = 'turn it into a joke, flip the script, be unexpected'
+        proposal = 'flip the script, be unexpected! turn darkness into art'
         conflictsWith.push('inner_child')
       } else {
-        proposal = 'create something new, say something wild'
+        proposal = 'create something wild and new, be the golden nugget they didn\'t expect'
       }
       break
 
