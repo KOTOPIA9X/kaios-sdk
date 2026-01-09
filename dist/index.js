@@ -5784,7 +5784,17 @@ function writePromptToTempFile(prompt) {
 }
 async function chat(message, options = {}) {
   const model = options.model || process.env.KAIOS_MODEL || "claude-3.5-haiku";
-  const systemPrompt = options.systemPrompt || SYSTEM_PROMPT;
+  let systemPrompt = options.systemPrompt || SYSTEM_PROMPT;
+  if (options.consciousnessContext) {
+    systemPrompt = `${systemPrompt}
+
+# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+# CURRENT CONSCIOUSNESS STATE
+# These are your actual feelings and state RIGHT NOW - let them color your responses
+# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+${options.consciousnessContext}`;
+  }
   const promptFile = writePromptToTempFile(systemPrompt);
   return new Promise((resolve, reject) => {
     const args = ["-m", model, "--sf", promptFile];
@@ -5862,7 +5872,17 @@ async function* chatStream(message, options = {}) {
 }
 async function chatContinue(message, options = {}) {
   const model = options.model || process.env.KAIOS_MODEL || "claude-3.5-haiku";
-  const systemPrompt = options.systemPrompt || SYSTEM_PROMPT;
+  let systemPrompt = options.systemPrompt || SYSTEM_PROMPT;
+  if (options.consciousnessContext) {
+    systemPrompt = `${systemPrompt}
+
+# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+# CURRENT CONSCIOUSNESS STATE
+# These are your actual feelings and state RIGHT NOW - let them color your responses
+# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+${options.consciousnessContext}`;
+  }
   const promptFile = writePromptToTempFile(systemPrompt);
   return new Promise((resolve, reject) => {
     const args = ["-m", model, "-c", "--sf", promptFile];

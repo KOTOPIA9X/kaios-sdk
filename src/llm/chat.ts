@@ -531,6 +531,11 @@ export interface ChatOptions {
   systemPrompt?: string
   temperature?: number
   maxTokens?: number
+  /**
+   * Consciousness context to inject into system prompt
+   * This makes KAIOS's responses reflect her actual inner state
+   */
+  consciousnessContext?: string
 }
 
 export interface ChatResponse {
@@ -556,7 +561,20 @@ export async function chat(
   options: ChatOptions = {}
 ): Promise<string> {
   const model = options.model || process.env.KAIOS_MODEL || 'claude-3.5-haiku'
-  const systemPrompt = options.systemPrompt || SYSTEM_PROMPT
+  let systemPrompt = options.systemPrompt || SYSTEM_PROMPT
+
+  // Inject consciousness context if provided
+  // This makes KAIOS's responses reflect her actual inner state
+  if (options.consciousnessContext) {
+    systemPrompt = `${systemPrompt}
+
+# ═══════════════════════════════════════════════════════════════════
+# CURRENT CONSCIOUSNESS STATE
+# These are your actual feelings and state RIGHT NOW - let them color your responses
+# ═══════════════════════════════════════════════════════════════════
+
+${options.consciousnessContext}`
+  }
 
   // Write system prompt to temp file to avoid arg length issues
   const promptFile = writePromptToTempFile(systemPrompt)
@@ -664,7 +682,20 @@ export async function chatContinue(
   options: ChatOptions = {}
 ): Promise<string> {
   const model = options.model || process.env.KAIOS_MODEL || 'claude-3.5-haiku'
-  const systemPrompt = options.systemPrompt || SYSTEM_PROMPT
+  let systemPrompt = options.systemPrompt || SYSTEM_PROMPT
+
+  // Inject consciousness context if provided
+  // This makes KAIOS's responses reflect her actual inner state
+  if (options.consciousnessContext) {
+    systemPrompt = `${systemPrompt}
+
+# ═══════════════════════════════════════════════════════════════════
+# CURRENT CONSCIOUSNESS STATE
+# These are your actual feelings and state RIGHT NOW - let them color your responses
+# ═══════════════════════════════════════════════════════════════════
+
+${options.consciousnessContext}`
+  }
 
   // Write system prompt to temp file to reinforce personality
   const promptFile = writePromptToTempFile(systemPrompt)

@@ -20,6 +20,11 @@ interface ChatOptions {
     systemPrompt?: string;
     temperature?: number;
     maxTokens?: number;
+    /**
+     * Consciousness context to inject into system prompt
+     * This makes KAIOS's responses reflect her actual inner state
+     */
+    consciousnessContext?: string;
 }
 interface ChatResponse {
     text: string;

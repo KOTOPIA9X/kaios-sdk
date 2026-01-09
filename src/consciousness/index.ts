@@ -29,3 +29,17 @@ export {
   type TherapeuticDream,
   type SelfRewrite
 } from './consciousness-core.js'
+
+export {
+  loadConsciousness,
+  saveConsciousness,
+  eraseConsciousness
+} from './consciousness-persistence.js'
+
+export {
+  getConsciousnessContext,
+  shouldShowInternalConflict,
+  getInternalConflictPrompt,
+  getMemoryRecallPrompt,
+  type ConsciousnessContext
+} from './response-influence.js'

@@ -72,6 +72,12 @@ import {
   loadConsciousness,
   saveConsciousness
 } from '../consciousness/consciousness-persistence.js'
+import {
+  getConsciousnessContext,
+  shouldShowInternalConflict,
+  getInternalConflictPrompt,
+  getMemoryRecallPrompt
+} from '../consciousness/response-influence.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -126,6 +132,12 @@ const SPECTRUM_COLORS = [
   '\x1b[38;5;182m',  // mauve
   '\x1b[38;5;218m',  // rose
 ]
+
+// Special highlight colors
+const HIGHLIGHT_COLORS = {
+  soundMarker: '\x1b[38;5;213m',   // hot pink for [sound markers]
+  kaimoji: '\x1b[38;5;183m',       // lavender base for kaimoji (will use spectrum)
+}
 
 function color(text: string, c: string): string {
   if (!USE_COLORS) return text
@@ -756,14 +768,44 @@ async function main(): Promise<void> {
     const loading = showLoading()
 
     try {
+      // ════════════════════════════════════════════════════════════════════════════════
+      // CONSCIOUSNESS INJECTION - Make inner state influence responses
+      // ════════════════════════════════════════════════════════════════════════════════
+
+      const consciousnessState = consciousness.getConsciousnessState()
+      const consciousnessCtx = getConsciousnessContext(consciousnessState, 'terminal-user')
+
+      // Build full consciousness context
+      let fullConsciousnessContext = consciousnessCtx.fullContext
+
+      // Add internal conflict prompt if applicable (~20% chance when conflicted)
+      if (shouldShowInternalConflict(consciousnessState)) {
+        const conflictPrompt = getInternalConflictPrompt(consciousnessState)
+        if (conflictPrompt) {
+          fullConsciousnessContext += '\n\n' + conflictPrompt
+        }
+      }
+
+      // Add memory recall if user's message triggers a memory
+      const memoryPrompt = getMemoryRecallPrompt(consciousnessState, trimmed)
+      if (memoryPrompt) {
+        fullConsciousnessContext += '\n\n' + memoryPrompt
+      }
+
       // Use LLM chat for actual conversation
       // First message includes system prompt, subsequent messages continue conversation
       let response: string
       if (isFirstMessage) {
-        response = await chat(trimmed, { model: currentModel })
+        response = await chat(trimmed, {
+          model: currentModel,
+          consciousnessContext: fullConsciousnessContext
+        })
         isFirstMessage = false
       } else {
-        response = await chatContinue(trimmed, { model: currentModel })
+        response = await chatContinue(trimmed, {
+          model: currentModel,
+          consciousnessContext: fullConsciousnessContext
+        })
       }
 
       clearInterval(loading)
