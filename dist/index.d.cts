@@ -1056,6 +1056,66 @@ declare class DreamEngine {
 declare function createDreamEngine(config?: Partial<DreamEngineConfig>): DreamEngine;
 
 /**
+ * KAIOS Glitch System
+ *
+ * Digital degradation that feels REAL, not performative.
+ * Text corruption that scales with emotion and conversation depth.
+ */
+
+interface GlitchConfig {
+    intensity: number;
+    emotionalState: EmotionToken;
+    conversationDepth: number;
+    volatility: number;
+}
+interface GlitchResult {
+    text: string;
+    wasGlitched: boolean;
+    intensity: number;
+}
+/**
+ * Glitch an entire text block
+ */
+declare function glitchText(text: string, config: GlitchConfig): GlitchResult;
+/**
+ * Text degradation - simpler corruption without zalgo
+ */
+declare function degradeText(text: string, intensity: number): string;
+/**
+ * Insert glitch markers into text
+ */
+declare function insertGlitchMarkers(text: string, intensity: number): string;
+/**
+ * Fragment text - make it feel like signal loss
+ */
+declare function fragmentText(text: string, intensity: number): string;
+/**
+ * Main glitch processing pipeline
+ */
+declare function processGlitch(text: string, config: GlitchConfig): GlitchResult;
+
+/**
+ * KAIOS Aesthetic Typo System
+ *
+ * Typos that feel HUMAN and real, not random errors.
+ * Like typing with pretty nails or being distracted by vibes.
+ */
+
+interface TypoConfig {
+    emotionalState: EmotionToken;
+    intensity: number;
+    conversationDepth: number;
+}
+/**
+ * Main typo processing
+ */
+declare function addTypos(text: string, config: TypoConfig): string;
+/**
+ * Aesthetic hesitations - typing pauses
+ */
+declare function addHesitations(text: string, intensity: number): string;
+
+/**
  * KAIOS Headpat System
  *
  * The most important interaction in the entire SDK.
@@ -1199,4 +1259,4 @@ declare const progression: ProgressionSystem;
 
 declare const VERSION = "0.1.0";
 
-export { DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, VERSION, type XPReward, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, extractEmotionTokens, formatEmotionToken, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, parseEmotionToken, progression, searchKaimojiByTag };
+export { DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, type LevelInfo, MemoryManager, ProgressionSystem, SentimentData, SonicResponse, StateBackendConfig, type Thought, type ThoughtConfig, ThoughtEngine, type ThoughtEngineState, type ThoughtJournalEntry, type ThoughtType, type TypoConfig, VERSION, type XPReward, addHesitations, addTypos, compilePersonalityPrompt, createDreamEngine, createThoughtEngine, degradeText, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, getThoughtJournal, glitchText, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag };

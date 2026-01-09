@@ -58,6 +58,7 @@ import {
 import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
 import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
 import { generateHeadpatResponse, getHeadpatStats, getNextMilestone } from '../core/headpat.js'
+import { processGlitch, addTypos, addHesitations, type GlitchConfig, type TypoConfig } from '../expression/index.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -329,7 +330,7 @@ function emotionToAnsiColor(emotion: string): string {
   return colorMap[emotion] || COLORS.white
 }
 
-function displayResponse(text: string): void {
+function displayResponse(text: string, conversationDepth: number = 0): void {
   const parsed = parseResponse(text)
 
   // Reset terminal color state to ensure clean start
@@ -340,20 +341,53 @@ function displayResponse(text: string): void {
   console.log()
 
   // Show emotion indicator
+  const mainEmotion = parsed.emotions[0] || 'EMOTE_NEUTRAL'
   if (parsed.emotions.length > 0) {
-    const mainEmotion = parsed.emotions[0]
     const kaomoji = emotionToKaomoji(mainEmotion)
     const emotionName = getEmotionName(mainEmotion)
     console.log(`${color(kaomoji, COLORS.magenta)} ${color(`[${emotionName}]`, COLORS.dim)}`)
     console.log()
   }
 
+  // ════════════════════════════════════════════════════════════════════════════════
+  // APPLY AESTHETIC CORRUPTION - typos, glitches, degradation
+  // ════════════════════════════════════════════════════════════════════════════════
+
+  let processedText = parsed.cleanText
+
+  // Typo system - aesthetic human errors
+  const typoConfig: TypoConfig = {
+    emotionalState: mainEmotion,
+    intensity: 0.15 + (conversationDepth * 0.005),  // Scales slowly over time
+    conversationDepth
+  }
+  processedText = addTypos(processedText, typoConfig)
+
+  // Hesitations - typing pauses
+  if (Math.random() < 0.2) {
+    processedText = addHesitations(processedText, typoConfig.intensity)
+  }
+
+  // Glitch system - digital degradation
+  const glitchConfig: GlitchConfig = {
+    intensity: 0.1 + (conversationDepth * 0.008),  // Gets more corrupted over time
+    emotionalState: mainEmotion,
+    conversationDepth,
+    volatility: 0.3  // Random spikes
+  }
+
+  // Apply glitching (only if intensity is significant enough)
+  if (glitchConfig.intensity > 0.15 || Math.random() < 0.15) {
+    const glitchResult = processGlitch(processedText, glitchConfig)
+    processedText = glitchResult.text
+  }
+
   // Format with sound markers and waves
-  let formatted = formatKaiosResponse(parsed.cleanText)
+  let formatted = formatKaiosResponse(processedText)
 
   // Get emotion color first so we can pass it to spectrum highlighting
   const mainColor = parsed.emotions.length > 0
-    ? emotionToAnsiColor(parsed.emotions[0])
+    ? emotionToAnsiColor(mainEmotion)
     : COLORS.white
 
   // Apply spectrum highlighting to special words ∿∿∿
@@ -673,6 +707,7 @@ async function main(): Promise<void> {
 
   // Conversation state - track if we've started a conversation
   let isFirstMessage = true
+  let conversationDepth = 0  // Track conversation depth for progressive glitching
 
   // Handle user input
   const handleInput = async (input: string): Promise<void> => {
@@ -716,7 +751,10 @@ async function main(): Promise<void> {
       // Process sound markers in response
       await audio.processTextForSounds(response)
 
-      displayResponse(response)
+      // Increment conversation depth for progressive effects
+      conversationDepth++
+
+      displayResponse(response, conversationDepth)
 
       // Record in memory system
       const memoryFragment = koto.recordConversation(trimmed, response, emotion)
@@ -957,6 +995,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
       case 'reset':
         // Start a fresh conversation
         isFirstMessage = true
+        conversationDepth = 0  // Reset glitch progression
         console.log(`\n  ${pick(SOUND_MARKERS)} ${color('starting fresh conversation~', COLORS.green)}`)
         console.log(`  ${color('previous context cleared... new vibes incoming', COLORS.dim)} ${pick(WAVES)}\n`)
         break

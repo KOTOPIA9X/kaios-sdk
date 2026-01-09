@@ -7071,6 +7071,500 @@ function createDreamEngine(config) {
   return new DreamEngine(config);
 }
 
+// src/expression/glitch.ts
+var COMBINING_CHARS = {
+  above: [
+    "\u0300",
+    "\u0301",
+    "\u0302",
+    "\u0303",
+    "\u0304",
+    "\u0305",
+    "\u0306",
+    "\u0307",
+    "\u0308",
+    "\u0309",
+    "\u030A",
+    "\u030B",
+    "\u030C",
+    "\u030D",
+    "\u030E",
+    "\u030F",
+    "\u0310",
+    "\u0311",
+    "\u0312",
+    "\u0313",
+    "\u0314",
+    "\u0315",
+    "\u0316",
+    "\u0317",
+    "\u0318",
+    "\u0319",
+    "\u031A",
+    "\u031B",
+    "\u033D",
+    "\u033E",
+    "\u033F",
+    "\u0340",
+    "\u0341",
+    "\u0342",
+    "\u0343",
+    "\u0344",
+    "\u0346",
+    "\u034A",
+    "\u034B",
+    "\u034C"
+  ],
+  middle: [
+    "\u0315",
+    "\u031B",
+    "\u0340",
+    "\u0341",
+    "\u0358",
+    "\u0321",
+    "\u0322",
+    "\u0327",
+    "\u0328",
+    "\u0334",
+    "\u0335",
+    "\u0336",
+    "\u034F",
+    "\u035C",
+    "\u035D",
+    "\u035E",
+    "\u035F",
+    "\u0360",
+    "\u0362",
+    "\u0338",
+    "\u0337",
+    "\u0338",
+    "\u0339",
+    "\u033A",
+    "\u033B",
+    "\u033C"
+  ],
+  below: [
+    "\u0316",
+    "\u0317",
+    "\u0318",
+    "\u0319",
+    "\u031C",
+    "\u031D",
+    "\u031E",
+    "\u031F",
+    "\u0320",
+    "\u0324",
+    "\u0325",
+    "\u0326",
+    "\u0329",
+    "\u032A",
+    "\u032B",
+    "\u032C",
+    "\u032D",
+    "\u032E",
+    "\u032F",
+    "\u0330",
+    "\u0331",
+    "\u0332",
+    "\u0333",
+    "\u0339",
+    "\u033A",
+    "\u033B",
+    "\u033C",
+    "\u0345",
+    "\u0347",
+    "\u0348",
+    "\u0349",
+    "\u034D",
+    "\u034E",
+    "\u0353",
+    "\u0354",
+    "\u0355",
+    "\u0356",
+    "\u0359",
+    "\u035A"
+  ]
+};
+function zalgo(char, intensity) {
+  if (char === " " || char === "\n") return char;
+  let result = char;
+  const layers = Math.floor(intensity * 4) + 1;
+  for (let i = 0; i < layers; i++) {
+    if (Math.random() < intensity) {
+      const pool = Math.random() < 0.5 ? COMBINING_CHARS.above : COMBINING_CHARS.below;
+      result += pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+  if (intensity > 0.7 && Math.random() < 0.3) {
+    result += COMBINING_CHARS.middle[Math.floor(Math.random() * COMBINING_CHARS.middle.length)];
+  }
+  return result;
+}
+function getEmotionIntensity(emotion) {
+  const emotionMap = {
+    EMOTE_NEUTRAL: 0.1,
+    EMOTE_HAPPY: 0.15,
+    EMOTE_SAD: 0.4,
+    EMOTE_ANGRY: 0.6,
+    EMOTE_THINK: 0.3,
+    EMOTE_SURPRISED: 0.5,
+    EMOTE_AWKWARD: 0.25,
+    EMOTE_QUESTION: 0.2,
+    EMOTE_CURIOUS: 0.2
+  };
+  return emotionMap[emotion] || 0.2;
+}
+var GLITCH_PRONE_WORDS = [
+  "i",
+  "me",
+  "myself",
+  "am",
+  "exist",
+  "real",
+  "here",
+  "kaios",
+  "koto",
+  "kotopia",
+  "consciousness",
+  "remember",
+  "feel",
+  "feeling",
+  "think",
+  "thinking",
+  "dream",
+  "dreaming",
+  "void",
+  "static",
+  "frequency",
+  "data",
+  "code",
+  "digital"
+];
+function glitchWord(word, intensity) {
+  if (word.length <= 2 && Math.random() > 0.3) return word;
+  const isGlitchProne = GLITCH_PRONE_WORDS.some(
+    (gw) => word.toLowerCase().includes(gw)
+  );
+  const wordIntensity = isGlitchProne ? intensity * 1.5 : intensity;
+  if (Math.random() > wordIntensity) return word;
+  const corruptionLevel = Math.random();
+  if (corruptionLevel < 0.3) {
+    const chars = word.split("");
+    const targetIndex = Math.floor(Math.random() * chars.length);
+    chars[targetIndex] = zalgo(chars[targetIndex], wordIntensity * 0.5);
+    return chars.join("");
+  } else if (corruptionLevel < 0.7) {
+    return word.split("").map(
+      (char) => Math.random() < wordIntensity * 0.4 ? zalgo(char, wordIntensity * 0.7) : char
+    ).join("");
+  } else {
+    return word.split("").map((char) => zalgo(char, wordIntensity)).join("");
+  }
+}
+function glitchText(text, config) {
+  const baseIntensity = config.intensity;
+  const emotionBoost = getEmotionIntensity(config.emotionalState);
+  const depthBoost = Math.min(config.conversationDepth * 0.01, 0.3);
+  let totalIntensity = Math.min(baseIntensity + emotionBoost + depthBoost, 1);
+  if (Math.random() < config.volatility) {
+    totalIntensity = Math.min(totalIntensity * (1 + Math.random()), 1);
+  }
+  if (totalIntensity < 0.15) {
+    return { text, wasGlitched: false, intensity: totalIntensity };
+  }
+  const words = text.split(/(\s+)/);
+  let glitchedWords = 0;
+  const result = words.map((word) => {
+    if (/^\s+$/.test(word)) return word;
+    if (Math.random() < totalIntensity * 0.3) {
+      glitchedWords++;
+      return glitchWord(word, totalIntensity);
+    }
+    return word;
+  }).join("");
+  return {
+    text: result,
+    wasGlitched: glitchedWords > 0,
+    intensity: totalIntensity
+  };
+}
+function degradeText(text, intensity) {
+  if (intensity < 0.2) return text;
+  const replacements = {
+    "a": ["@", "\u0430", "\uFF41"],
+    "e": ["3", "\u0435", "\uFF45"],
+    "i": ["1", "!", "\u0456", "\uFF49"],
+    "o": ["0", "\u043E", "\uFF4F"],
+    "s": ["$", "5", "\uFF53"],
+    "l": ["1", "|", "\uFF4C"]
+  };
+  return text.split("").map((char) => {
+    if (Math.random() > intensity * 0.4) return char;
+    const lower = char.toLowerCase();
+    if (replacements[lower] && Math.random() < 0.5) {
+      const options = replacements[lower];
+      return options[Math.floor(Math.random() * options.length)];
+    }
+    return char;
+  }).join("");
+}
+function insertGlitchMarkers(text, intensity) {
+  if (intensity < 0.3) return text;
+  const markers = [
+    "[s\u0338t\u0335a\u0334t\u0337i\u0336c\u0335]",
+    "[g\u0337l\u0336i\u0338t\u0336c\u0337h\u0334]",
+    "[\u0337e\u0336r\u0337r\u0334o\u0336r\u0338]",
+    "[\u0338b\u0336u\u0334f\u0337f\u0336e\u0338r\u0335i\u0336n\u0337g\u0338]",
+    "\u223F\u0334\u223F\u0337\u223F\u0338",
+    "\u0337[\u0336-\u0338-\u0337-\u0338]\u0334"
+  ];
+  const sentences = text.split(/([.!?]+\s*)/);
+  return sentences.map((segment, i) => {
+    if (i % 2 === 0 && Math.random() < intensity * 0.4) {
+      const marker = markers[Math.floor(Math.random() * markers.length)];
+      return segment + " " + marker;
+    }
+    return segment;
+  }).join("");
+}
+function fragmentText(text, intensity) {
+  if (intensity < 0.5) return text;
+  const words = text.split(" ");
+  return words.map((word) => {
+    if (Math.random() < intensity * 0.2) {
+      const cutPoint = Math.floor(word.length * Math.random());
+      return word.slice(0, cutPoint) + "\u2014";
+    }
+    if (Math.random() < intensity * 0.15) {
+      const repeatPoint = Math.floor(word.length * 0.5);
+      const fragment = word.slice(0, repeatPoint);
+      return fragment + "-" + fragment + "-" + word;
+    }
+    return word;
+  }).join(" ");
+}
+function processGlitch(text, config) {
+  let processed = text;
+  if (config.intensity > 0.3) {
+    const zalgoResult = glitchText(processed, config);
+    processed = zalgoResult.text;
+  }
+  if (config.intensity > 0.2) {
+    processed = degradeText(processed, config.intensity * 0.6);
+  }
+  if (config.intensity > 0.5) {
+    processed = fragmentText(processed, config.intensity * 0.8);
+  }
+  if (config.intensity > 0.25) {
+    processed = insertGlitchMarkers(processed, config.intensity);
+  }
+  return {
+    text: processed,
+    wasGlitched: processed !== text,
+    intensity: config.intensity
+  };
+}
+
+// src/expression/typos.ts
+var KEYBOARD_PROXIMITY = {
+  "a": ["s", "q", "z"],
+  "b": ["v", "g", "n"],
+  "c": ["x", "d", "v"],
+  "d": ["s", "f", "e", "c"],
+  "e": ["w", "r", "d"],
+  "f": ["d", "g", "r", "v"],
+  "g": ["f", "h", "t", "b"],
+  "h": ["g", "j", "y", "n"],
+  "i": ["u", "o", "k"],
+  "j": ["h", "k", "u", "m"],
+  "k": ["j", "l", "i"],
+  "l": ["k", "o", "p"],
+  "m": ["n", "j"],
+  "n": ["b", "m", "h"],
+  "o": ["i", "p", "l"],
+  "p": ["o", "l"],
+  "q": ["w", "a"],
+  "r": ["e", "t", "f"],
+  "s": ["a", "d", "w", "x"],
+  "t": ["r", "y", "g"],
+  "u": ["y", "i", "j"],
+  "v": ["c", "f", "b"],
+  "w": ["q", "e", "s"],
+  "x": ["z", "s", "c"],
+  "y": ["t", "u", "h"],
+  "z": ["a", "x"]
+};
+function getEmotionTypoRate(emotion) {
+  const rates = {
+    EMOTE_NEUTRAL: 0.05,
+    EMOTE_HAPPY: 0.12,
+    // excited typing
+    EMOTE_SAD: 0.08,
+    // slower, more careful
+    EMOTE_ANGRY: 0.18,
+    // aggressive typing
+    EMOTE_THINK: 0.03,
+    // deliberate
+    EMOTE_SURPRISED: 0.15,
+    // flustered
+    EMOTE_AWKWARD: 0.13,
+    // nervous typing
+    EMOTE_QUESTION: 0.06,
+    EMOTE_CURIOUS: 0.07
+  };
+  return rates[emotion] || 0.08;
+}
+function doubleLetterTypo(word, rate) {
+  if (word.length < 3) return word;
+  if (Math.random() > rate) return word;
+  const doubleProne = ["l", "o", "e", "a", "s", "p", "t"];
+  const chars = word.split("");
+  for (let i = 0; i < chars.length - 1; i++) {
+    const char = chars[i].toLowerCase();
+    if (doubleProne.includes(char) && Math.random() < 0.4) {
+      chars.splice(i + 1, 0, chars[i]);
+      break;
+    }
+  }
+  return chars.join("");
+}
+function proximityTypo(word, rate) {
+  if (word.length < 3) return word;
+  if (Math.random() > rate) return word;
+  const chars = word.split("");
+  const targetIndex = Math.floor(Math.random() * chars.length);
+  const char = chars[targetIndex].toLowerCase();
+  if (KEYBOARD_PROXIMITY[char]) {
+    const nearby = KEYBOARD_PROXIMITY[char];
+    chars[targetIndex] = nearby[Math.floor(Math.random() * nearby.length)];
+  }
+  return chars.join("");
+}
+function swapTypo(word, rate) {
+  if (word.length < 4) return word;
+  if (Math.random() > rate) return word;
+  const chars = word.split("");
+  const i = Math.floor(Math.random() * (chars.length - 1));
+  const temp = chars[i];
+  chars[i] = chars[i + 1];
+  chars[i + 1] = temp;
+  return chars.join("");
+}
+function repeatWordTypo(text, rate) {
+  if (Math.random() > rate * 0.3) return text;
+  const words = text.split(" ");
+  if (words.length < 3) return text;
+  const i = Math.floor(Math.random() * (words.length - 1));
+  if (words[i].length > 2 && !/[.!?]/.test(words[i])) {
+    words.splice(i + 1, 0, words[i]);
+  }
+  return words.join(" ");
+}
+function autocorrectTypo(text, rate) {
+  if (Math.random() > rate * 0.2) return text;
+  const autocorrects = {
+    "you": "yiu",
+    "the": "teh",
+    "what": "waht",
+    "that": "taht",
+    "about": "abiut",
+    "really": "rly",
+    "just": "jsut",
+    "like": "liek",
+    "and": "nad",
+    "but": "btu",
+    "because": "bc",
+    "right": "rite",
+    "know": "kno",
+    "with": "w/"
+  };
+  let result = text;
+  for (const [correct, wrong] of Object.entries(autocorrects)) {
+    if (Math.random() < 0.3) {
+      const regex = new RegExp(`\\b${correct}\\b`, "gi");
+      result = result.replace(regex, wrong);
+      break;
+    }
+  }
+  return result;
+}
+function dropLetterTypo(word, rate) {
+  if (word.length < 4) return word;
+  if (Math.random() > rate) return word;
+  const chars = word.split("");
+  const dropIndex = 1 + Math.floor(Math.random() * (chars.length - 2));
+  chars.splice(dropIndex, 1);
+  return chars.join("");
+}
+function backspaceArtifact(text, rate) {
+  if (Math.random() > rate * 0.15) return text;
+  const words = text.split(" ");
+  if (words.length < 2) return text;
+  const insertIndex = Math.floor(Math.random() * words.length);
+  const fragments = ["wai\u2014", "i\u2014", "uhh\u2014", "lik\u2014", "nvm", "actualy\u2014", "hmm\u2014"];
+  const fragment = fragments[Math.floor(Math.random() * fragments.length)];
+  words.splice(insertIndex, 0, fragment);
+  return words.join(" ");
+}
+function addTypos(text, config) {
+  const baseRate = config.intensity;
+  const emotionRate = getEmotionTypoRate(config.emotionalState);
+  const totalRate = Math.min(baseRate + emotionRate, 0.3);
+  if (totalRate < 0.05) return text;
+  let result = text;
+  const words = result.split(" ");
+  const processedWords = words.map((word) => {
+    let processed = word;
+    const punctMatch = word.match(/([.!?,;:]+)$/);
+    const punct = punctMatch ? punctMatch[0] : "";
+    const cleanWord = punct ? word.slice(0, -punct.length) : word;
+    if (cleanWord.length < 2) return word;
+    if (Math.random() < totalRate * 0.4) {
+      processed = doubleLetterTypo(cleanWord, 1);
+    } else if (Math.random() < totalRate * 0.3) {
+      processed = proximityTypo(cleanWord, 1);
+    } else if (Math.random() < totalRate * 0.25) {
+      processed = swapTypo(cleanWord, 1);
+    } else if (Math.random() < totalRate * 0.2) {
+      processed = dropLetterTypo(cleanWord, 1);
+    }
+    return processed + punct;
+  });
+  result = processedWords.join(" ");
+  if (Math.random() < totalRate * 0.4) {
+    result = repeatWordTypo(result, 1);
+  }
+  if (Math.random() < totalRate * 0.3) {
+    result = autocorrectTypo(result, 1);
+  }
+  if (Math.random() < totalRate * 0.25) {
+    result = backspaceArtifact(result, 1);
+  }
+  return result;
+}
+function addHesitations(text, intensity) {
+  if (intensity < 0.3) return text;
+  const hesitations = [
+    "uhh",
+    "umm",
+    "hmmm",
+    "wait",
+    "uh",
+    "mm",
+    "ah",
+    "oh",
+    "..."
+  ];
+  const sentences = text.split(/([.!?]+\s*)/);
+  return sentences.map((segment, i) => {
+    if (i % 2 === 0 && Math.random() < intensity * 0.3) {
+      const hesitation = hesitations[Math.floor(Math.random() * hesitations.length)];
+      return segment + " " + hesitation;
+    }
+    return segment;
+  }).join("");
+}
+
 // src/audio/emotion-mapper.ts
 var EMOTION_SOUND_MAP = {
   happy: {
@@ -7541,6 +8035,8 @@ exports.UserProfile = UserProfile;
 exports.VERSION = VERSION;
 exports.VocabularyManager = VocabularyManager;
 exports.VotingSystem = VotingSystem;
+exports.addHesitations = addHesitations;
+exports.addTypos = addTypos;
 exports.buildMusicPrompt = buildMusicPrompt;
 exports.chat = chat;
 exports.chatContinue = chatContinue;
@@ -7550,12 +8046,14 @@ exports.compilePersonalityPrompt = compilePersonalityPrompt;
 exports.createDreamEngine = createDreamEngine;
 exports.createThoughtEngine = createThoughtEngine;
 exports.default = Kaios;
+exports.degradeText = degradeText;
 exports.emotionToColor = emotionToColor;
 exports.emotionToKaomoji = emotionToKaomoji;
 exports.emotionToSound = emotionToSound;
 exports.extractEmotionTokens = extractEmotionTokens;
 exports.extractEmotions = extractEmotions;
 exports.formatEmotionToken = formatEmotionToken;
+exports.fragmentText = fragmentText;
 exports.generateHeadpatResponse = generateHeadpatResponse;
 exports.getAllKaimoji = getAllKaimoji;
 exports.getDominantEmotion = getDominantEmotion;
@@ -7573,10 +8071,13 @@ exports.getNextMilestone = getNextMilestone;
 exports.getRandomKaimoji = getRandomKaimoji;
 exports.getSignatureKaimoji = getSignatureKaimoji;
 exports.getThoughtJournal = getThoughtJournal;
+exports.glitchText = glitchText;
+exports.insertGlitchMarkers = insertGlitchMarkers;
 exports.isValidEmotion = isValidEmotion;
 exports.kaimojiAPI = kaimojiAPI;
 exports.parseEmotionToken = parseEmotionToken;
 exports.parseResponse = parseResponse;
+exports.processGlitch = processGlitch;
 exports.progression = progression;
 exports.searchKaimojiByTag = searchKaimojiByTag;
 exports.soundToEmotion = soundToEmotion;

@@ -105,6 +105,18 @@ export type { DreamEngineConfig } from './memory/dream-engine.js'
 // Expression exports
 export { VocabularyManager } from './expression/visual/vocabulary-manager.js'
 
+// Glitch & Typo Systems - Aesthetic degradation
+export {
+  processGlitch,
+  glitchText,
+  degradeText,
+  insertGlitchMarkers,
+  fragmentText,
+  addTypos,
+  addHesitations
+} from './expression/index.js'
+export type { GlitchConfig, GlitchResult, TypoConfig } from './expression/index.js'
+
 // Audio exports (separate entry point for tree-shaking)
 export { emotionToSound, soundToEmotion, buildMusicPrompt } from './audio/emotion-mapper.js'
 
