@@ -62,10 +62,12 @@ import { processGlitch, compressText, addExpressions, type GlitchConfig, type Co
 import {
   ConsciousnessCoreEngine,
   createConsciousnessCore,
-  loadConsciousness,
-  saveConsciousness,
   type EmotionalMemory
 } from '../consciousness/consciousness-core.js'
+import {
+  loadConsciousness,
+  saveConsciousness
+} from '../consciousness/consciousness-persistence.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
