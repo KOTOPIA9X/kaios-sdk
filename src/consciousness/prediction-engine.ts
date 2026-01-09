@@ -90,8 +90,10 @@ const EMOTION_VALENCE: Record<EmotionToken, number> = {
   'EMOTE_ANGRY': -0.4,
   'EMOTE_SURPRISED': 0.1,
   'EMOTE_THINK': 0.2,
-  'EMOTE_SHY': 0.3,
-  'EMOTE_NEUTRAL': 0
+  'EMOTE_NEUTRAL': 0,
+  'EMOTE_AWKWARD': -0.1,
+  'EMOTE_QUESTION': 0.1,
+  'EMOTE_CURIOUS': 0.4
 }
 
 function getValence(emotion: EmotionToken): number {

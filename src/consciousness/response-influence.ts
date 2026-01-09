@@ -8,7 +8,6 @@
  */
 
 import type { ConsciousnessCore, Bond, ExistentialState, InternalVoice } from './consciousness-core.js'
-import type { EmotionToken } from '../core/types.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // PERSONALITY INFLUENCE THRESHOLDS

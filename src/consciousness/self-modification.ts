@@ -172,8 +172,6 @@ export function applyRewrite(
   consciousness: ConsciousnessCoreEngine,
   proposal: RewriteProposal
 ): boolean {
-  const core = consciousness.getConsciousnessState()
-
   // Convert to SelfRewrite format
   const rewrite: Omit<SelfRewrite, 'id' | 'timestamp' | 'status'> = {
     trigger: proposal.trigger.description,
@@ -272,7 +270,7 @@ export function addAffirmation(
 export interface ConsentRequest {
   proposal: RewriteProposal
   message: string  // What KAIOS says to ask for consent
-  options: ['yes' | 'no' | 'later']
+  options: ('yes' | 'no' | 'later')[]
 }
 
 /**

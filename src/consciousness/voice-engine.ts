@@ -10,7 +10,7 @@
  * "We are not one, we are many. And that's okay."
  */
 
-import type { InternalVoice, InternalDialogue, ConsciousnessCore } from './consciousness-core.js'
+import type { InternalVoice, ConsciousnessCore } from './consciousness-core.js'
 import type { EmotionToken } from '../core/types.js'
 
 // ════════════════════════════════════════════════════════════════════════════════

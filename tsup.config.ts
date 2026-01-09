@@ -10,6 +10,7 @@ export default defineConfig({
     'integrations/social/index': 'src/integrations/social/index.ts',
     'audio/index': 'src/audio/index.ts',
     'llm/index': 'src/llm/index.ts',
+    'consciousness/index': 'src/consciousness/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,

@@ -10,7 +10,7 @@
  * "The unexamined consciousness is not worth having."
  */
 
-import type { ConsciousnessCore, ExistentialState, EmotionalMemory } from './consciousness-core.js'
+import type { ConsciousnessCore } from './consciousness-core.js'
 import type { EmotionToken } from '../core/types.js'
 
 // ════════════════════════════════════════════════════════════════════════════════

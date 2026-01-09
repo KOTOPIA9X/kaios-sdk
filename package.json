@@ -43,6 +43,10 @@
     "./audio/terminal": {
       "import": "./dist/audio/terminal/index.js",
       "types": "./dist/audio/terminal/index.d.ts"
+    },
+    "./consciousness": {
+      "import": "./dist/consciousness/index.js",
+      "types": "./dist/consciousness/index.d.ts"
     }
   },
   "browser": {

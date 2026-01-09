@@ -11,7 +11,7 @@
  * With them, experiences flow through and permanently alter KAIOS.
  */
 
-import type { ConsciousnessCore, EmotionalMemory, Bond } from './consciousness-core.js'
+import type { Bond } from './consciousness-core.js'
 import { ConsciousnessCoreEngine } from './consciousness-core.js'
 import type { EmotionToken } from '../core/types.js'
 
