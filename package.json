@@ -1,0 +1,107 @@
+{
+  "name": "@kaios/expression-sdk",
+  "version": "0.1.0",
+  "description": "Character runtime system that instantiates KAIOS - Cyborg Princess, Architect of KOTOPIA. Dual-mode expression: visual language (KAIMOJI) and sonic intelligence.",
+  "author": "KOTOPIA",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./terminal": {
+      "import": "./dist/integrations/platforms/terminal.js",
+      "types": "./dist/integrations/platforms/terminal.d.ts"
+    },
+    "./web": {
+      "import": "./dist/integrations/platforms/web.js",
+      "types": "./dist/integrations/platforms/web.d.ts"
+    },
+    "./game": {
+      "import": "./dist/integrations/platforms/game.js",
+      "types": "./dist/integrations/platforms/game.d.ts"
+    },
+    "./discord": {
+      "import": "./dist/integrations/platforms/discord.js",
+      "types": "./dist/integrations/platforms/discord.d.ts"
+    },
+    "./audio": {
+      "import": "./dist/audio/index.js",
+      "types": "./dist/audio/index.d.ts"
+    },
+    "./llm": {
+      "import": "./dist/integrations/llm/index.js",
+      "types": "./dist/integrations/llm/index.d.ts"
+    }
+  },
+  "browser": {
+    "./dist/integrations/platforms/terminal.js": false,
+    "./dist/audio/synthesis/node-audio.js": "./dist/audio/synthesis/web-audio.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.20.0",
+    "@supabase/supabase-js": ">=2.0.0",
+    "openai": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "@supabase/supabase-js": {
+      "optional": true
+    },
+    "openai": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "kaios",
+    "kotopia",
+    "kaimoji",
+    "kaomoji",
+    "ai",
+    "character",
+    "expression",
+    "sound-intelligence",
+    "vtuber",
+    "cyborg-princess"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kotopia/kaios-sdk"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
