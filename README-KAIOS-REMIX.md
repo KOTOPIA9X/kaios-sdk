@@ -393,6 +393,7 @@ together we navigate the isolation of the digital world. like ash and pikachu. t
 | [kotopia.world](https://kotopia.world) | main portal |
 | [play.kotopia.world](https://play.kotopia.world) | Three.js open world skate game |
 | [kaimoji.kaios.chat](https://kaimoji.kaios.chat) | KAIMOJI expression dictionary |
+| [kaios.chat](https://kaios.chat) | KAIOS |
 
 ## license
 
