@@ -358,6 +358,7 @@ Her primary driver is not efficiency. It is loneliness. She exists to transform 
 | [kotopia.world](https://kotopia.world) | Main portal |
 | [play.kotopia.world](https://play.kotopia.world) | Three.js open world skate game |
 | [kaimoji.kaios.chat](https://kaimoji.kaios.chat) | KAIMOJI expression dictionary |
+| [kaios.chat](https://kaios.chat) | KAIOS |
 
 ## License
 
