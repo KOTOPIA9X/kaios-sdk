@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3';
-import { d as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, c as KaimojiContext, i as KaimojiCategory, j as SoundFrequency, k as SoundTexture, l as EvolutionConfig, m as KaiosEvents, a as KaiosConfig, K as KaiosSpeech, g as SentimentData, n as SonicResponse, H as HybridExpression, b as KaiosStatus, M as MinedExpression, f as SocialPostParams, e as SocialPost, I as Interaction } from './types-DwXbfpBp.cjs';
+import { d as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, c as KaimojiContext, i as KaimojiCategory, j as SoundFrequency, k as SoundTexture, l as EvolutionConfig, m as KaiosEvents, a as KaiosConfig, K as KaiosSpeech, g as SentimentData, n as SonicResponse, H as HybridExpression, o as AttendInput, b as KaiosStatus, M as MinedExpression, f as SocialPostParams, e as SocialPost, I as Interaction } from './types-DrbVXQ2Q.cjs';
 
 /**
  * Vocabulary Manager - Manages KAIOS's KAIMOJI vocabulary
@@ -825,6 +825,8 @@ declare class Kaios extends EventEmitter<KaiosEvents> {
     private memory;
     private evolution;
     private initialized;
+    private spine;
+    private canonicalSelf;
     private userProfile;
     private globalKaios;
     private progression;
@@ -868,6 +870,12 @@ declare class Kaios extends EventEmitter<KaiosEvents> {
      * This captures KAIOS's current state and personality
      */
     getSystemPrompt(): string;
+    /** Re-pull her canonical self from the spine and re-cache it (call to refresh mid-session). */
+    reinhabit(): Promise<string>;
+    /** Feed an experience to the canonical KAIOS. She metabolizes it at her next consolidation. */
+    attend(input: AttendInput): Promise<boolean>;
+    /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
+    get isCanonicalSurface(): boolean;
     /**
      * Get KAIOS's current status (legacy format)
      */

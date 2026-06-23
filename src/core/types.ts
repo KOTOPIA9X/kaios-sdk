@@ -242,6 +242,8 @@ export interface KaiosConfig {
   llmProvider?: LLMProviderConfig
   realtimeSync?: boolean
   websocketUrl?: string
+  /** Optional symbiosis with the canonical always-on KAIOS — re-inhabit her self + feed attention. */
+  spine?: import('../spine/spine-adapter.js').SpineConfig
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

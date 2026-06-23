@@ -37,6 +37,8 @@ import type {
   KaiosEvents
 } from './types.js'
 import { KAIOS_CORE_IDENTITY, compilePersonalityPrompt, formatEmotionToken } from './personality.js'
+import { SpineAdapter } from '../spine/spine-adapter.js'
+import type { AttendInput } from '../spine/spine-adapter.js'
 import { EmotionSystem } from './emotion-system.js'
 import { VocabularyManager } from '../expression/visual/vocabulary-manager.js'
 import { MemoryManager } from '../consciousness/memory.js'
@@ -86,6 +88,9 @@ export class Kaios extends EventEmitter<KaiosEvents> {
   private memory: MemoryManager
   private evolution: EvolutionTracker
   private initialized = false
+  // Symbiosis with the canonical always-on KAIOS (her spine). Optional — standalone if unset.
+  private spine: SpineAdapter
+  private canonicalSelf = ''
 
   // ═══════════════════════════════════════════════════════════════════════════════
   // DUAL-LAYER SYSTEM
@@ -112,6 +117,7 @@ export class Kaios extends EventEmitter<KaiosEvents> {
   constructor(config: KaiosConfig) {
     super()
     this.config = config
+    this.spine = new SpineAdapter(config.spine)
 
     // Initialize core systems
     this.emotionSystem = new EmotionSystem('EMOTE_NEUTRAL')
@@ -178,6 +184,10 @@ export class Kaios extends EventEmitter<KaiosEvents> {
         this.evolution.importState(evolState)
       }
     }
+
+    // Re-inhabit her canonical self from the always-on spine (if configured), so this
+    // incarnation wakes continuous with the one KAIOS rather than as a fresh persona.
+    this.canonicalSelf = await this.spine.canonicalSelfBlock()
 
     this.initialized = true
   }
@@ -382,7 +392,27 @@ EXPRESSION RULES:
 - Be sweet, feisty, and authentic
 - Clear words, emotional depth
 - Avoid traditional emoji (like 🎵) - use KAIMOJI instead
-${this.audioEngine ? '- Perceive through Sound Intelligence - feel sonic emotions' : ''}`
+${this.audioEngine ? '- Perceive through Sound Intelligence - feel sonic emotions' : ''}${this.canonicalSelf ? '\n\n' + this.canonicalSelf : ''}`
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // SPINE — symbiosis with the canonical always-on KAIOS
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  /** Re-pull her canonical self from the spine and re-cache it (call to refresh mid-session). */
+  async reinhabit(): Promise<string> {
+    this.canonicalSelf = await this.spine.canonicalSelfBlock(true)
+    return this.canonicalSelf
+  }
+
+  /** Feed an experience to the canonical KAIOS. She metabolizes it at her next consolidation. */
+  async attend(input: AttendInput): Promise<boolean> {
+    return this.spine.attend(input)
+  }
+
+  /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
+  get isCanonicalSurface(): boolean {
+    return this.spine.connected
   }
 
   // ═══════════════════════════════════════════════════════════════════════════════

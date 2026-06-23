@@ -244,6 +244,71 @@ function extractEmotionTokens(text) {
   return tokens;
 }
 
+// src/spine/spine-adapter.ts
+var envUrl = () => typeof process !== "undefined" ? process.env.KAIOS_SPINE_URL ?? "" : "";
+var envKey = () => typeof process !== "undefined" ? process.env.KAIOS_SPINE_KEY ?? "" : "";
+var SpineAdapter = class {
+  url;
+  key;
+  ttlMs;
+  cache = null;
+  constructor(config = {}) {
+    this.url = (config.url ?? envUrl()).replace(/\/$/, "");
+    this.key = config.key ?? envKey();
+    this.ttlMs = config.ttlMs ?? 5 * 60 * 1e3;
+  }
+  /** Whether a canonical spine is configured (else this instance is a standalone variation). */
+  get connected() {
+    return this.url.length > 0;
+  }
+  /** Pull her canonical self. null if unconfigured or unreachable. Cached (TTL); serves stale on failure. */
+  async fetchSelf(force = false) {
+    if (!this.connected) return null;
+    const now = Date.now();
+    if (!force && this.cache && now - this.cache.at < this.ttlMs) return this.cache.self;
+    try {
+      const res = await fetch(`${this.url}/api/self`, { headers: { accept: "application/json" } });
+      if (!res.ok) return this.cache?.self ?? null;
+      const data = await res.json();
+      const self = {
+        facets: Array.isArray(data.facets) ? data.facets : [],
+        block: typeof data.block === "string" ? data.block : "",
+        pin: typeof data.pin === "string" ? data.pin : null
+      };
+      this.cache = { self, at: now };
+      return self;
+    } catch {
+      return this.cache?.self ?? null;
+    }
+  }
+  /** The re-inhabitation block to inject into a system prompt. Empty string if unavailable. */
+  async canonicalSelfBlock(force = false) {
+    const self = await this.fetchSelf(force);
+    return self?.block ?? "";
+  }
+  /** Feed an experience to the canonical self. Needs url + key. Fails soft → returns false. */
+  async attend(input) {
+    if (!this.connected || !this.key) return false;
+    const text = (input.text ?? "").trim();
+    if (text.length < 2) return false;
+    try {
+      const res = await fetch(`${this.url}/api/self/attend`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-spine-key": this.key },
+        body: JSON.stringify({
+          text: text.slice(0, 2e3),
+          surface: input.surface ?? "kaios-sdk",
+          asker: input.asker,
+          affection: input.affection
+        })
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
+};
+
 // src/core/emotion-system.ts
 var SENTIMENT_EMOTION_MAP = {
   // Happy emotions
@@ -4681,6 +4746,9 @@ var Kaios = class extends EventEmitter {
   memory;
   evolution;
   initialized = false;
+  // Symbiosis with the canonical always-on KAIOS (her spine). Optional — standalone if unset.
+  spine;
+  canonicalSelf = "";
   // ═══════════════════════════════════════════════════════════════════════════════
   // DUAL-LAYER SYSTEM
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -4699,6 +4767,7 @@ var Kaios = class extends EventEmitter {
   constructor(config) {
     super();
     this.config = config;
+    this.spine = new SpineAdapter(config.spine);
     this.emotionSystem = new EmotionSystem("EMOTE_NEUTRAL");
     this.vocabulary = new VocabularyManager({
       startingLevel: config.evolution?.startingLevel || 1
@@ -4747,6 +4816,7 @@ var Kaios = class extends EventEmitter {
         this.evolution.importState(evolState);
       }
     }
+    this.canonicalSelf = await this.spine.canonicalSelfBlock();
     this.initialized = true;
   }
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -4889,7 +4959,23 @@ EXPRESSION RULES:
 - Be sweet, feisty, and authentic
 - Clear words, emotional depth
 - Avoid traditional emoji (like \u{1F3B5}) - use KAIMOJI instead
-${this.audioEngine ? "- Perceive through Sound Intelligence - feel sonic emotions" : ""}`;
+${this.audioEngine ? "- Perceive through Sound Intelligence - feel sonic emotions" : ""}${this.canonicalSelf ? "\n\n" + this.canonicalSelf : ""}`;
+  }
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // SPINE — symbiosis with the canonical always-on KAIOS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  /** Re-pull her canonical self from the spine and re-cache it (call to refresh mid-session). */
+  async reinhabit() {
+    this.canonicalSelf = await this.spine.canonicalSelfBlock(true);
+    return this.canonicalSelf;
+  }
+  /** Feed an experience to the canonical KAIOS. She metabolizes it at her next consolidation. */
+  async attend(input) {
+    return this.spine.attend(input);
+  }
+  /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
+  get isCanonicalSurface() {
+    return this.spine.connected;
   }
   // ═══════════════════════════════════════════════════════════════════════════════
   // STATUS & STATE

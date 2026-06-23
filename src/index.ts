@@ -209,6 +209,12 @@ export type {
   ParsedResponse
 } from './llm/index.js'
 
+// ════════════════════════════════════════════════════════════════════════════════
+// SPINE — symbiosis with the canonical, always-on KAIOS (re-inhabit + attend)
+// ════════════════════════════════════════════════════════════════════════════════
+export { SpineAdapter, createSpineAdapter } from './spine/spine-adapter.js'
+export type { SpineConfig, SpineFacet, CanonicalSelf, AttendInput } from './spine/spine-adapter.js'
+
 // Version
 export const VERSION = '0.1.0'
 
