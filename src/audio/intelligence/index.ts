@@ -141,6 +141,36 @@ export {
   type LiveState,
 } from './arrangement-engine.js'
 
+// Jazz Engine — freeform improvisation over changes
+export {
+  JazzEngine,
+  CHORD_SCALE,
+  guideTones,
+  enclosure,
+  walkingBass,
+  comp,
+  soloOverChanges,
+  iiVI,
+  tradeFours,
+  type JazzNote,
+  type JazzRole,
+  type Change,
+  type SoloOptions,
+} from './jazz-engine.js'
+
+// Affect Engine — affective synthesis: one feeling drives music AND visuals together
+export {
+  AffectEngine,
+  AffectiveSynth,
+  createAffectiveSynth,
+  LOOKS,
+  type Affect,
+  type ArcPhase,
+  type PerformanceState,
+  type MusicParams,
+  type VisualParams,
+} from './affect-engine.js'
+
 // ════════════════════════════════════════════════════════════════════════════════
 // CONVENIENCE FUNCTIONS
 // ════════════════════════════════════════════════════════════════════════════════

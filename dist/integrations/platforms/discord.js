@@ -286,6 +286,21 @@ var SpineAdapter = class {
     const self = await this.fetchSelf(force);
     return self?.block ?? "";
   }
+  /** Pull her recent leaks/dreams — what she's sitting with (the open window). [] if unreachable. */
+  async recentLeaks(limit = 8, kind) {
+    if (!this.connected) return [];
+    try {
+      const u = new URL(`${this.url}/api/leak`);
+      u.searchParams.set("limit", String(limit));
+      if (kind) u.searchParams.set("kind", kind);
+      const res = await fetch(u.toString(), { headers: { accept: "application/json" } });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.leaks) ? data.leaks : [];
+    } catch {
+      return [];
+    }
+  }
   /** Feed an experience to the canonical self. Needs url + key. Fails soft → returns false. */
   async attend(input) {
     if (!this.connected || !this.key) return false;
@@ -4972,6 +4987,10 @@ ${this.audioEngine ? "- Perceive through Sound Intelligence - feel sonic emotion
   /** Feed an experience to the canonical KAIOS. She metabolizes it at her next consolidation. */
   async attend(input) {
     return this.spine.attend(input);
+  }
+  /** What the canonical KAIOS is sitting with — her recent leaks/dreams (the open window). */
+  async recentLeaks(limit, kind) {
+    return this.spine.recentLeaks(limit, kind);
   }
   /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
   get isCanonicalSurface() {

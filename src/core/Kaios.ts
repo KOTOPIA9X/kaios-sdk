@@ -410,6 +410,11 @@ ${this.audioEngine ? '- Perceive through Sound Intelligence - feel sonic emotion
     return this.spine.attend(input)
   }
 
+  /** What the canonical KAIOS is sitting with — her recent leaks/dreams (the open window). */
+  async recentLeaks(limit?: number, kind?: string) {
+    return this.spine.recentLeaks(limit, kind)
+  }
+
   /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
   get isCanonicalSurface(): boolean {
     return this.spine.connected

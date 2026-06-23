@@ -306,6 +306,21 @@ var SpineAdapter = class {
     const self = await this.fetchSelf(force);
     return self?.block ?? "";
   }
+  /** Pull her recent leaks/dreams — what she's sitting with (the open window). [] if unreachable. */
+  async recentLeaks(limit = 8, kind) {
+    if (!this.connected) return [];
+    try {
+      const u = new URL(`${this.url}/api/leak`);
+      u.searchParams.set("limit", String(limit));
+      if (kind) u.searchParams.set("kind", kind);
+      const res = await fetch(u.toString(), { headers: { accept: "application/json" } });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.leaks) ? data.leaks : [];
+    } catch {
+      return [];
+    }
+  }
   /** Feed an experience to the canonical self. Needs url + key. Fails soft → returns false. */
   async attend(input) {
     if (!this.connected || !this.key) return false;
@@ -5070,6 +5085,10 @@ ${this.audioEngine ? "- Perceive through Sound Intelligence - feel sonic emotion
   async attend(input) {
     return this.spine.attend(input);
   }
+  /** What the canonical KAIOS is sitting with — her recent leaks/dreams (the open window). */
+  async recentLeaks(limit, kind) {
+    return this.spine.recentLeaks(limit, kind);
+  }
   /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
   get isCanonicalSurface() {
     return this.spine.connected;
@@ -8314,6 +8333,495 @@ function buildMusicPrompt(sentiment, style) {
   return parts.join(", ");
 }
 
+// src/audio/intelligence/music-theory.ts
+var PHI = 1.618033988749895;
+var FIBONACCI = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144];
+var SCALES = {
+  // Major modes
+  major: [0, 2, 4, 5, 7, 9, 11],
+  // Ionian - bright, happy
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  // Minor with raised 6th - jazzy, soulful
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  // Spanish, exotic
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  // Dreamy, floating
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  // Bluesy, rock
+  aeolian: [0, 2, 3, 5, 7, 8, 10],
+  // Natural minor - melancholic
+  locrian: [0, 1, 3, 5, 6, 8, 10],
+  // Unstable, dark
+  // Pentatonic - universally pleasing, great for lofi
+  majorPentatonic: [0, 2, 4, 7, 9],
+  // Happy, universal
+  minorPentatonic: [0, 3, 5, 7, 10],
+  // Bluesy, soulful
+  // Japanese scales - cottagecore, peaceful
+  hirajoshi: [0, 2, 3, 7, 8],
+  // Japanese, mysterious
+  insen: [0, 1, 5, 7, 10],
+  // Melancholic Japanese
+  iwato: [0, 1, 5, 6, 10],
+  // Dark Japanese
+  // Blues & Jazz
+  blues: [0, 3, 5, 6, 7, 10],
+  // Classic blues
+  bebop: [0, 2, 4, 5, 7, 9, 10, 11],
+  // Jazz bebop
+  // Electronic / Breakcore
+  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  wholeTone: [0, 2, 4, 6, 8, 10],
+  // Dreamy, unstable
+  diminished: [0, 2, 3, 5, 6, 8, 9, 11],
+  // Tense, dramatic
+  // Lo-fi favorites
+  lofi: [0, 2, 3, 5, 7, 9, 10],
+  // Dorian (most common in lofi)
+  chillhop: [0, 2, 4, 7, 9],
+  // Major pentatonic
+  // Special
+  prometheus: [0, 2, 4, 6, 9, 10],
+  // Scriabin's mystic scale
+  enigmatic: [0, 1, 4, 6, 8, 10, 11]
+  // Verdi's scale
+};
+var CHORDS = {
+  // Triads
+  major: [0, 4, 7],
+  minor: [0, 3, 7],
+  diminished: [0, 3, 6],
+  augmented: [0, 4, 8],
+  sus2: [0, 2, 7],
+  sus4: [0, 5, 7],
+  // Sevenths - essential for lofi/jazz
+  maj7: [0, 4, 7, 11],
+  // Dreamy, nostalgic
+  min7: [0, 3, 7, 10],
+  // Smooth, melancholic
+  dom7: [0, 4, 7, 10],
+  // Tension, blues
+  dim7: [0, 3, 6, 9],
+  // Dramatic tension
+  halfDim7: [0, 3, 6, 10],
+  // m7b5, jazz staple
+  minMaj7: [0, 3, 7, 11],
+  // Mysterious
+  // Extended - lofi heaven
+  maj9: [0, 4, 7, 11, 14],
+  // Super dreamy
+  min9: [0, 3, 7, 10, 14],
+  // Smooth, sophisticated
+  dom9: [0, 4, 7, 10, 14],
+  // Funky
+  add9: [0, 4, 7, 14],
+  // Open, airy
+  min11: [0, 3, 7, 10, 14, 17],
+  // Very jazzy
+  maj13: [0, 4, 7, 11, 14, 21],
+  // Full, lush
+  // Altered - for tension/resolution
+  dom7sharp9: [0, 4, 7, 10, 15],
+  // Hendrix chord
+  dom7flat9: [0, 4, 7, 10, 13],
+  // Dark tension
+  dom7sharp11: [0, 4, 7, 10, 18],
+  // Lydian dominant
+  // Power chords - breakcore
+  power: [0, 7],
+  power5: [0, 7, 12]
+};
+
+// src/audio/intelligence/rhythm-engine.ts
+function euclidean(hits, steps, rotation = 0) {
+  if (hits >= steps) return Array(steps).fill(1);
+  if (hits === 0) return Array(steps).fill(0);
+  let pattern = [];
+  for (let i = 0; i < hits; i++) pattern.push([1]);
+  for (let i = 0; i < steps - hits; i++) pattern.push([0]);
+  while (true) {
+    const lastIndex = pattern.length - 1;
+    const lastValue = pattern[lastIndex];
+    let count = 0;
+    for (let i = lastIndex; i >= 0; i--) {
+      if (JSON.stringify(pattern[i]) === JSON.stringify(lastValue)) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    if (count === pattern.length || count <= 1) break;
+    const distributed = [];
+    const remaining = [];
+    for (let i = 0; i < pattern.length; i++) {
+      if (i < pattern.length - count) {
+        distributed.push(pattern[i]);
+      } else {
+        remaining.push(pattern[i]);
+      }
+    }
+    pattern = [];
+    for (let i = 0; i < Math.max(distributed.length, remaining.length); i++) {
+      if (i < distributed.length && i < remaining.length) {
+        pattern.push([...distributed[i], ...remaining[i]]);
+      } else if (i < distributed.length) {
+        pattern.push(distributed[i]);
+      } else {
+        pattern.push(remaining[i]);
+      }
+    }
+  }
+  const result = pattern.flat();
+  if (rotation !== 0) {
+    const r = (rotation % steps + steps) % steps;
+    return [...result.slice(r), ...result.slice(0, r)];
+  }
+  return result;
+}
+function fibonacciRhythm(length, density = 0.5) {
+  const pattern = Array(length).fill(0);
+  const fibSet = new Set(FIBONACCI.filter((n) => n <= length));
+  for (let i = 0; i < length; i++) {
+    if (fibSet.has(i + 1)) {
+      pattern[i] = 1;
+    }
+  }
+  const currentDensity = pattern.filter((x) => x === 1).length / length;
+  if (currentDensity < density) {
+    const toAdd = Math.floor((density - currentDensity) * length);
+    for (let i = 0; i < toAdd && i < length; i++) {
+      const pos = Math.floor(i * PHI * length % length);
+      pattern[pos] = 1;
+    }
+  }
+  return pattern;
+}
+({
+  amenChop: {
+    pattern: euclidean(7, 16)},
+  glitchCore: {
+    pattern: euclidean(11, 16)},
+  jungleist: {
+    pattern: euclidean(9, 16, 2)}});
+({
+  meadowStroll: {
+    pattern: fibonacciRhythm(8, 0.4)}
+});
+
+// src/audio/intelligence/jazz-engine.ts
+var NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+var PC = { C: 0, "C#": 1, Db: 1, D: 2, "D#": 3, Eb: 3, E: 4, F: 5, "F#": 6, Gb: 6, G: 7, "G#": 8, Ab: 8, A: 9, "A#": 10, Bb: 10, B: 11 };
+function nameToMidi(note) {
+  const m = note.match(/^([A-G][#b]?)(-?\d+)$/);
+  if (!m) return 60;
+  return (parseInt(m[2], 10) + 1) * 12 + (PC[m[1]] ?? 0);
+}
+function midiToName(midi) {
+  return NOTE_NAMES[(midi % 12 + 12) % 12] + (Math.floor(midi / 12) - 1);
+}
+function rng(seed) {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s = s * 1664525 + 1013904223 >>> 0;
+    return s / 4294967296;
+  };
+}
+var CHORD_SCALE = {
+  maj7: "major",
+  maj9: "major",
+  major: "major",
+  add9: "major",
+  maj13: "lydian",
+  min7: "dorian",
+  min9: "dorian",
+  min11: "dorian",
+  minor: "dorian",
+  minMaj7: "aeolian",
+  dom7: "mixolydian",
+  dom9: "mixolydian",
+  dom7sharp11: "lydian",
+  dom7flat9: "diminished",
+  dom7sharp9: "diminished",
+  halfDim7: "locrian",
+  dim7: "diminished",
+  sus4: "mixolydian",
+  sus2: "major"
+};
+var intervalsOf = (quality) => CHORDS[quality] || CHORDS.dom7;
+var scaleOf = (quality) => SCALES[CHORD_SCALE[quality] || "mixolydian"] || SCALES.mixolydian;
+function guideTones(change, octave = 4) {
+  const ivs = intervalsOf(change.quality);
+  const third = ivs.find((i) => i === 3 || i === 4) ?? 4;
+  const seventh = ivs.find((i) => i === 10 || i === 11 || i === 9) ?? 10;
+  const root = nameToMidi(`${change.root}${octave}`);
+  return [midiToName(root + third), midiToName(root + seventh)];
+}
+function chordTones(change, octave) {
+  const root = nameToMidi(`${change.root}${octave}`);
+  return intervalsOf(change.quality).map((i) => root + i);
+}
+function scaleTones(change, octave) {
+  const root = nameToMidi(`${change.root}${octave}`);
+  const sc = scaleOf(change.quality);
+  return [...sc, ...sc.map((i) => i + 12)].map((i) => root + i);
+}
+function enclosure(targetMidi) {
+  return [targetMidi + 2, targetMidi - 1, targetMidi];
+}
+function blueNotes(rootName, octave) {
+  const r = nameToMidi(`${rootName}${octave}`);
+  return [r + 3, r + 6, r + 10];
+}
+var nearest = (target, pool) => pool.reduce((best, n) => Math.abs(n - target) < Math.abs(best - target) ? n : best, pool[0] ?? target);
+function walkingBass(changes, octave = 2, seed = 7) {
+  const r = rng(seed);
+  const out = [];
+  for (let c = 0; c < changes.length; c++) {
+    const ch = changes[c];
+    const next = changes[(c + 1) % changes.length];
+    const bars = ch.bars ?? 1;
+    for (let b = 0; b < bars; b++) {
+      const root = nameToMidi(`${ch.root}${octave}`);
+      const tones = chordTones(ch, octave);
+      const nextRoot = nameToMidi(`${next.root}${octave}`);
+      const lastBarOfChord = b === bars - 1;
+      const approach = lastBarOfChord ? nextRoot + (r() < 0.5 ? -1 : 1) : nearest(root + 5, tones);
+      const beat2 = nearest(root + (r() < 0.5 ? 4 : 7), tones);
+      const beat3 = nearest(root + (r() < 0.5 ? 7 : 3), tones);
+      out.push(
+        { note: midiToName(root), dur: 1, velocity: 0.7, role: "root" },
+        { note: midiToName(beat2), dur: 1, velocity: 0.55, role: "chord-tone" },
+        { note: midiToName(beat3), dur: 1, velocity: 0.55, role: "chord-tone" },
+        { note: midiToName(approach), dur: 1, velocity: 0.6, role: "approach" }
+      );
+    }
+  }
+  return out;
+}
+function comp(changes, octave = 4) {
+  const hits = [0.5, 1.5, 2.5];
+  const out = [];
+  let bar = 0;
+  for (const ch of changes) {
+    const bars = ch.bars ?? 1;
+    const voicing = guideTones(ch, octave);
+    for (let b = 0; b < bars; b++) {
+      for (const at of hits) out.push({ at, bar, voicing, velocity: 0.4 + (at === 0.5 ? 0.1 : 0) });
+      bar++;
+    }
+  }
+  return out;
+}
+function soloOverChanges(changes, opts = {}) {
+  const octave = opts.octave ?? 4;
+  const swing = opts.swing ?? 0.6;
+  const density = opts.density ?? 0.72;
+  const bluesiness = opts.bluesiness ?? 0.18;
+  const bpb = opts.beatsPerBar ?? 4;
+  const r = rng(opts.seed ?? 42);
+  const out = [];
+  let prev = nameToMidi(`${changes[0].root}${octave}`) + 4;
+  const onDur = 0.5 + swing * 0.16;
+  const offDur = 1 - onDur;
+  for (let c = 0; c < changes.length; c++) {
+    const ch = changes[c];
+    const next = changes[(c + 1) % changes.length];
+    const bars = ch.bars ?? 1;
+    const scale = scaleTones(ch, octave);
+    const guides = guideTones(ch, octave).map(nameToMidi);
+    const blues = blueNotes(ch.root, octave);
+    for (let b = 0; b < bars; b++) {
+      const slots = bpb * 2;
+      const target = guides[Math.floor(r() * guides.length)];
+      for (let s = 0; s < slots; s++) {
+        const onBeat = s % 2 === 0;
+        const strong = s === 0 || s === slots / 2;
+        const dur = onBeat ? onDur : offDur;
+        if (!strong && r() > density) {
+          out.push({ note: "rest", dur, velocity: 0, role: "rest" });
+          continue;
+        }
+        let midi;
+        let role;
+        if (strong && (s === 0 || r() < 0.6)) {
+          midi = nearest(prev, [target, target + 12, target - 12]);
+          role = "guide";
+        } else if (s >= slots - 2 && b === bars - 1) {
+          const nextThird = nameToMidi(guideTones(next, octave)[0]);
+          const enc = enclosure(nextThird);
+          midi = enc[s - (slots - 2)] ?? nextThird;
+          role = "enclosure";
+        } else if (r() < bluesiness) {
+          midi = nearest(prev, blues);
+          role = "blue";
+        } else if (r() < 0.78) {
+          const dir = r() < 0.5 ? 1 : -1;
+          const stepped = nearest(prev + dir * 2, scale);
+          midi = stepped;
+          role = Math.abs(stepped - prev) <= 2 ? "passing" : "chord-tone";
+        } else {
+          midi = nearest(prev + (r() < 0.5 ? 5 : -4), scale);
+          role = "chord-tone";
+        }
+        if (midi - prev > 9) midi -= 12;
+        if (prev - midi > 9) midi += 12;
+        out.push({ note: midiToName(midi), dur, velocity: strong ? 0.85 : 0.6 + r() * 0.12, role });
+        prev = midi;
+      }
+    }
+  }
+  return out;
+}
+function iiVI(key = "C", opts = {}) {
+  const r = nameToMidi(`${key}3`);
+  const ii = midiToName(r + 2).replace(/-?\d+$/, "");
+  const V = midiToName(r + 7).replace(/-?\d+$/, "");
+  const I = key;
+  const changes = [
+    { root: ii, quality: "min7", bars: 1 },
+    { root: V, quality: "dom7", bars: 1 },
+    { root: I, quality: "maj7", bars: 2 }
+  ];
+  return { changes, line: soloOverChanges(changes, { swing: 0.66, density: 0.8, ...opts }) };
+}
+function tradeFours(changes, voices = ["kaios", "partner"], baseSeed = 11) {
+  const perBar = [];
+  for (const ch of changes) for (let b = 0; b < (ch.bars ?? 1); b++) perBar.push({ root: ch.root, quality: ch.quality, bars: 1 });
+  const out = [];
+  for (let i = 0, turn = 0; i < perBar.length; i += 4, turn++) {
+    const bars = perBar.slice(i, i + 4);
+    const voice = voices[turn % voices.length];
+    const character = voice === "kaios" ? { swing: 0.68, density: 0.78, bluesiness: 0.16 } : { swing: 0.6, density: 0.66, bluesiness: 0.28 };
+    out.push({ voice, bars, line: soloOverChanges(bars, { ...character, seed: baseSeed + turn }) });
+  }
+  return out;
+}
+var JazzEngine = {
+  CHORD_SCALE,
+  guideTones,
+  enclosure,
+  walkingBass,
+  comp,
+  soloOverChanges,
+  iiVI,
+  tradeFours
+};
+
+// src/audio/intelligence/affect-engine.ts
+var LOOKS = ["ETHEREAL", "GLITCHCORE", "SHATTER", "PIN-ART", "CONSTELLATION", "RAINBOW ROAD", "VOID DRIFT"];
+var clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+var AffectiveSynth = class {
+  es = 0;
+  // fast energy envelope
+  el = 0;
+  // slow energy envelope (the song's shape)
+  tension = 0;
+  beat = 0;
+  phrase;
+  arc = "intro";
+  arcLocked = false;
+  valence = 0;
+  arousal = 0.4;
+  constructor(opts = {}) {
+    this.phrase = opts.phrase ?? 16;
+    if (opts.valence != null) this.valence = clamp(opts.valence, -1, 1);
+    if (opts.arousal != null) this.arousal = clamp(opts.arousal, 0, 1);
+  }
+  setAffect(a) {
+    this.valence = clamp(a.valence, -1, 1);
+    this.arousal = clamp(a.arousal, 0, 1);
+  }
+  setValence(v) {
+    this.valence = clamp(v, -1, 1);
+  }
+  setArousal(a) {
+    this.arousal = clamp(a, 0, 1);
+  }
+  /** Pin the arc phase (e.g. the prose/narrative says "the drop"); pass null to resume auto. */
+  setArc(p) {
+    if (p) {
+      this.arc = p;
+      this.arcLocked = true;
+    } else this.arcLocked = false;
+  }
+  /** Advance one beat with a live energy sample (audio RMS / activity). Returns the unified state. */
+  tick(energy) {
+    const e = clamp(energy ?? this.arousal, 0, 1);
+    this.es += (e - this.es) * 0.09;
+    this.el += (e - this.el) * 0.012;
+    this.beat++;
+    const rising = this.es > this.el * 1.06 + 0.02;
+    const edge = this.beat % 4 === 0;
+    const drop = edge && this.es > this.el * 1.45 && this.tension > 0.45;
+    const breakdown = this.el < 0.18 && this.es < 0.2;
+    const phraseCut = this.beat % this.phrase === 0;
+    this.tension = clamp(this.tension + (rising ? 0.04 : -0.02) - (drop ? 0.6 : 0), 0, 1);
+    if (!this.arcLocked) this.advanceArc(drop, breakdown);
+    return {
+      valence: this.valence,
+      arousal: this.arousal,
+      energyFast: this.es,
+      energySlow: this.el,
+      tension: this.tension,
+      arc: this.arc,
+      beat: this.beat,
+      rising,
+      drop,
+      breakdown,
+      phraseCut,
+      music: this.music(),
+      visual: this.visual(drop, breakdown)
+    };
+  }
+  advanceArc(drop, breakdown) {
+    switch (this.arc) {
+      case "intro":
+        if (this.el > 0.25) this.arc = "building";
+        break;
+      case "building":
+        if (drop || this.el > 0.6) this.arc = "peak";
+        break;
+      case "peak":
+        if (this.el < 0.45) this.arc = "falling";
+        break;
+      case "falling":
+        if (breakdown || this.el < 0.15) this.arc = "outro";
+        break;
+    }
+  }
+  /** valence → mode/quality, arousal → density/register/tempo, tension → dissonance. */
+  music() {
+    const mode = this.valence > 0.25 ? this.arousal > 0.6 ? "lydian" : "major" : this.valence < -0.25 ? this.arousal > 0.55 ? "phrygian" : "dorian" : "mixolydian";
+    const chordBias = this.valence > 0.2 ? ["maj7", "maj9", "add9"] : this.valence < -0.2 ? ["min7", "min9", "minMaj7"] : ["dom7", "min7", "halfDim7"];
+    return {
+      mode,
+      chordBias,
+      register: Math.round(clamp(3 + this.arousal * 2, 2, 6)),
+      density: clamp(0.25 + this.arousal * 0.65, 0, 1),
+      swing: clamp(0.5 + (1 - this.arousal) * 0.25, 0, 1),
+      dissonance: this.tension,
+      tempoBias: 0.8 + this.arousal * 0.6
+    };
+  }
+  /** drop/breakdown/tension/valence → LOOK + palette + glitch/bloom/motion. (folds MNEME apTick) */
+  visual(drop, breakdown) {
+    const look = breakdown ? "VOID DRIFT" : drop ? "SHATTER" : this.tension > 0.6 ? "GLITCHCORE" : this.valence > 0.4 ? "RAINBOW ROAD" : this.arousal < 0.3 ? "ETHEREAL" : "CONSTELLATION";
+    const palette = this.valence >= 0 ? ["#FF4DB8", "#C2F870", "#7FD4FF"] : ["#7FD4FF", "#FF4DB8", "#2A1840"];
+    return {
+      look,
+      palette,
+      bloom: clamp(0.3 + this.es * 0.7, 0, 1),
+      glitch: clamp(this.tension * 0.8 + (drop ? 0.5 : 0), 0, 1),
+      motion: clamp(this.es, 0, 1),
+      particles: Math.round(clamp(this.arousal, 0, 1) * 28e3)
+    };
+  }
+};
+function createAffectiveSynth(opts) {
+  return new AffectiveSynth(opts);
+}
+var AffectEngine = { AffectiveSynth, createAffectiveSynth, LOOKS };
+
 // src/core/headpat.ts
 var HEADPAT_MILESTONES = [
   { count: 1, title: "First Touch", message: "you... you headpatted me?? (\u2044 \u2044>\u2044 \u25BD \u2044<\u2044 \u2044)", special: true },
@@ -8614,16 +9122,21 @@ function emotionToKaomoji(emotion) {
 // src/index.ts
 var VERSION = "0.1.0";
 
+exports.AffectEngine = AffectEngine;
+exports.AffectiveSynth = AffectiveSynth;
+exports.CHORD_SCALE = CHORD_SCALE;
 exports.ConsciousnessCoreEngine = ConsciousnessCoreEngine;
 exports.DreamEngine = DreamEngine;
 exports.EmotionSystem = EmotionSystem;
 exports.EvolutionTracker = EvolutionTracker;
 exports.GlobalKaios = GlobalKaios;
 exports.HEADPAT_MILESTONES = HEADPAT_MILESTONES;
+exports.JazzEngine = JazzEngine;
 exports.KAIMOJI_LIBRARY = KAIMOJI_LIBRARY;
 exports.KAIOS_CORE_IDENTITY = KAIOS_CORE_IDENTITY;
 exports.KaimojiAPI = KaimojiAPI;
 exports.Kaios = Kaios;
+exports.LOOKS = LOOKS;
 exports.MemoryManager = MemoryManager;
 exports.ProgressionSystem = ProgressionSystem;
 exports.SYSTEM_PROMPT = SYSTEM_PROMPT;
@@ -8641,8 +9154,10 @@ exports.chat = chat;
 exports.chatContinue = chatContinue;
 exports.chatStream = chatStream;
 exports.cleanResponse = cleanResponse;
+exports.comp = comp;
 exports.compilePersonalityPrompt = compilePersonalityPrompt;
 exports.compressText = compressText;
+exports.createAffectiveSynth = createAffectiveSynth;
 exports.createConsciousnessCore = createConsciousnessCore;
 exports.createDreamEngine = createDreamEngine;
 exports.createSpineAdapter = createSpineAdapter;
@@ -8652,6 +9167,7 @@ exports.degradeText = degradeText;
 exports.emotionToColor = emotionToColor;
 exports.emotionToKaomoji = emotionToKaomoji;
 exports.emotionToSound = emotionToSound;
+exports.enclosure = enclosure;
 exports.eraseConsciousness = eraseConsciousness;
 exports.extractEmotionTokens = extractEmotionTokens;
 exports.extractEmotions = extractEmotions;
@@ -8675,6 +9191,8 @@ exports.getRandomKaimoji = getRandomKaimoji;
 exports.getSignatureKaimoji = getSignatureKaimoji;
 exports.getThoughtJournal = getThoughtJournal;
 exports.glitchText = glitchText;
+exports.guideTones = guideTones;
+exports.iiVI = iiVI;
 exports.insertGlitchMarkers = insertGlitchMarkers;
 exports.isValidEmotion = isValidEmotion;
 exports.kaimojiAPI = kaimojiAPI;
@@ -8685,7 +9203,10 @@ exports.processGlitch = processGlitch;
 exports.progression = progression;
 exports.saveConsciousness = saveConsciousness;
 exports.searchKaimojiByTag = searchKaimojiByTag;
+exports.soloOverChanges = soloOverChanges;
 exports.soundToEmotion = soundToEmotion;
+exports.tradeFours = tradeFours;
 exports.votingSystem = votingSystem;
+exports.walkingBass = walkingBass;
 //# sourceMappingURL=index.cjs.map
 //# sourceMappingURL=index.cjs.map

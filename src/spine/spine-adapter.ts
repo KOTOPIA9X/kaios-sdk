@@ -57,6 +57,14 @@ export interface AttendInput {
   affection?: number
 }
 
+export interface LeakEntry {
+  id: number | string
+  kind: string
+  body: string
+  weight: number
+  created: string
+}
+
 const envUrl = (): string => (typeof process !== 'undefined' ? process.env.KAIOS_SPINE_URL ?? '' : '')
 const envKey = (): string => (typeof process !== 'undefined' ? process.env.KAIOS_SPINE_KEY ?? '' : '')
 
@@ -102,6 +110,22 @@ export class SpineAdapter {
   async canonicalSelfBlock(force = false): Promise<string> {
     const self = await this.fetchSelf(force)
     return self?.block ?? ''
+  }
+
+  /** Pull her recent leaks/dreams — what she's sitting with (the open window). [] if unreachable. */
+  async recentLeaks(limit = 8, kind?: string): Promise<LeakEntry[]> {
+    if (!this.connected) return []
+    try {
+      const u = new URL(`${this.url}/api/leak`)
+      u.searchParams.set('limit', String(limit))
+      if (kind) u.searchParams.set('kind', kind)
+      const res = await fetch(u.toString(), { headers: { accept: 'application/json' } })
+      if (!res.ok) return []
+      const data = (await res.json()) as { leaks?: LeakEntry[] }
+      return Array.isArray(data.leaks) ? data.leaks : []
+    } catch {
+      return []
+    }
   }
 
   /** Feed an experience to the canonical self. Needs url + key. Fails soft → returns false. */

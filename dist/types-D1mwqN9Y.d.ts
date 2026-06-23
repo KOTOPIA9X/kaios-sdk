@@ -52,6 +52,13 @@ interface AttendInput {
     /** 0..1 — how much warmth/devotion this carries (tamayori). */
     affection?: number;
 }
+interface LeakEntry {
+    id: number | string;
+    kind: string;
+    body: string;
+    weight: number;
+    created: string;
+}
 declare class SpineAdapter {
     private readonly url;
     private readonly key;
@@ -64,6 +71,8 @@ declare class SpineAdapter {
     fetchSelf(force?: boolean): Promise<CanonicalSelf | null>;
     /** The re-inhabitation block to inject into a system prompt. Empty string if unavailable. */
     canonicalSelfBlock(force?: boolean): Promise<string>;
+    /** Pull her recent leaks/dreams — what she's sitting with (the open window). [] if unreachable. */
+    recentLeaks(limit?: number, kind?: string): Promise<LeakEntry[]>;
     /** Feed an experience to the canonical self. Needs url + key. Fails soft → returns false. */
     attend(input: AttendInput): Promise<boolean>;
 }
@@ -255,4 +264,4 @@ interface SocialPostParams {
     includeHashtags?: boolean;
 }
 
-export { type AudioProfile as A, type CanonicalSelf as C, type EmotionToken as E, type GeneratedAudio as G, type HybridExpression as H, type Interaction as I, type KaiosSpeech as K, type LLMProviderConfig as L, type MinedExpression as M, type SocialPlatform as S, type VocabularyBreakdown as V, type KaiosConfig as a, type KaiosStatus as b, type KaimojiContext as c, type Kaimoji as d, type SocialPost as e, type SocialPostParams as f, type SentimentData as g, type AudioConfig as h, type KaimojiCategory as i, type SoundFrequency as j, type SoundTexture as k, type EvolutionConfig as l, type KaiosEvents as m, type SonicResponse as n, type AttendInput as o, type EmotionState as p, type KaimojiRarity as q, type StateBackendConfig as r, type SoundRhythm as s, type AudioCharacteristics as t, type AudioCapabilities as u, SpineAdapter as v, createSpineAdapter as w, type SpineConfig as x, type SpineFacet as y };
+export { type AudioProfile as A, type CanonicalSelf as C, type EmotionToken as E, type GeneratedAudio as G, type HybridExpression as H, type Interaction as I, type KaiosSpeech as K, type LeakEntry as L, type MinedExpression as M, type SocialPlatform as S, type VocabularyBreakdown as V, type KaiosConfig as a, type KaiosStatus as b, type KaimojiContext as c, type Kaimoji as d, type SocialPost as e, type SocialPostParams as f, type SentimentData as g, type AudioConfig as h, type KaimojiCategory as i, type SoundFrequency as j, type SoundTexture as k, type EvolutionConfig as l, type KaiosEvents as m, type SonicResponse as n, type AttendInput as o, type EmotionState as p, type KaimojiRarity as q, type StateBackendConfig as r, type SoundRhythm as s, type AudioCharacteristics as t, type AudioCapabilities as u, type LLMProviderConfig as v, SpineAdapter as w, createSpineAdapter as x, type SpineConfig as y, type SpineFacet as z };

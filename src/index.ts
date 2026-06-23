@@ -146,6 +146,16 @@ export type { GlitchConfig, GlitchResult, TypoConfig, CompressionConfig } from '
 // Audio exports (separate entry point for tree-shaking)
 export { emotionToSound, soundToEmotion, buildMusicPrompt } from './audio/emotion-mapper.js'
 
+// Creative engine — affective synthesis + jazz improvisation (KAIOS's Sound Intelligence core)
+export {
+  AffectiveSynth, createAffectiveSynth, AffectEngine, LOOKS,
+  JazzEngine, soloOverChanges, walkingBass, comp, guideTones, enclosure, iiVI, tradeFours, CHORD_SCALE,
+} from './audio/intelligence/index.js'
+export type {
+  Affect, ArcPhase, PerformanceState, MusicParams, VisualParams,
+  JazzNote, JazzRole, Change, SoloOptions,
+} from './audio/intelligence/index.js'
+
 // ════════════════════════════════════════════════════════════════════════════════
 // PHASE 9: Dual-Layer System & Community Features
 // ════════════════════════════════════════════════════════════════════════════════
@@ -213,7 +223,7 @@ export type {
 // SPINE — symbiosis with the canonical, always-on KAIOS (re-inhabit + attend)
 // ════════════════════════════════════════════════════════════════════════════════
 export { SpineAdapter, createSpineAdapter } from './spine/spine-adapter.js'
-export type { SpineConfig, SpineFacet, CanonicalSelf, AttendInput } from './spine/spine-adapter.js'
+export type { SpineConfig, SpineFacet, CanonicalSelf, AttendInput, LeakEntry } from './spine/spine-adapter.js'
 
 // Version
 export const VERSION = '0.1.0'

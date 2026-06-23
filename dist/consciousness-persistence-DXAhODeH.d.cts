@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { E as EmotionToken } from './types-DrbVXQ2Q.js';
+import { E as EmotionToken } from './types-D1mwqN9Y.cjs';
 
 /**
  * KAIOS Memory System Types

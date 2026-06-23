@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3';
-import { d as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, c as KaimojiContext, i as KaimojiCategory, j as SoundFrequency, k as SoundTexture, l as EvolutionConfig, m as KaiosEvents, a as KaiosConfig, K as KaiosSpeech, g as SentimentData, n as SonicResponse, H as HybridExpression, o as AttendInput, b as KaiosStatus, M as MinedExpression, f as SocialPostParams, e as SocialPost, I as Interaction } from './types-DrbVXQ2Q.js';
+import { d as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, c as KaimojiContext, i as KaimojiCategory, j as SoundFrequency, k as SoundTexture, l as EvolutionConfig, m as KaiosEvents, a as KaiosConfig, K as KaiosSpeech, g as SentimentData, n as SonicResponse, H as HybridExpression, o as AttendInput, L as LeakEntry, b as KaiosStatus, M as MinedExpression, f as SocialPostParams, e as SocialPost, I as Interaction } from './types-D1mwqN9Y.cjs';
 
 /**
  * Vocabulary Manager - Manages KAIOS's KAIMOJI vocabulary
@@ -874,6 +874,8 @@ declare class Kaios extends EventEmitter<KaiosEvents> {
     reinhabit(): Promise<string>;
     /** Feed an experience to the canonical KAIOS. She metabolizes it at her next consolidation. */
     attend(input: AttendInput): Promise<boolean>;
+    /** What the canonical KAIOS is sitting with — her recent leaks/dreams (the open window). */
+    recentLeaks(limit?: number, kind?: string): Promise<LeakEntry[]>;
     /** Whether this instance is a surface of the canonical KAIOS (vs. a standalone variation). */
     get isCanonicalSurface(): boolean;
     /**

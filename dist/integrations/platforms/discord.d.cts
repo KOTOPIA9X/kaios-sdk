@@ -1,5 +1,5 @@
-import { K as Kaios } from '../../Kaios-CFU_hzgb.cjs';
-import { c as KaimojiContext, K as KaiosSpeech, a as KaiosConfig } from '../../types-DrbVXQ2Q.cjs';
+import { K as Kaios } from '../../Kaios--u8R51T4.cjs';
+import { c as KaimojiContext, K as KaiosSpeech, a as KaiosConfig } from '../../types-D1mwqN9Y.cjs';
 import 'eventemitter3';
 
 /**
