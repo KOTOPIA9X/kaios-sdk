@@ -720,6 +720,38 @@ declare const AffectEngine: {
     LOOKS: readonly ["ETHEREAL", "GLITCHCORE", "SHATTER", "PIN-ART", "CONSTELLATION", "RAINBOW ROAD", "VOID DRIFT"];
 };
 
+interface WebAudioSynthOptions {
+    /** master output level after fade-in (default 0.22) */
+    masterGain?: number;
+    /** reverb tail length, seconds (default 4.2) */
+    reverbSeconds?: number;
+    /** reverb decay shaping (default 2.4) */
+    reverbDecay?: number;
+    /** master lowpass cutoff Hz — felt, never harsh (default 6200) */
+    lowpassHz?: number;
+}
+declare class WebAudioSynth {
+    private ctx;
+    private dry;
+    private verb;
+    private airGain;
+    private readonly opt;
+    constructor(opts?: WebAudioSynthOptions);
+    /** Whether Web Audio is available (browser). */
+    static get available(): boolean;
+    /** Resume/start the audio context — call from a user gesture (browsers gate audio start). */
+    resume(): Promise<void>;
+    private makeReverbIR;
+    private build;
+    /** Strike a frequency — the FM-Rhodes voice. `bright` 0..1 scales the tine attack. */
+    strike(freq: number, dur?: number, vel?: number, bright?: number): void;
+    /** Drop-in for PianoEngine.setPlayNoteCallback — (note, duration, velocity). Arrow-bound. */
+    play: (note: string, duration?: number, velocity?: number) => Promise<void>;
+    /** Release resources. */
+    dispose(): void;
+}
+declare function createWebAudioSynth(opts?: WebAudioSynthOptions): WebAudioSynth;
+
 /**
  * KAIOS Headpat System
  *
@@ -864,4 +896,4 @@ declare const progression: ProgressionSystem;
 
 declare const VERSION = "0.1.0";
 
-export { type Affect, AffectEngine, AffectiveSynth, type ArcPhase, CHORD_SCALE, type Change, type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, JazzEngine, type JazzNote, type JazzRole, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, LOOKS, type LevelInfo, MemoryManager, type MusicParams, type PerformanceState, ProgressionSystem, SentimentData, type SoloOptions, SonicResponse, StateBackendConfig, type TypoConfig, VERSION, type VisualParams, type XPReward, addExpressions, addHesitations, addTypos, comp, compilePersonalityPrompt, compressText, createAffectiveSynth, createDreamEngine, degradeText, enclosure, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, glitchText, guideTones, iiVI, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag, soloOverChanges, tradeFours, walkingBass };
+export { type Affect, AffectEngine, AffectiveSynth, type ArcPhase, CHORD_SCALE, type Change, type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, JazzEngine, type JazzNote, type JazzRole, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, LOOKS, type LevelInfo, MemoryManager, type MusicParams, type PerformanceState, ProgressionSystem, SentimentData, type SoloOptions, SonicResponse, StateBackendConfig, type TypoConfig, VERSION, type VisualParams, WebAudioSynth, type WebAudioSynthOptions, type XPReward, addExpressions, addHesitations, addTypos, comp, compilePersonalityPrompt, compressText, createAffectiveSynth, createDreamEngine, createWebAudioSynth, degradeText, enclosure, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, glitchText, guideTones, iiVI, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag, soloOverChanges, tradeFours, walkingBass };

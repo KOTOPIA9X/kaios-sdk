@@ -156,6 +156,10 @@ export type {
   JazzNote, JazzRole, Change, SoloOptions,
 } from './audio/intelligence/index.js'
 
+// WebAudio FM-Rhodes synth — KAIOS's real timbre (browser output backend for the piano engine)
+export { WebAudioSynth, createWebAudioSynth } from './audio/web/webaudio-synth.js'
+export type { WebAudioSynthOptions } from './audio/web/webaudio-synth.js'
+
 // ════════════════════════════════════════════════════════════════════════════════
 // PHASE 9: Dual-Layer System & Community Features
 // ════════════════════════════════════════════════════════════════════════════════
