@@ -599,8 +599,6 @@ const AMBIENT_PHRASES: Phrase[] = [
 export class PianoEngine extends EventEmitter {
   private config: PianoConfig
   private state: PianoState
-  private playQueue: Note[] = []
-  private isProcessingQueue = false
   private currentTimeout: NodeJS.Timeout | null = null
 
   // Callback for playing notes (will be connected to audio system)
@@ -870,7 +868,6 @@ export class PianoEngine extends EventEmitter {
 
     const [, noteName, octaveStr] = match
     const baseNote = noteName.replace('#', '')
-    const isSharp = noteName.includes('#')
     let octave = parseInt(octaveStr)
     let noteIdx = notes.indexOf(baseNote)
 

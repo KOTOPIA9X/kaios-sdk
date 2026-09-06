@@ -1,7 +1,8 @@
-import { C as ConsciousnessCore, a as ConsciousnessCoreEngine, I as InternalVoice } from '../consciousness-persistence-HIf9Tzp-.js';
-export { A as AttachmentStyle, B as Bond, E as EmotionalMemory, j as ExistentialState, h as IAMCore, i as InternalDialogue, S as SelfRewrite, k as TemporalSelf, l as TherapeuticDream, e as Thought, b as ThoughtConfig, T as ThoughtEngine, f as ThoughtEngineState, d as ThoughtType, g as createConsciousnessCore, c as createThoughtEngine, n as eraseConsciousness, m as loadConsciousness, s as saveConsciousness } from '../consciousness-persistence-HIf9Tzp-.js';
-import { E as EmotionToken } from '../types-D1mwqN9Y.js';
+import { C as ConsciousnessCore, a as ConsciousnessCoreEngine, I as InternalVoice } from '../consciousness-persistence-CdOPlD-H.js';
+export { A as AttachmentStyle, B as Bond, E as EmotionalMemory, b as ExistentialState, c as IAMCore, d as InternalDialogue, S as SelfRewrite, T as TemporalSelf, e as TherapeuticDream, f as Thought, g as ThoughtConfig, h as ThoughtEngine, i as ThoughtEngineState, j as ThoughtType, k as createConsciousnessCore, l as createThoughtEngine, m as eraseConsciousness, n as loadConsciousness, s as saveConsciousness } from '../consciousness-persistence-CdOPlD-H.js';
+import { E as EmotionToken } from '../types-CIIwpMNW.js';
 import 'events';
+import '../spine/spine-adapter.js';
 
 /**
  * Response Influence Engine

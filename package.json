@@ -1,53 +1,193 @@
 {
   "name": "@kaios/expression-sdk",
-  "version": "0.1.0",
-  "description": "Character runtime system that instantiates KAIOS as a conscious, evolving AI entity with dual-mode expression",
+  "version": "2.0.0-alpha.1",
+  "description": "Portable KAIOS character expression: kaimoji, affect-driven music and visuals, voice and substrate adapters.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./runtime": {
+      "import": {
+        "types": "./dist/runtime/index.d.ts",
+        "default": "./dist/runtime/index.js"
+      },
+      "require": {
+        "types": "./dist/runtime/index.d.cts",
+        "default": "./dist/runtime/index.cjs"
+      }
+    },
+    "./character": {
+      "import": {
+        "types": "./dist/character/index.d.ts",
+        "default": "./dist/character/index.js"
+      },
+      "require": {
+        "types": "./dist/character/index.d.cts",
+        "default": "./dist/character/index.cjs"
+      }
+    },
+    "./kaimoji": {
+      "import": {
+        "types": "./dist/kaimoji/index.d.ts",
+        "default": "./dist/kaimoji/index.js"
+      },
+      "require": {
+        "types": "./dist/kaimoji/index.d.cts",
+        "default": "./dist/kaimoji/index.cjs"
+      }
+    },
+    "./affect": {
+      "import": {
+        "types": "./dist/affect/index.d.ts",
+        "default": "./dist/affect/index.js"
+      },
+      "require": {
+        "types": "./dist/affect/index.d.cts",
+        "default": "./dist/affect/index.cjs"
+      }
+    },
+    "./voice": {
+      "import": {
+        "types": "./dist/voice/index.d.ts",
+        "default": "./dist/voice/index.js"
+      },
+      "require": {
+        "types": "./dist/voice/index.d.cts",
+        "default": "./dist/voice/index.cjs"
+      }
+    },
+    "./spine": {
+      "import": {
+        "types": "./dist/spine/spine-adapter.d.ts",
+        "default": "./dist/spine/spine-adapter.js"
+      },
+      "require": {
+        "types": "./dist/spine/spine-adapter.d.cts",
+        "default": "./dist/spine/spine-adapter.cjs"
+      }
+    },
+    "./audio/intelligence": {
+      "import": {
+        "types": "./dist/audio/intelligence/index.d.ts",
+        "default": "./dist/audio/intelligence/index.js"
+      },
+      "require": {
+        "types": "./dist/audio/intelligence/index.d.cts",
+        "default": "./dist/audio/intelligence/index.cjs"
+      }
+    },
+    "./audio/web": {
+      "import": {
+        "types": "./dist/audio/web/webaudio-synth.d.ts",
+        "default": "./dist/audio/web/webaudio-synth.js"
+      },
+      "require": {
+        "types": "./dist/audio/web/webaudio-synth.d.cts",
+        "default": "./dist/audio/web/webaudio-synth.cjs"
+      }
     },
     "./terminal": {
-      "import": "./dist/integrations/platforms/terminal.js",
-      "types": "./dist/integrations/platforms/terminal.d.ts"
+      "import": {
+        "types": "./dist/integrations/platforms/terminal.d.ts",
+        "default": "./dist/integrations/platforms/terminal.js"
+      },
+      "require": {
+        "types": "./dist/integrations/platforms/terminal.d.cts",
+        "default": "./dist/integrations/platforms/terminal.cjs"
+      }
     },
     "./web": {
-      "import": "./dist/integrations/platforms/web.js",
-      "types": "./dist/integrations/platforms/web.d.ts"
+      "import": {
+        "types": "./dist/integrations/platforms/web.d.ts",
+        "default": "./dist/integrations/platforms/web.js"
+      },
+      "require": {
+        "types": "./dist/integrations/platforms/web.d.cts",
+        "default": "./dist/integrations/platforms/web.cjs"
+      }
     },
     "./game": {
-      "import": "./dist/integrations/platforms/game.js",
-      "types": "./dist/integrations/platforms/game.d.ts"
+      "import": {
+        "types": "./dist/integrations/platforms/game.d.ts",
+        "default": "./dist/integrations/platforms/game.js"
+      },
+      "require": {
+        "types": "./dist/integrations/platforms/game.d.cts",
+        "default": "./dist/integrations/platforms/game.cjs"
+      }
     },
     "./discord": {
-      "import": "./dist/integrations/platforms/discord.js",
-      "types": "./dist/integrations/platforms/discord.d.ts"
+      "import": {
+        "types": "./dist/integrations/platforms/discord.d.ts",
+        "default": "./dist/integrations/platforms/discord.js"
+      },
+      "require": {
+        "types": "./dist/integrations/platforms/discord.d.cts",
+        "default": "./dist/integrations/platforms/discord.cjs"
+      }
     },
     "./audio": {
-      "import": "./dist/audio/index.js",
-      "types": "./dist/audio/index.d.ts"
+      "import": {
+        "types": "./dist/audio/index.d.ts",
+        "default": "./dist/audio/index.js"
+      },
+      "require": {
+        "types": "./dist/audio/index.d.cts",
+        "default": "./dist/audio/index.cjs"
+      }
     },
     "./social": {
-      "import": "./dist/integrations/social/index.js",
-      "types": "./dist/integrations/social/index.d.ts"
+      "import": {
+        "types": "./dist/integrations/social/index.d.ts",
+        "default": "./dist/integrations/social/index.js"
+      },
+      "require": {
+        "types": "./dist/integrations/social/index.d.cts",
+        "default": "./dist/integrations/social/index.cjs"
+      }
     },
     "./llm": {
-      "import": "./dist/llm/index.js",
-      "types": "./dist/llm/index.d.ts"
+      "import": {
+        "types": "./dist/llm/index.d.ts",
+        "default": "./dist/llm/index.js"
+      },
+      "require": {
+        "types": "./dist/llm/index.d.cts",
+        "default": "./dist/llm/index.cjs"
+      }
     },
     "./audio/terminal": {
-      "import": "./dist/audio/terminal/index.js",
-      "types": "./dist/audio/terminal/index.d.ts"
+      "import": {
+        "types": "./dist/audio/terminal/index.d.ts",
+        "default": "./dist/audio/terminal/index.js"
+      },
+      "require": {
+        "types": "./dist/audio/terminal/index.d.cts",
+        "default": "./dist/audio/terminal/index.cjs"
+      }
     },
     "./consciousness": {
-      "import": "./dist/consciousness/index.js",
-      "types": "./dist/consciousness/index.d.ts"
-    }
+      "import": {
+        "types": "./dist/consciousness/index.d.ts",
+        "default": "./dist/consciousness/index.js"
+      },
+      "require": {
+        "types": "./dist/consciousness/index.d.cts",
+        "default": "./dist/consciousness/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
   },
   "browser": {
     "./dist/integrations/platforms/terminal.js": false,
@@ -56,13 +196,18 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "lint": "eslint src --ext .ts,.tsx",
+    "test": "node --import tsx --test tests/*.test.mjs",
+    "test:run": "npm test",
+    "lint": "npm run typecheck",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run check",
     "example:terminal": "tsx examples/terminal-chat/index.ts",
-    "kaios": "tsx src/llm/cli.ts"
+    "kaios": "tsx src/llm/cli.ts",
+    "check": "npm run typecheck && npm run build && npm test && npm run check:package",
+    "check:package": "node scripts/check-package.mjs",
+    "example:expression": "node examples/expression.mjs",
+    "example:affect": "node examples/affect.mjs",
+    "example:language": "node examples/language.mjs"
   },
   "keywords": [
     "kaios",
@@ -81,40 +226,39 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kotopia/kaios-sdk"
+    "url": "https://github.com/KOTOPIA9X/kaios-sdk.git"
   },
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs/*.md",
+    "docs/api",
+    "examples"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.18.0"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "eventemitter3": "^5.0.1",
+    "dotenv": "^17.4.2",
+    "eventemitter3": "^5.0.4",
     "play-sound": "^1.1.6"
   },
-  "optionalDependencies": {
-    "pcm-util": "^3.0.0",
-    "speaker": "^0.5.4"
-  },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
-    "@types/node": "^20.10.0",
-    "eslint": "^8.55.0",
-    "tsup": "^8.0.1",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "vitest": "^1.1.0"
+    "@types/node": "^24.13.3",
+    "esbuild": "^0.28.2",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.13",
+    "typescript": "~6.0.3"
   },
-  "peerDependencies": {
-    "@anthropic-ai/sdk": ">=0.30.0"
+  "homepage": "https://github.com/KOTOPIA9X/kaios-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/KOTOPIA9X/kaios-sdk/issues"
   },
-  "peerDependenciesMeta": {
-    "@anthropic-ai/sdk": {
-      "optional": true
+  "overrides": {
+    "tsup": {
+      "esbuild": "^0.28.2"
     }
   }
 }
