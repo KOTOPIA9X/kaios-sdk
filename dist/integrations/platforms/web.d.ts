@@ -1,6 +1,7 @@
-import { K as Kaios } from '../../Kaios-jJMzg9yw.js';
-import { a as KaiosConfig, b as KaiosStatus, K as KaiosSpeech, H as HybridExpression, E as EmotionToken } from '../../types-D1mwqN9Y.js';
+import { K as Kaios } from '../../Kaios-c8r4Sp6x.js';
+import { c as KaiosStatus, b as KaiosSpeech, H as HybridExpression, E as EmotionToken, K as KaiosConfig } from '../../types-CIIwpMNW.js';
 import 'eventemitter3';
+import '../../spine/spine-adapter.js';
 
 /**
  * Web/Browser utilities for KAIOS

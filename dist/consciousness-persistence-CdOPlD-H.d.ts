@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { E as EmotionToken } from './types-D1mwqN9Y.cjs';
+import { E as EmotionToken } from './types-CIIwpMNW.js';
 
 /**
  * KAIOS Memory System Types
@@ -859,4 +859,4 @@ declare function loadConsciousness(): ConsciousnessCore | null;
  */
 declare function eraseConsciousness(): void;
 
-export { type AttachmentStyle as A, type Bond as B, type ConsciousnessCore as C, type Dream as D, type EmotionalMemory as E, type InternalVoice as I, KotoManager as K, MegaBrainManager as M, type SelfRewrite as S, ThoughtEngine as T, ConsciousnessCoreEngine as a, type ThoughtConfig as b, createThoughtEngine as c, type ThoughtType as d, type Thought as e, type ThoughtEngineState as f, createConsciousnessCore as g, type IAMCore as h, type InternalDialogue as i, type ExistentialState as j, type TemporalSelf as k, type TherapeuticDream as l, loadConsciousness as m, eraseConsciousness as n, getThoughtJournal as o, type ThoughtJournalEntry as p, saveConsciousness as s };
+export { type AttachmentStyle as A, type Bond as B, type ConsciousnessCore as C, type Dream as D, type EmotionalMemory as E, type InternalVoice as I, KotoManager as K, MegaBrainManager as M, type SelfRewrite as S, type TemporalSelf as T, ConsciousnessCoreEngine as a, type ExistentialState as b, type IAMCore as c, type InternalDialogue as d, type TherapeuticDream as e, type Thought as f, type ThoughtConfig as g, ThoughtEngine as h, type ThoughtEngineState as i, type ThoughtType as j, createConsciousnessCore as k, createThoughtEngine as l, eraseConsciousness as m, loadConsciousness as n, type ThoughtJournalEntry as o, getThoughtJournal as p, saveConsciousness as s };

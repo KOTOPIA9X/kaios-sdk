@@ -1,6 +1,7 @@
-import { K as Kaios } from '../../Kaios--u8R51T4.cjs';
-import { a as KaiosConfig, E as EmotionToken, A as AudioProfile, K as KaiosSpeech } from '../../types-D1mwqN9Y.cjs';
+import { K as Kaios } from '../../Kaios-DHPXnbm7.cjs';
+import { E as EmotionToken, A as AudioProfile, K as KaiosConfig, b as KaiosSpeech } from '../../types-0SKyQiZK.cjs';
 import 'eventemitter3';
+import '../../spine/spine-adapter.cjs';
 
 /**
  * Game engine utilities for KAIOS

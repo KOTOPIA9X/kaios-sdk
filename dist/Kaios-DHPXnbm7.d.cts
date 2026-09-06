@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3';
-import { d as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, c as KaimojiContext, i as KaimojiCategory, j as SoundFrequency, k as SoundTexture, l as EvolutionConfig, m as KaiosEvents, a as KaiosConfig, K as KaiosSpeech, g as SentimentData, n as SonicResponse, H as HybridExpression, o as AttendInput, L as LeakEntry, b as KaiosStatus, M as MinedExpression, f as SocialPostParams, e as SocialPost, I as Interaction } from './types-D1mwqN9Y.cjs';
+import { g as Kaimoji, V as VocabularyBreakdown, E as EmotionToken, a as KaimojiContext, i as KaimojiCategory, l as SoundFrequency, m as SoundTexture, n as EvolutionConfig, o as KaiosEvents, K as KaiosConfig, b as KaiosSpeech, S as SentimentData, p as SonicResponse, H as HybridExpression, c as KaiosStatus, M as MinedExpression, e as SocialPostParams, f as SocialPost, I as Interaction } from './types-0SKyQiZK.cjs';
+import { AttendInput, LeakEntry } from './spine/spine-adapter.cjs';
 
 /**
  * Vocabulary Manager - Manages KAIOS's KAIMOJI vocabulary
@@ -989,4 +990,4 @@ declare class Kaios extends EventEmitter<KaiosEvents> {
     private getAudioCapabilities;
 }
 
-export { type Achievement as A, type ContributionRecord as C, type Discovery as D, EvolutionTracker as E, GlobalKaios as G, Kaios as K, type LeaderboardEntry as L, type PendingDiscovery as P, type TrendingKaimoji as T, UserProfile as U, VocabularyManager as V, type UserProfileState as a, type GlobalKaiosState as b, type Evolution as c, type GlobalMilestone as d, KaimojiAPI as e, VotingSystem as f, type VoteRecord as g, type VotingResult as h, type DualStatus as i, kaimojiAPI as k, votingSystem as v };
+export { type Achievement as A, type ContributionRecord as C, type Discovery as D, type Evolution as E, GlobalKaios as G, Kaios as K, type LeaderboardEntry as L, type PendingDiscovery as P, type TrendingKaimoji as T, UserProfile as U, VocabularyManager as V, type DualStatus as a, EvolutionTracker as b, type GlobalKaiosState as c, type GlobalMilestone as d, KaimojiAPI as e, type UserProfileState as f, type VoteRecord as g, type VotingResult as h, VotingSystem as i, kaimojiAPI as k, votingSystem as v };
