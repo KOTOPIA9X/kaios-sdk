@@ -1,6 +1,7 @@
-import { K as Kaios } from '../../Kaios--u8R51T4.cjs';
-import { E as EmotionToken, K as KaiosSpeech } from '../../types-D1mwqN9Y.cjs';
+import { K as Kaios } from '../../Kaios-DHPXnbm7.cjs';
+import { E as EmotionToken, b as KaiosSpeech } from '../../types-0SKyQiZK.cjs';
 import 'eventemitter3';
+import '../../spine/spine-adapter.cjs';
 
 /**
  * Terminal/CLI utilities for KAIOS

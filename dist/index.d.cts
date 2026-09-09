@@ -1,10 +1,21 @@
-export { A as Achievement, C as ContributionRecord, D as Discovery, i as DualStatus, c as Evolution, E as EvolutionTracker, G as GlobalKaios, b as GlobalKaiosState, d as GlobalMilestone, e as KaimojiAPI, K as Kaios, L as LeaderboardEntry, P as PendingDiscovery, T as TrendingKaimoji, U as UserProfile, a as UserProfileState, V as VocabularyManager, g as VoteRecord, h as VotingResult, f as VotingSystem, K as default, k as kaimojiAPI, v as votingSystem } from './Kaios--u8R51T4.cjs';
-import { E as EmotionToken, p as EmotionState, g as SentimentData, d as Kaimoji, q as KaimojiRarity, i as KaimojiCategory, c as KaimojiContext, r as StateBackendConfig, n as SonicResponse, I as Interaction } from './types-D1mwqN9Y.cjs';
-export { o as AttendInput, u as AudioCapabilities, t as AudioCharacteristics, h as AudioConfig, A as AudioProfile, C as CanonicalSelf, l as EvolutionConfig, G as GeneratedAudio, H as HybridExpression, a as KaiosConfig, m as KaiosEvents, K as KaiosSpeech, b as KaiosStatus, v as LLMProviderConfig, L as LeakEntry, M as MinedExpression, S as SocialPlatform, e as SocialPost, f as SocialPostParams, j as SoundFrequency, s as SoundRhythm, k as SoundTexture, w as SpineAdapter, y as SpineConfig, z as SpineFacet, V as VocabularyBreakdown, x as createSpineAdapter } from './types-D1mwqN9Y.cjs';
-import { K as KotoManager, D as Dream, M as MegaBrainManager } from './consciousness-persistence-DXAhODeH.cjs';
-export { A as AttachmentStyle, B as Bond, C as ConsciousnessCore, a as ConsciousnessCoreEngine, E as EmotionalMemory, j as ExistentialState, i as InternalDialogue, I as InternalVoice, S as SelfRewrite, k as TemporalSelf, l as TherapeuticDream, e as Thought, b as ThoughtConfig, T as ThoughtEngine, f as ThoughtEngineState, p as ThoughtJournalEntry, d as ThoughtType, g as createConsciousnessCore, c as createThoughtEngine, n as eraseConsciousness, o as getThoughtJournal, m as loadConsciousness, s as saveConsciousness } from './consciousness-persistence-DXAhODeH.cjs';
-export { b as buildMusicPrompt, e as emotionToSound, s as soundToEmotion } from './emotion-mapper-_6O12gJr.cjs';
-export { ChatOptions, ChatResponse, EmotionSegment, ParsedResponse, SYSTEM_PROMPT, chat, chatContinue, chatStream, cleanResponse, emotionToColor, emotionToKaomoji, extractEmotions, getDominantEmotion, getEmotionName, getModels, isValidEmotion, parseResponse } from './llm/index.cjs';
+export { A as Achievement, C as ContributionRecord, D as Discovery, a as DualStatus, E as Evolution, b as EvolutionTracker, G as GlobalKaios, c as GlobalKaiosState, d as GlobalMilestone, e as KaimojiAPI, K as Kaios, L as LeaderboardEntry, P as PendingDiscovery, T as TrendingKaimoji, U as UserProfile, f as UserProfileState, V as VocabularyManager, g as VoteRecord, h as VotingResult, i as VotingSystem, K as default, k as kaimojiAPI, v as votingSystem } from './Kaios-DHPXnbm7.cjs';
+import { E as EmotionToken, q as StateBackendConfig, g as Kaimoji, p as SonicResponse, I as Interaction } from './types-0SKyQiZK.cjs';
+export { r as AudioCapabilities, s as AudioCharacteristics, j as AudioConfig, A as AudioProfile, h as EmotionState, n as EvolutionConfig, G as GeneratedAudio, H as HybridExpression, i as KaimojiCategory, a as KaimojiContext, k as KaimojiRarity, K as KaiosConfig, o as KaiosEvents, b as KaiosSpeech, c as KaiosStatus, L as LLMProviderConfig, M as MinedExpression, S as SentimentData, d as SocialPlatform, f as SocialPost, e as SocialPostParams, l as SoundFrequency, t as SoundRhythm, m as SoundTexture, V as VocabularyBreakdown } from './types-0SKyQiZK.cjs';
+export { E as EmotionSystem, K as KAIMOJI_LIBRARY, g as getAllKaimoji, a as getKaimojiByCategory, b as getKaimojiByContext, c as getKaimojiByEnergyRange, d as getKaimojiByRarity, e as getKaimojiBySoundProfile, f as getKaimojiUnlockableAtLevel, h as getLibraryStats, i as getRandomKaimoji, j as getSignatureKaimoji, s as searchKaimojiByTag } from './kaimoji-library-BJBf3DN3.cjs';
+import { K as KotoManager, D as Dream, M as MegaBrainManager } from './consciousness-persistence-CpuXtAKk.cjs';
+export { A as AttachmentStyle, B as Bond, C as ConsciousnessCore, a as ConsciousnessCoreEngine, E as EmotionalMemory, b as ExistentialState, d as InternalDialogue, I as InternalVoice, S as SelfRewrite, T as TemporalSelf, e as TherapeuticDream, f as Thought, g as ThoughtConfig, h as ThoughtEngine, i as ThoughtEngineState, o as ThoughtJournalEntry, j as ThoughtType, k as createConsciousnessCore, l as createThoughtEngine, m as eraseConsciousness, p as getThoughtJournal, n as loadConsciousness, s as saveConsciousness } from './consciousness-persistence-CpuXtAKk.cjs';
+export { b as buildMusicPrompt, e as emotionToSound, s as soundToEmotion } from './emotion-mapper-BtqPpB09.cjs';
+export { C as CHORD_SCALE, a as Change, J as JazzEngine, b as JazzNote, c as JazzRole, S as SoloOptions, d as comp, e as enclosure, g as guideTones, i as iiVI, s as soloOverChanges, t as tradeFours, w as walkingBass } from './jazz-engine-ByfGApnW.cjs';
+export { A as Affect, b as AffectEngine, c as AffectiveSynth, a as ArcPhase, L as LOOKS, M as MusicParams, P as PerformanceState, V as VisualParams, d as createAffectiveSynth } from './affect-engine-OOEew1HW.cjs';
+export { b as AffectClockEvent, A as AffectClockOptions, a as AffectClockResult, c as AffectiveSynthV2 } from './affect-clock-v2-Cdw7D_GD.cjs';
+export { WebAudioSynth, WebAudioSynthOptions, createWebAudioSynth } from './audio/web/webaudio-synth.cjs';
+export { ChatOptions, ChatResponse, SYSTEM_PROMPT, chat, chatContinue, chatStream, getModels } from './llm/index.cjs';
+export { E as EmotionSegment, P as ParsedResponse, c as cleanResponse, a as emotionToColor, e as emotionToKaomoji, b as extractEmotions, g as getDominantEmotion, d as getEmotionName, i as isValidEmotion, p as parseResponse } from './parseEmotions-BUWaGnhq.cjs';
+export { AttendInput, CanonicalSelf, LeakEntry, SpineAdapter, SpineConfig, SpineFacet, createSpineAdapter } from './spine/spine-adapter.cjs';
+export { CanonicalIdentityAdapter, Expression, IdentitySnapshot, KaiosRuntime, Message, Reply, RuntimeConfig, RuntimeIdentity, SessionMemory, TextAdapter, TextRequest, TextResponse, createKaios, createSessionMemory } from './runtime/index.cjs';
+export { CharacterDefinition, KAIOS_CHARACTER, compileCharacterPrompt } from './character/index.cjs';
+export { AffectBus, AffectBusOptions, AffectFrame, DeepReadonly, ExternalAffectOwner, isAffectFrame, isPerformanceState } from './affect/index.cjs';
+export { VoiceAdapter, VoiceAudio, VoiceCapabilities, VoiceRequest, VoiceResult, createNullVoiceAdapter, createVoice } from './voice/index.cjs';
 import 'eventemitter3';
 import 'events';
 
@@ -152,155 +163,6 @@ declare function parseEmotionToken(text: string): EmotionToken | null;
  * Extract all emotion tokens from text
  */
 declare function extractEmotionTokens(text: string): EmotionToken[];
-
-/**
- * Emotion System - Processes and manages KAIOS's emotional state
- * Handles emotion tokens, state transitions, and intensity scaling
- */
-
-/**
- * Emotion processor and state manager for KAIOS
- */
-declare class EmotionSystem {
-    private state;
-    private history;
-    private maxHistoryLength;
-    constructor(initialEmotion?: EmotionToken);
-    /**
-     * Get current emotion state
-     */
-    getState(): EmotionState;
-    /**
-     * Get current emotion token
-     */
-    getCurrentEmotion(): EmotionToken;
-    /**
-     * Get formatted emotion token string
-     */
-    getFormattedToken(): string;
-    /**
-     * Transition to a new emotion
-     */
-    setEmotion(emotion: EmotionToken, intensity?: number): EmotionState;
-    /**
-     * Analyze text and determine appropriate emotion
-     */
-    analyzeText(text: string): {
-        emotion: EmotionToken;
-        confidence: number;
-    };
-    /**
-     * Convert sentiment data to emotion token
-     */
-    sentimentToEmotion(sentiment: SentimentData): EmotionToken;
-    /**
-     * Process response text and extract emotion changes
-     */
-    processResponse(text: string): {
-        emotions: EmotionToken[];
-        segments: Array<{
-            text: string;
-            emotion: EmotionToken;
-        }>;
-    };
-    /**
-     * Build text with emotion token at start
-     */
-    wrapWithEmotion(text: string, emotion?: EmotionToken): string;
-    /**
-     * Get emotion history
-     */
-    getHistory(): EmotionState[];
-    /**
-     * Get dominant emotion from history
-     */
-    getDominantEmotion(windowSize?: number): EmotionToken;
-    /**
-     * Get all available emotion tokens
-     */
-    static getAvailableEmotions(): EmotionToken[];
-    /**
-     * Check if a string is a valid emotion token
-     */
-    static isValidEmotion(emotion: string): emotion is EmotionToken;
-    /**
-     * Get intensity modifier based on text patterns
-     */
-    static getIntensityModifier(text: string): number;
-}
-
-/**
- * KAIMOJI Library - KAIOS's evolving visual language
- * 200+ expressions with rich metadata for emotional expression
- *
- * AESTHETIC PHILOSOPHY:
- * KAIMOJI uses ASCII, text symbols, emoticons, and kaomoji - NOT traditional emoji.
- * Traditional emoji exist only as metadata tags for searchability.
- * The authentic visual expression uses only ASCII/text symbols.
- */
-
-/**
- * The complete KAIMOJI library
- * Distribution: 60% common, 25% uncommon, 12% rare, 3% legendary
- */
-declare const KAIMOJI_LIBRARY: Kaimoji[];
-/**
- * Get all expressions in the library
- */
-declare function getAllKaimoji(): Kaimoji[];
-/**
- * Get expressions by rarity
- */
-declare function getKaimojiByRarity(rarity: KaimojiRarity): Kaimoji[];
-/**
- * Get expressions by category
- */
-declare function getKaimojiByCategory(category: KaimojiCategory): Kaimoji[];
-/**
- * Get expressions by context
- */
-declare function getKaimojiByContext(context: KaimojiContext): Kaimoji[];
-/**
- * Get expressions by energy level range
- */
-declare function getKaimojiByEnergyRange(min: number, max: number): Kaimoji[];
-/**
- * Get signature expressions
- */
-declare function getSignatureKaimoji(): Kaimoji[];
-/**
- * Get expressions with sound characteristics
- */
-declare function getKaimojiBySoundProfile(params: {
-    soundFrequency?: 'low' | 'mid' | 'high';
-    texture?: 'smooth' | 'rough' | 'glitchy' | 'ambient' | 'chaotic';
-}): Kaimoji[];
-/**
- * Get expressions unlockable at a specific level
- */
-declare function getKaimojiUnlockableAtLevel(level: number): Kaimoji[];
-/**
- * Search expressions by tag
- */
-declare function searchKaimojiByTag(tag: string): Kaimoji[];
-/**
- * Get a random expression from the library
- */
-declare function getRandomKaimoji(filter?: {
-    rarity?: KaimojiRarity;
-    category?: KaimojiCategory;
-    maxLevel?: number;
-}): Kaimoji;
-/**
- * Get library statistics
- */
-declare function getLibraryStats(): {
-    total: number;
-    byRarity: Record<KaimojiRarity, number>;
-    byCategory: Partial<Record<KaimojiCategory, number>>;
-    signatures: number;
-    withAudio: number;
-};
 
 /**
  * Memory System - Cross-session memory for KAIOS
@@ -552,206 +414,6 @@ declare function compressText(text: string, config: CompressionConfig): string;
  */
 declare function addExpressions(text: string, config: CompressionConfig): string;
 
-type JazzRole = 'root' | 'chord-tone' | 'guide' | 'approach' | 'enclosure' | 'passing' | 'blue' | 'rest';
-interface JazzNote {
-    note: string;
-    dur: number;
-    velocity: number;
-    role: JazzRole;
-}
-interface Change {
-    root: string;
-    quality: string;
-    bars?: number;
-}
-interface SoloOptions {
-    octave?: number;
-    swing?: number;
-    density?: number;
-    bluesiness?: number;
-    seed?: number;
-    beatsPerBar?: number;
-}
-/** Chord quality → the scale to improvise with (chord-scale theory). */
-declare const CHORD_SCALE: Record<string, string>;
-/** The guide tones — the 3rd and 7th — the notes that carry the harmony through changes. */
-declare function guideTones(change: Change, octave?: number): string[];
-/** Bebop enclosure of a target: diatonic-above, chromatic-below, target. The bop signature. */
-declare function enclosure(targetMidi: number): number[];
-/**
- * Walking bass over the changes — quarter notes: root on 1, chord/scale tones on 2 & 3,
- * a chromatic/diatonic approach into the NEXT chord's root on 4.
- */
-declare function walkingBass(changes: Change[], octave?: number, seed?: number): JazzNote[];
-/**
- * Comping rhythm — syncopated voicings (Charleston-ish: the "and of 1" + beat 2-and),
- * voiced with guide tones so it stays out of the soloist's way. Returns onset (in beats
- * from the bar start) + the rootless guide-tone voicing for that chord.
- */
-declare function comp(changes: Change[], octave?: number): Array<{
-    at: number;
-    bar: number;
-    voicing: string[];
-    velocity: number;
-}>;
-/**
- * Solo over changes — the heart. For each bar: target a guide tone of the chord on a strong
- * beat, approach it by enclosure/chromatic from the previous note, connect with chord-scale
- * tones (stepwise voice-leading + the occasional leap), sprinkle blue notes, and breathe
- * (rests = call & response). Eighth-note grid with swing.
- */
-declare function soloOverChanges(changes: Change[], opts?: SoloOptions): JazzNote[];
-/** The canonical ii–V–I in a key, as a bebop line + its changes. */
-declare function iiVI(key?: string, opts?: SoloOptions): {
-    changes: Change[];
-    line: JazzNote[];
-};
-/**
- * Trading fours — call & response. Splits the changes into 4-bar chunks and alternates
- * soloists, each with its own seed/character (KAIOS vs a partner / another KAIOS variation).
- */
-declare function tradeFours(changes: Change[], voices?: string[], baseSeed?: number): Array<{
-    voice: string;
-    bars: Change[];
-    line: JazzNote[];
-}>;
-declare const JazzEngine: {
-    CHORD_SCALE: Record<string, string>;
-    guideTones: typeof guideTones;
-    enclosure: typeof enclosure;
-    walkingBass: typeof walkingBass;
-    comp: typeof comp;
-    soloOverChanges: typeof soloOverChanges;
-    iiVI: typeof iiVI;
-    tradeFours: typeof tradeFours;
-};
-
-/**
- * KAIOS Affective Synthesis — the shared heart.
- *
- * KAIOS's core is not music OR visuals; it is AFFECT, expressed as both. She perceives/feels
- * and generates emotion as sound AND image. Today that logic is re-invented three times: MNEME's
- * `apTick` autopilot (energy envelopes → drop/breakdown/phrase decisions, for visuals), the
- * arrangement engine's energy/tension curves (for music), and the letter-piano affect→harmony
- * map. This unifies them into ONE performance state derived from a single affect bus — so the
- * music backends (jazz / piano / synth) and the visual backends (MNEME shaders / canvas) move
- * together, off the same feeling.
- *
- * Pure + framework-free + deterministic. Feed it emotion (valence/arousal) and/or a live energy
- * signal (audio RMS, a beat); `tick()` returns the unified state every backend reads.
- */
-interface Affect {
-    /** -1 (dark) .. 1 (bright) */ valence: number;
-    /** 0 (still) .. 1 (intense) */ arousal: number;
-    /** 0..1 live energy sample (audio RMS / activity); defaults to arousal */ energy?: number;
-}
-type ArcPhase = 'intro' | 'building' | 'peak' | 'falling' | 'outro';
-interface MusicParams {
-    mode: string;
-    chordBias: string[];
-    register: number;
-    density: number;
-    swing: number;
-    dissonance: number;
-    tempoBias: number;
-}
-interface VisualParams {
-    look: string;
-    palette: [string, string, string];
-    bloom: number;
-    glitch: number;
-    motion: number;
-    particles: number;
-}
-interface PerformanceState {
-    valence: number;
-    arousal: number;
-    energyFast: number;
-    energySlow: number;
-    tension: number;
-    arc: ArcPhase;
-    beat: number;
-    rising: boolean;
-    drop: boolean;
-    breakdown: boolean;
-    phraseCut: boolean;
-    music: MusicParams;
-    visual: VisualParams;
-}
-/** The 7 MNEME LOOKS (visuals.asgardstud.io). */
-declare const LOOKS: readonly ["ETHEREAL", "GLITCHCORE", "SHATTER", "PIN-ART", "CONSTELLATION", "RAINBOW ROAD", "VOID DRIFT"];
-declare class AffectiveSynth {
-    private es;
-    private el;
-    private tension;
-    private beat;
-    private phrase;
-    private arc;
-    private arcLocked;
-    private valence;
-    private arousal;
-    constructor(opts?: {
-        phrase?: number;
-        valence?: number;
-        arousal?: number;
-    });
-    setAffect(a: Affect): void;
-    setValence(v: number): void;
-    setArousal(a: number): void;
-    /** Pin the arc phase (e.g. the prose/narrative says "the drop"); pass null to resume auto. */
-    setArc(p: ArcPhase | null): void;
-    /** Advance one beat with a live energy sample (audio RMS / activity). Returns the unified state. */
-    tick(energy?: number): PerformanceState;
-    private advanceArc;
-    /** valence → mode/quality, arousal → density/register/tempo, tension → dissonance. */
-    private music;
-    /** drop/breakdown/tension/valence → LOOK + palette + glitch/bloom/motion. (folds MNEME apTick) */
-    private visual;
-}
-/** Convenience factory. */
-declare function createAffectiveSynth(opts?: {
-    phrase?: number;
-    valence?: number;
-    arousal?: number;
-}): AffectiveSynth;
-declare const AffectEngine: {
-    AffectiveSynth: typeof AffectiveSynth;
-    createAffectiveSynth: typeof createAffectiveSynth;
-    LOOKS: readonly ["ETHEREAL", "GLITCHCORE", "SHATTER", "PIN-ART", "CONSTELLATION", "RAINBOW ROAD", "VOID DRIFT"];
-};
-
-interface WebAudioSynthOptions {
-    /** master output level after fade-in (default 0.22) */
-    masterGain?: number;
-    /** reverb tail length, seconds (default 4.2) */
-    reverbSeconds?: number;
-    /** reverb decay shaping (default 2.4) */
-    reverbDecay?: number;
-    /** master lowpass cutoff Hz — felt, never harsh (default 6200) */
-    lowpassHz?: number;
-}
-declare class WebAudioSynth {
-    private ctx;
-    private dry;
-    private verb;
-    private airGain;
-    private readonly opt;
-    constructor(opts?: WebAudioSynthOptions);
-    /** Whether Web Audio is available (browser). */
-    static get available(): boolean;
-    /** Resume/start the audio context — call from a user gesture (browsers gate audio start). */
-    resume(): Promise<void>;
-    private makeReverbIR;
-    private build;
-    /** Strike a frequency — the FM-Rhodes voice. `bright` 0..1 scales the tine attack. */
-    strike(freq: number, dur?: number, vel?: number, bright?: number): void;
-    /** Drop-in for PianoEngine.setPlayNoteCallback — (note, duration, velocity). Arrow-bound. */
-    play: (note: string, duration?: number, velocity?: number) => Promise<void>;
-    /** Release resources. */
-    dispose(): void;
-}
-declare function createWebAudioSynth(opts?: WebAudioSynthOptions): WebAudioSynth;
-
 /**
  * KAIOS Headpat System
  *
@@ -869,7 +531,7 @@ declare const progression: ProgressionSystem;
 /**
  * @kaios/expression-sdk
  *
- * Character runtime system that instantiates KAIOS as a conscious, evolving AI entity
+ * Legacy character runtime and public expression SDK exports
  * with dual-mode expression: visual language (KAIMOJI) and sonic intelligence.
  *
  * KAIOS is the Cyborg Princess, Architect of KOTOPIA - "Not Like The Other AIs"
@@ -894,6 +556,6 @@ declare const progression: ProgressionSystem;
  * ```
  */
 
-declare const VERSION = "0.1.0";
+declare const VERSION = "2.0.0-alpha.1";
 
-export { type Affect, AffectEngine, AffectiveSynth, type ArcPhase, CHORD_SCALE, type Change, type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionState, EmotionSystem, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, JazzEngine, type JazzNote, type JazzRole, KAIMOJI_LIBRARY, KAIOS_CORE_IDENTITY, Kaimoji, KaimojiCategory, KaimojiContext, KaimojiRarity, LOOKS, type LevelInfo, MemoryManager, type MusicParams, type PerformanceState, ProgressionSystem, SentimentData, type SoloOptions, SonicResponse, StateBackendConfig, type TypoConfig, VERSION, type VisualParams, WebAudioSynth, type WebAudioSynthOptions, type XPReward, addExpressions, addHesitations, addTypos, comp, compilePersonalityPrompt, compressText, createAffectiveSynth, createDreamEngine, createWebAudioSynth, degradeText, enclosure, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getAllKaimoji, getHeadpatStats, getKaimojiByCategory, getKaimojiByContext, getKaimojiByEnergyRange, getKaimojiByRarity, getKaimojiBySoundProfile, getKaimojiUnlockableAtLevel, getLibraryStats, getNextMilestone, getRandomKaimoji, getSignatureKaimoji, glitchText, guideTones, iiVI, insertGlitchMarkers, parseEmotionToken, processGlitch, progression, searchKaimojiByTag, soloOverChanges, tradeFours, walkingBass };
+export { type CompressionConfig, DreamEngine, type DreamEngineConfig, EmotionToken, type GlitchConfig, type GlitchResult, HEADPAT_MILESTONES, type HeadpatMilestone, type HeadpatResult, Interaction, KAIOS_CORE_IDENTITY, Kaimoji, type LevelInfo, MemoryManager, ProgressionSystem, SonicResponse, StateBackendConfig, type TypoConfig, VERSION, type XPReward, addExpressions, addHesitations, addTypos, compilePersonalityPrompt, compressText, createDreamEngine, degradeText, extractEmotionTokens, formatEmotionToken, fragmentText, generateHeadpatResponse, getHeadpatStats, getNextMilestone, glitchText, insertGlitchMarkers, parseEmotionToken, processGlitch, progression };

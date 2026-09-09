@@ -1,4 +1,6 @@
-import { E as EmotionToken } from '../types-D1mwqN9Y.js';
+export { E as EmotionSegment, P as ParsedResponse, c as cleanResponse, a as emotionToColor, e as emotionToKaomoji, b as extractEmotions, f as formatEmotionToken, g as getDominantEmotion, d as getEmotionName, i as isValidEmotion, p as parseResponse } from '../parseEmotions-CAnwkcIs.js';
+import '../types-CIIwpMNW.js';
+import '../spine/spine-adapter.js';
 
 /**
  * LLM Chat Module - Wraps Simon Willison's `llm` CLI for KAIOS
@@ -49,81 +51,4 @@ declare function chatContinue(message: string, options?: ChatOptions): Promise<s
  */
 declare function getModels(): Promise<string[]>;
 
-/**
- * Emotion Parser for KAIOS LLM Responses
- *
- * Extracts and processes emotion tokens from KAIOS's responses
- * for use in visual/audio expression systems
- *
- * @example
- * ```typescript
- * import { parseResponse } from '@kaios/expression-sdk/llm'
- *
- * const response = '<|EMOTE_HAPPY|> hello~ (◕‿◕) <|EMOTE_CURIOUS|> what brings you here?'
- * const parsed = parseResponse(response)
- * // {
- * //   segments: [
- * //     { emotion: 'EMOTE_HAPPY', text: 'hello~ (◕‿◕) ' },
- * //     { emotion: 'EMOTE_CURIOUS', text: 'what brings you here?' }
- * //   ],
- * //   emotions: ['EMOTE_HAPPY', 'EMOTE_CURIOUS'],
- * //   cleanText: 'hello~ (◕‿◕) what brings you here?'
- * // }
- * ```
- */
-
-interface EmotionSegment {
-    emotion: EmotionToken;
-    text: string;
-    delay?: number;
-}
-interface ParsedResponse {
-    /** Text segments with their associated emotions */
-    segments: EmotionSegment[];
-    /** All emotions found in order of appearance */
-    emotions: EmotionToken[];
-    /** The complete text with all tokens removed */
-    cleanText: string;
-    /** Whether the response starts with an emotion token */
-    startsWithEmotion: boolean;
-    /** Total delays in seconds */
-    totalDelay: number;
-}
-/**
- * Parse a KAIOS response to extract emotion tokens and delays
- */
-declare function parseResponse(text: string): ParsedResponse;
-/**
- * Extract just the emotion tokens from text
- */
-declare function extractEmotions(text: string): EmotionToken[];
-/**
- * Get the dominant (first) emotion from a response
- */
-declare function getDominantEmotion(text: string): EmotionToken;
-/**
- * Remove all emotion and delay tokens from text
- */
-declare function cleanResponse(text: string): string;
-/**
- * Format an emotion token for display
- */
-declare function formatEmotionToken(emotion: EmotionToken): string;
-/**
- * Validate if a string is a valid emotion token
- */
-declare function isValidEmotion(emotion: string): emotion is EmotionToken;
-/**
- * Get emotion display name (without EMOTE_ prefix)
- */
-declare function getEmotionName(emotion: EmotionToken): string;
-/**
- * Map emotion to a color for display
- */
-declare function emotionToColor(emotion: EmotionToken): string;
-/**
- * Map emotion to a kaomoji for display
- */
-declare function emotionToKaomoji(emotion: EmotionToken): string;
-
-export { type ChatOptions, type ChatResponse, type EmotionSegment, type ParsedResponse, SYSTEM_PROMPT, chat, chatContinue, chatStream, cleanResponse, emotionToColor, emotionToKaomoji, extractEmotions, formatEmotionToken, getDominantEmotion, getEmotionName, getModels, isValidEmotion, parseResponse };
+export { type ChatOptions, type ChatResponse, SYSTEM_PROMPT, chat, chatContinue, chatStream, getModels };

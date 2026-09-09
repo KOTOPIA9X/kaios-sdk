@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Explore KAIOS expression, musical feeling and movement in a local interactive study.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E✿%3C/text%3E%3C/svg%3E">
+  <title>KAIOS — expression playground</title>
+  <style>
+    :root {
+      --paper: #f7f5ef; --ink: #222122; --muted: #68616b; --lilac: #e8e1f0;
+      --sakura: #c83952; --line: #d6d0d8; --glass: #fcfaf7;
+      --serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); color: var(--ink); }
+    body { margin: 0; font: 15px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+    button, input { font: inherit; }
+    button, a, input { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    button:not(:disabled), input[type="range"] { cursor: pointer; }
+    button:disabled { cursor: wait; opacity: .52; }
+    :focus-visible { outline: 3px solid var(--sakura); outline-offset: 5px; }
+    button, a { touch-action: manipulation; }
+    a { color: inherit; text-underline-offset: 4px; }
+    .shell { max-width: 1280px; margin: auto; padding: 0 50px; }
+    .masthead { min-height: 100px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .wordmark { display: flex; align-items: center; gap: 11px; text-decoration: none; font-size: 25px; font-weight: 800; letter-spacing: -.09em; }
+    .flower { font-family: Georgia, serif; color: var(--sakura); font-size: 37px; font-weight: normal; line-height: 1; letter-spacing: 0; }
+    .masthead-note { color: var(--muted); font-size: 13px; }
+    .masthead-note span { color: var(--sakura); margin-right: 7px; }
+    .intro { display: flex; align-items: flex-end; justify-content: space-between; padding: 32px 0 36px; gap: 36px; }
+    h1 { font: 400 clamp(42px, 5.4vw, 72px)/1.01 var(--serif); letter-spacing: -.055em; margin: 0; }
+    .intro p { color: var(--muted); max-width: 290px; margin: 0 0 5px; font-size: 15px; line-height: 1.6; }
+    .instrument { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); border: 1px solid var(--line); border-radius: 30px; overflow: hidden; background: var(--glass); }
+    .stage { min-width: 0; background: var(--lilac); position: relative; min-height: 536px; display: grid; grid-template-rows: auto 1fr auto; isolation: isolate; }
+    .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+    .stage-head, .stage-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 28px; }
+    .stage-head { align-items: flex-start; }
+    .stage-title { font-size: 14px; }
+    .stage-subtitle { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .live-state { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .live-dot { width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+    .is-playing .live-dot { color: var(--sakura); }
+    .face-wrap { align-self: center; text-align: center; padding: 22px; min-width: 0; }
+    .face { display: block; font: 400 clamp(40px, 5.2vw, 72px)/1.4 var(--sans); letter-spacing: -.055em; white-space: nowrap; }
+    .face-label { font: 400 21px/1.5 var(--serif); margin-top: 9px; color: #595061; }
+    .stage-foot { padding-top: 16px; font-size: 12px; }
+    .frame-mark { display: flex; gap: 9px; align-items: center; color: #595061; }
+    .frame-mark i { width: 5px; height: 5px; border: 1px solid currentColor; border-radius: 50%; }
+    .copy { border: 1px solid #ada2b9; background: transparent; padding: 8px 13px; border-radius: 100px; font-size: 12px; min-height: 36px; }
+    .copy:hover { background: #ffffff65; }
+    .controls { padding: 31px 30px 25px; }
+    .control-heading { display: flex; align-items: baseline; gap: 12px; justify-content: space-between; margin-bottom: 22px; }
+    h2 { font: 400 27px/1.15 var(--serif); letter-spacing: -.035em; margin: 0; }
+    .control-heading span { color: var(--muted); font-size: 12px; }
+    .presets { display: flex; gap: 7px; margin-bottom: 28px; flex-wrap: wrap; }
+    .preset { padding: 8px 12px; border: 1px solid var(--line); background: transparent; border-radius: 9px; font-size: 12px; min-height: 36px; }
+    .preset[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .preset:hover { border-color: var(--ink); }
+    .slider-block + .slider-block { margin-top: 22px; }
+    .slider-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    label { font-weight: 550; font-size: 14px; }
+    .slider-top output { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+    input[type="range"] { display: block; appearance: none; -webkit-appearance: none; width: 100%; height: 24px; margin: 11px 0 0; padding: 0; background: transparent; }
+    input[type="range"]::-webkit-slider-runnable-track { height: 3px; background: var(--line); border-radius: 2px; }
+    input[type="range"]::-moz-range-track { height: 3px; background: var(--line); border-radius: 2px; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; background: var(--ink); border: 3px solid var(--glass); border-radius: 50%; margin-top: -7px; box-shadow: 0 0 0 1px var(--ink); }
+    input[type="range"]::-moz-range-thumb { width: 11px; height: 11px; background: var(--ink); border: 3px solid var(--glass); border-radius: 50%; box-shadow: 0 0 0 1px var(--ink); }
+    .endpoints { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .transport { display: flex; gap: 9px; margin-top: 28px; }
+    .play { display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-height: 47px; border: 1px solid var(--ink); border-radius: 13px; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 550; }
+    .play:hover { background: #3c343e; }
+    .play svg { width: 12px; height: 12px; fill: currentColor; }
+    .sound { min-width: 94px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 13px; background: transparent; font-size: 12px; }
+    .sound[aria-pressed="true"] { border-color: var(--sakura); color: #ac1e3b; background: #fbeaf0; }
+    .notice { min-height: 37px; margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .readout { display: grid; grid-template-columns: 1fr 1fr; padding: 23px 0 0; margin: 2px 0 0; border-top: 1px solid var(--line); gap: 22px; }
+    .readout dt { color: var(--muted); font-size: 11px; }
+    .readout dd { margin: 3px 0 0; font-size: 25px; line-height: 1.15; font-family: var(--serif); font-variant-numeric: tabular-nums; }
+    .readout dd small { font: 12px var(--sans); color: var(--muted); margin-left: 2px; }
+    .shared { padding: 32px 0 25px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 0; }
+    .shared-heading { padding: 0 30px 0 0; }
+    .shared-heading h2 { font-size: 28px; }
+    .shared-heading p { font-size: 13px; color: var(--muted); max-width: 400px; margin: 9px 0 0; line-height: 1.6; }
+    .properties { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 15px 22px; padding: 0 30px; }
+    .properties dt { color: var(--muted); font-size: 11px; }
+    .properties dd { margin: 2px 0 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .meter { display: block; width: 100%; height: 3px; background: #e4dfe6; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .meter span { display: block; height: 100%; width: 0; background: #887295; border-radius: inherit; }
+    footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); margin-top: 20px; padding: 22px 0 30px; font-size: 11px; color: var(--muted); }
+    footer nav { display: flex; gap: 20px; }
+    footer p { margin: 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (min-width: 1400px) { .intro { padding-top: 54px; } }
+    @media (max-width: 800px) {
+      .shell { padding: 0 24px; }
+      .masthead { min-height: 80px; }
+      .intro { padding: 20px 0 28px; }
+      .intro p { max-width: 220px; font-size: 13px; }
+      .instrument { grid-template-columns: minmax(0, 1.1fr) minmax(280px, 1fr); }
+      .controls { padding: 25px 22px 22px; }
+      .stage { min-height: 514px; }
+      .stage-head, .stage-foot { padding-left: 20px; padding-right: 20px; }
+      .shared { grid-template-columns: 1fr 1fr; }
+      .properties { padding-right: 0; padding-left: 22px; }
+      .face { font-size: 43px; }
+    }
+    @media (max-width: 620px) {
+      .shell { padding: 0 18px; }
+      .masthead { min-height: 74px; }
+      .wordmark { font-size: 23px; }
+      .masthead-note { font-size: 11px; }
+      .intro { display: block; padding: 18px 0 25px; }
+      h1 { font-size: clamp(40px, 11vw, 62px); }
+      .intro p { max-width: 330px; margin-top: 16px; font-size: 13px; }
+      .instrument { display: block; border-radius: 24px; }
+      .stage { min-height: 344px; }
+      .stage-head { padding-top: 20px; }
+      .stage-foot { padding-bottom: 18px; }
+      .face { font-size: clamp(47px, 11vw, 65px); }
+      .controls { padding: 27px 23px 25px; }
+      .control-heading { margin-bottom: 17px; }
+      .presets { margin-bottom: 23px; }
+      .readout { padding-top: 20px; }
+      .shared { display: block; padding: 28px 4px 20px; }
+      .shared-heading { padding: 0; }
+      .properties { margin-top: 23px; padding: 0; gap: 17px 30px; }
+      footer { margin-top: 9px; }
+      footer p { max-width: 270px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="masthead">
+      <a class="wordmark" href="../README.md" aria-label="KAIOS SDK home"><span class="flower" aria-hidden="true">✿</span>KAIOS</a>
+      <div class="masthead-note"><span aria-hidden="true">✧</span>Expression playground</div>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <h1 id="title">a feeling,<br>in every form.</h1>
+        <p>Choose a feeling. Let it take shape as a face, a little melody and a field of motion.</p>
+      </section>
+      <section class="instrument" aria-label="Expression instrument">
+        <div class="stage" id="stage">
+          <canvas id="field" aria-hidden="true"></canvas>
+          <div class="stage-head">
+            <div class="stage-title">A small presence<span class="stage-subtitle">Kaimoji expression study</span></div>
+            <span class="live-state"><i class="live-dot" aria-hidden="true"></i><span id="play-state">At rest</span></span>
+          </div>
+          <div class="face-wrap">
+            <output class="face" id="face" aria-label="Selected kaimoji expression">(◕‿◕)</output>
+            <div class="face-label" id="face-label">a little brightness</div>
+          </div>
+          <div class="stage-foot">
+            <span class="frame-mark"><i aria-hidden="true"></i><span id="look">Void drift</span></span>
+            <button class="copy" id="copy" type="button" disabled>Copy face</button>
+          </div>
+        </div>
+        <div class="controls">
+          <div class="control-heading"><h2>Find a feeling</h2><span>Make it yours</span></div>
+          <div class="presets" role="group" aria-label="Feeling presets">
+            <button class="preset" type="button" data-preset="soft" aria-pressed="true" disabled>Soft</button>
+            <button class="preset" type="button" data-preset="bright" aria-pressed="false" disabled>Bright</button>
+            <button class="preset" type="button" data-preset="restless" aria-pressed="false" disabled>Restless</button>
+          </div>
+          <div class="slider-block">
+            <div class="slider-top"><label for="valence">Valence</label><output id="valence-value" for="valence">+0.48</output></div>
+            <input id="valence" type="range" min="-1" max="1" step="0.01" value="0.48" aria-describedby="valence-meaning" disabled>
+            <div class="endpoints" id="valence-meaning"><span>Shadow</span><span>Light</span></div>
+          </div>
+          <div class="slider-block">
+            <div class="slider-top"><label for="arousal">Arousal</label><output id="arousal-value" for="arousal">0.32</output></div>
+            <input id="arousal" type="range" min="0" max="1" step="0.01" value="0.32" aria-describedby="arousal-meaning" disabled>
+            <div class="endpoints" id="arousal-meaning"><span>Still</span><span>Electric</span></div>
+          </div>
+          <div class="transport">
+            <button class="play" id="play" type="button" disabled><svg viewBox="0 0 12 12" aria-hidden="true"><path id="play-icon" d="M2 1 L11 6 L2 11 Z"/></svg><span id="play-label">Play feeling</span></button>
+            <button class="sound" id="sound" type="button" aria-pressed="false" disabled>Sound off</button>
+          </div>
+          <p class="notice" id="notice" role="status">Loading the expression instrument…</p>
+          <dl class="readout">
+            <div><dt>Elapsed</dt><dd><span id="elapsed">0:00</span></dd></div>
+            <div><dt>Beat</dt><dd><span id="beat">0</span><small>/ 120 bpm</small></dd></div>
+          </dl>
+        </div>
+      </section>
+      <section class="shared" aria-labelledby="shared-title">
+        <div class="shared-heading"><h2 id="shared-title">One feeling, many expressions.</h2><p>The same musical state shapes the melody and the moving field. Move the sliders while it plays to hear and see the change.</p></div>
+        <dl class="properties">
+          <div><dt>Harmony</dt><dd id="harmony">Major</dd></div>
+          <div><dt>Register</dt><dd id="register">Octave 4</dd></div>
+          <div><dt>Note density</dt><dd><span id="density">46%</span><span class="meter" aria-hidden="true"><span id="density-meter"></span></span></dd></div>
+          <div><dt>Motion</dt><dd><span id="motion">0%</span><span class="meter" aria-hidden="true"><span id="motion-meter"></span></span></dd></div>
+        </dl>
+      </section>
+    </main>
+    <footer>
+      <p>Local expression demo. No language model or canonical connection.</p>
+      <nav aria-label="Documentation"><a href="../docs/concept.md">The idea</a><a href="../docs/lore.md">The lore</a><a href="../docs/architecture.md">Build with it</a></nav>
+    </footer>
+  </div>
+  <noscript><p class="shell">Enable JavaScript to use the expression controls.</p></noscript>
+  <script type="module">
+    // Local built modules only. No provider, canonical service, persistence or analytics.
+    const $ = id => document.getElementById(id);
+    const canvas = $('field');
+    const context = canvas.getContext('2d');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const presets = {
+      soft: {valence: 0.48, arousal: 0.32},
+      bright: {valence: 0.8, arousal: 0.78},
+      restless: {valence: -0.58, arousal: 0.76},
+    };
+    const scales = {
+      major: [0, 2, 4, 7, 9, 7, 4, 2],
+      lydian: [0, 4, 6, 7, 11, 9, 7, 4],
+      mixolydian: [0, 2, 4, 7, 10, 7, 4, 2],
+      dorian: [0, 2, 3, 7, 9, 7, 3, 2],
+      phrygian: [0, 1, 3, 7, 8, 7, 3, 1],
+    };
+    let bus, runtime, Synth, synth = null, frame, playing = false, soundOn = false;
+    let lastWall = 0, trackTime = 0, animation = 0, audioEpoch = 0;
+    let width = 0, height = 0, copyTimer = 0;
+    const affect = () => ({valence: Number($('valence').value), arousal: Number($('arousal').value)});
+    const capitalize = text => text.toLowerCase().replace(/^./, char => char.toUpperCase());
+    const percent = value => `${Math.round(value * 100)}%`;
+    const clockOptions = () => ({bpm: 120, phraseBeats: 16, maxGapSeconds: 2, affect: affect()});
+
+    function updateFace() {
+      const {valence, arousal} = affect();
+      const emotion = valence < -0.25 ? (arousal > 0.55 ? 'EMOTE_ANGRY' : 'EMOTE_SAD')
+        : valence > 0.25 ? 'EMOTE_HAPPY' : arousal > 0.55 ? 'EMOTE_CURIOUS' : 'EMOTE_NEUTRAL';
+      $('face').textContent = runtime.express('', emotion).face;
+      $('face-label').textContent = valence < -0.25 ? (arousal > 0.55 ? 'a restless heart' : 'a quieter moment')
+        : valence > 0.25 ? (arousal > 0.6 ? 'a little electricity' : 'a little brightness') : 'room for wondering';
+      $('valence-value').textContent = `${valence >= 0 ? '+' : ''}${valence.toFixed(2)}`;
+      $('arousal-value').textContent = arousal.toFixed(2);
+      $('valence').setAttribute('aria-valuetext', `${valence.toFixed(2)}, ${valence < 0 ? 'toward shadow' : 'toward light'}`);
+      $('arousal').setAttribute('aria-valuetext', `${Math.round(arousal * 100)} percent, ${arousal < .5 ? 'quieter' : 'more energetic'}`);
+    }
+
+    function resize() {
+      const bounds = canvas.getBoundingClientRect();
+      width = bounds.width; height = bounds.height;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
+      context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+      draw();
+    }
+
+    function draw() {
+      if (!context || !width || !height) return;
+      const state = frame?.state;
+      const energy = state?.visual.motion ?? 0;
+      const bloom = state?.visual.bloom ?? 0.3;
+      const time = reducedMotion.matches ? 0 : trackTime;
+      const phase = playing && !reducedMotion.matches ? frame.clock.beatPhase : 0;
+      const radius = Math.min(width * .34, height * .29);
+      const cx = width / 2, cy = height / 2 + 3;
+      context.clearRect(0, 0, width, height);
+      // A quiet open center for the face. Motion stays in the surrounding field.
+      context.fillStyle = `rgba(255,255,255,${.18 + bloom * .16})`;
+      context.beginPath(); context.arc(cx, cy, radius * .79, 0, Math.PI * 2); context.fill();
+      const rings = 5;
+      for (let ring = 0; ring < rings; ring++) {
+        const base = radius * (.91 + ring * .095);
+        context.beginPath();
+        for (let index = 0; index <= 180; index++) {
+          const angle = index / 180 * Math.PI * 2;
+          const wave = Math.sin(angle * 5 + time * (.14 + energy * .3) + ring * .7);
+          const r = base + wave * (4 + energy * 13) + Math.sin(phase * Math.PI) * energy * 2;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r * (.94 + ring * .006);
+          if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        }
+        context.closePath();
+        context.lineWidth = ring === 0 ? 1.1 : .7;
+        context.strokeStyle = `rgba(105,80,125,${.2 - ring * .022})`;
+        context.stroke();
+      }
+      const dots = 15 + Math.round((state?.arousal ?? .32) * 28);
+      const palette = state?.visual.palette ?? ['#c83952', '#8a7297', '#fff'];
+      for (let index = 0; index < dots; index++) {
+        const angle = index * 2.39996 + time * .018 * (index % 2 ? 1 : -1) * (1 + energy);
+        const distance = radius * (1.34 + ((index * 17) % 21) / 65);
+        const x = cx + Math.cos(angle) * distance;
+        const y = cy + Math.sin(angle) * distance * .93;
+        context.globalAlpha = .32 + (index % 4) * .09;
+        context.fillStyle = palette[index % 3];
+        context.beginPath(); context.arc(x, y, index % 7 === 0 ? 2.5 : 1.3, 0, Math.PI * 2); context.fill();
+      }
+      context.globalAlpha = 1;
+    }
+
+    function render(next) {
+      frame = next;
+      const state = next.state;
+      $('look').textContent = capitalize(state.visual.look);
+      $('harmony').textContent = capitalize(state.music.mode);
+      $('register').textContent = `Octave ${state.music.register}`;
+      $('density').textContent = percent(state.music.density);
+      $('density-meter').style.width = percent(state.music.density);
+      $('motion').textContent = percent(state.visual.motion);
+      $('motion-meter').style.width = percent(state.visual.motion);
+      $('beat').textContent = String(state.beat);
+      const seconds = Math.floor(next.clock.timeSeconds);
+      $('elapsed').textContent = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+      draw();
+    }
+
+    function closeAudio() {
+      audioEpoch++;
+      if (synth) { synth.dispose(); synth = null; }
+    }
+
+    async function openAudio() {
+      if (!soundOn || synth) return;
+      if (!Synth.available) { soundOn = false; syncSound(); $('notice').textContent = 'Sound is unavailable in this browser. You can still play the visual study.'; return; }
+      const epoch = audioEpoch;
+      const candidate = new Synth({masterGain: 0.13, reverbSeconds: 1.8});
+      try {
+        await candidate.resume();
+        if (epoch !== audioEpoch || !soundOn || !playing) { candidate.dispose(); return; }
+        synth = candidate;
+      } catch {
+        candidate.dispose(); soundOn = false; syncSound();
+        $('notice').textContent = 'Sound could not start. The visual study is still available.';
+      }
+    }
+
+    function syncSound() {
+      $('sound').setAttribute('aria-pressed', String(soundOn));
+      $('sound').textContent = soundOn ? 'Sound on' : 'Sound off';
+    }
+
+    function playNotes(next) {
+      if (!synth || !soundOn) return;
+      const music = next.state.music;
+      for (const event of next.events) {
+        if (event.type !== 'beat') continue;
+        // A small authored melody, using the actual bus's mode, register and density.
+        if (music.density < .55 && event.beat % 2 === 0) continue;
+        const scale = scales[music.mode] ?? scales.major;
+        const midi = (music.register + 1) * 12 + scale[(event.beat - 1) % scale.length];
+        const hz = 432 * 2 ** ((midi - 69) / 12);
+        synth.strike(hz, 1.1 + (1 - next.state.arousal) * 1.2, .32 + music.density * .2, next.state.arousal * .5);
+      }
+    }
+
+    function syncTransport() {
+      $('stage').classList.toggle('is-playing', playing);
+      $('play-state').textContent = playing ? 'In motion' : 'At rest';
+      $('play-label').textContent = playing ? 'Stop feeling' : 'Play feeling';
+      $('play-icon').setAttribute('d', playing ? 'M2 2 H10 V10 H2 Z' : 'M2 1 L11 6 L2 11 Z');
+    }
+
+    function reset() {
+      trackTime = 0;
+      render(bus.resetTrack(0, clockOptions()));
+    }
+
+    function stop(message = 'At rest. Play starts a new phrase.') {
+      playing = false; cancelAnimationFrame(animation); closeAudio();
+      syncTransport(); $('notice').textContent = message;
+      draw();
+    }
+
+    function step(now) {
+      if (!playing) return;
+      const delta = (now - lastWall) / 1000;
+      lastWall = now;
+      // Explicitly reset after sleep, devtools pauses or a throttled background tab.
+      // Never feed the elapsed gap into a bounded clock, or replay a burst of notes.
+      if (!Number.isFinite(delta) || delta < 0 || delta > 1) {
+        reset();
+        $('notice').textContent = 'A fresh phrase after the pause.';
+      } else {
+        trackTime += delta;
+        try { const next = bus.advanceTo(trackTime); render(next); playNotes(next); }
+        catch { stop('Playback stopped. Press play to start a fresh phrase.'); return; }
+      }
+      animation = requestAnimationFrame(step);
+    }
+
+    function changeFeeling() {
+      updateFace();
+      for (const button of document.querySelectorAll('[data-preset]')) {
+        const value = presets[button.dataset.preset];
+        button.setAttribute('aria-pressed', String(value.valence === affect().valence && value.arousal === affect().arousal));
+      }
+      // Samples are installed prospectively at the last rendered track timestamp.
+      render(bus.advanceTo(trackTime, affect()));
+    }
+
+    try {
+      const [runtimeModule, affectModule, synthModule] = await Promise.all([
+        import('../dist/runtime/index.js'),
+        import('../dist/affect/index.js'),
+        import('../dist/audio/web/webaudio-synth.js'),
+      ]);
+      runtime = runtimeModule.createKaios();
+      Synth = synthModule.WebAudioSynth;
+      bus = new affectModule.AffectBus({sourceId: 'expression-playground', ...clockOptions()});
+      updateFace(); render(bus.getSnapshot()); resize();
+      for (const element of document.querySelectorAll('button, input')) element.disabled = false;
+      $('notice').textContent = 'Sound starts only when you turn it on. Nothing is recorded.';
+
+      $('valence').addEventListener('input', changeFeeling);
+      $('arousal').addEventListener('input', changeFeeling);
+      for (const button of document.querySelectorAll('[data-preset]')) {
+        button.addEventListener('click', () => {
+          const preset = presets[button.dataset.preset];
+          $('valence').value = String(preset.valence); $('arousal').value = String(preset.arousal);
+          changeFeeling();
+        });
+      }
+      $('play').addEventListener('click', async () => {
+        if (playing) { stop(); return; }
+        reset(); playing = true; lastWall = performance.now(); syncTransport();
+        $('notice').textContent = soundOn ? 'A small melody, following your feeling.' : 'Playing quietly. Turn sound on to hear the melody.';
+        animation = requestAnimationFrame(step);
+        if (soundOn) await openAudio();
+      });
+      $('sound').addEventListener('click', async () => {
+        soundOn = !soundOn; syncSound();
+        if (!soundOn) { closeAudio(); $('notice').textContent = playing ? 'Sound off. The feeling keeps moving.' : 'Sound off. Play when you are ready.'; return; }
+        if (playing) { $('notice').textContent = 'A small melody, following your feeling.'; await openAudio(); }
+        else $('notice').textContent = 'Sound is ready. Press play to hear the melody.';
+      });
+      $('copy').addEventListener('click', async () => {
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error('unavailable');
+          await navigator.clipboard.writeText($('face').textContent);
+          $('copy').textContent = 'Copied';
+          clearTimeout(copyTimer); copyTimer = setTimeout(() => { $('copy').textContent = 'Copy face'; }, 1600);
+        } catch { $('notice').textContent = 'Copy is unavailable here. Select the face to copy it manually.'; }
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && playing) stop('Paused while you were away. Play starts a fresh phrase.');
+      });
+      window.addEventListener('pagehide', () => { playing = false; cancelAnimationFrame(animation); closeAudio(); });
+      window.addEventListener('resize', resize);
+      reducedMotion.addEventListener('change', draw);
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(resize).observe($('stage'));
+    } catch {
+      $('notice').textContent = 'The instrument could not load. Build the SDK and open this example from a local static preview.';
+      resize();
+    }
+  </script>
+</body>
+</html>

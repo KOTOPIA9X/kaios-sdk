@@ -1,6 +1,7 @@
-import { K as Kaios } from '../../Kaios--u8R51T4.cjs';
-import { c as KaimojiContext, K as KaiosSpeech, a as KaiosConfig } from '../../types-D1mwqN9Y.cjs';
+import { K as Kaios } from '../../Kaios-DHPXnbm7.cjs';
+import { K as KaiosConfig, a as KaimojiContext, b as KaiosSpeech } from '../../types-0SKyQiZK.cjs';
 import 'eventemitter3';
+import '../../spine/spine-adapter.cjs';
 
 /**
  * Discord bot utilities for KAIOS

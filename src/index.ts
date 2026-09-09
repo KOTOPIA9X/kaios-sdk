@@ -1,7 +1,7 @@
 /**
  * @kaios/expression-sdk
  *
- * Character runtime system that instantiates KAIOS as a conscious, evolving AI entity
+ * Legacy character runtime and public expression SDK exports
  * with dual-mode expression: visual language (KAIMOJI) and sonic intelligence.
  *
  * KAIOS is the Cyborg Princess, Architect of KOTOPIA - "Not Like The Other AIs"
@@ -230,7 +230,13 @@ export { SpineAdapter, createSpineAdapter } from './spine/spine-adapter.js'
 export type { SpineConfig, SpineFacet, CanonicalSelf, AttendInput, LeakEntry } from './spine/spine-adapter.js'
 
 // Version
-export const VERSION = '0.1.0'
+export const VERSION = '2.0.0-alpha.1'
 
 // Default export
 export { Kaios as default } from './core/Kaios.js'
+
+// Portable v2 entry points (use subpath imports in browsers).
+export * from './runtime/index.js'
+export * from './character/index.js'
+export * from './affect/index.js'
+export * from './voice/index.js'

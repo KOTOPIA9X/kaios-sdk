@@ -171,6 +171,14 @@ export {
   type VisualParams,
 } from './affect-engine.js'
 
+// Opt-in elapsed-time/BPM clock candidate; legacy AffectiveSynth remains unchanged.
+export {
+  AffectiveSynthV2,
+  type AffectClockOptions,
+  type AffectClockEvent,
+  type AffectClockResult,
+} from './affect-clock-v2.js'
+
 // ════════════════════════════════════════════════════════════════════════════════
 // CONVENIENCE FUNCTIONS
 // ════════════════════════════════════════════════════════════════════════════════

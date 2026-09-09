@@ -1,5 +1,6 @@
-import { h as AudioConfig, A as AudioProfile, g as SentimentData, G as GeneratedAudio } from '../types-D1mwqN9Y.cjs';
-export { e as emotionToSound, s as soundToEmotion } from '../emotion-mapper-_6O12gJr.cjs';
+import { j as AudioConfig, A as AudioProfile, S as SentimentData, G as GeneratedAudio } from '../types-0SKyQiZK.cjs';
+export { e as emotionToSound, s as soundToEmotion } from '../emotion-mapper-BtqPpB09.cjs';
+import '../spine/spine-adapter.cjs';
 
 /**
  * Audio Engine - Core sound intelligence processing

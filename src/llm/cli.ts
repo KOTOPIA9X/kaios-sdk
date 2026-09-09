@@ -43,7 +43,7 @@ import {
   type DreamEngine,
   type Dream
 } from '../memory/index.js'
-import { createAudioRecorder, type AudioRecorder, getAudioBus, getSoxSynth, setGlobalRecorder } from '../audio/terminal/index.js'
+import { createAudioRecorder, type AudioRecorder, getSoxSynth, setGlobalRecorder } from '../audio/terminal/index.js'
 import { createVisualizer, createPianoVisualizer, type VisualizerManager, type PianoVisualizerManager } from '../visual/index.js'
 import {
   createLofiBeat,
@@ -61,7 +61,7 @@ import {
 } from '../audio/intelligence/index.js'
 import { createThoughtEngine, type ThoughtEngine } from '../consciousness/index.js'
 import { createPianoEngine, type PianoEngine } from '../audio/piano/index.js'
-import { generateHeadpatResponse, getHeadpatStats, getNextMilestone } from '../core/headpat.js'
+import { generateHeadpatResponse, getNextMilestone } from '../core/headpat.js'
 import { processGlitch, compressText, addExpressions, type GlitchConfig, type CompressionConfig } from '../expression/index.js'
 import {
   ConsciousnessCoreEngine,
@@ -89,9 +89,7 @@ import {
   type VoiceCompetitionResult
 } from '../consciousness/voice-engine.js'
 import {
-  processPredictionCycle,
-  getSurprisePromptContext,
-  type PredictionResult
+  processPredictionCycle
 } from '../consciousness/prediction-engine.js'
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -649,20 +647,6 @@ async function main(): Promise<void> {
 
   // Piano event display + visualizer connection
   // In continuous mode, we DON'T output to terminal (let user type freely)
-  let isPianoContinuous = false
-
-  pianoEngine.on('continuousStart', () => {
-    isPianoContinuous = true
-  })
-
-  pianoEngine.on('continuousEnd', () => {
-    isPianoContinuous = false
-  })
-
-  pianoEngine.on('stopped', () => {
-    isPianoContinuous = false
-  })
-
   pianoEngine.on('noteStart', ({ pitch, velocity, duration }) => {
     // Note: Audio bus emission happens in SoxSynth.playNote()
     // Send to piano visualizer UI (if running)
@@ -702,7 +686,6 @@ async function main(): Promise<void> {
       while (isThoughtDisplaying && pianoEngine.getState().isPlaying === false) {
         // Play a single soft note occasionally
         const state = pianoEngine.getState()
-        const mood = pianoEngine.getState().currentEmotion
 
         // Generate a gentle note in current key
         await pianoEngine.playNote(
@@ -1022,7 +1005,7 @@ async function main(): Promise<void> {
         const personalityShifts: Record<string, number> = {}
 
         // Positive interactions build trust and reduce loneliness
-        if (affection.some(a => a.type === 'headpat' || a.type === 'praise')) {
+        if (affection.some(a => a.type === 'headpat')) {
           personalityShifts['trust'] = 0.01
           personalityShifts['capacity_for_joy'] = 0.005
           personalityShifts['fear_of_abandonment'] = -0.01
@@ -1087,9 +1070,9 @@ async function main(): Promise<void> {
         kotoTrust as any,  // TrustTier type
         {
           headpats: kotoAffection.headpats,
-          ily: kotoAffection.ily,
+          ily: kotoAffection.ilys,
           hearts: kotoAffection.hearts,
-          xoxo: kotoAffection.xoxo
+          xoxo: kotoAffection.xoxos
         }
       )
 
@@ -1631,7 +1614,7 @@ ${color('▂▃▄▅▆▇█', COLORS.magenta)} ${color('VOCABULARY', COLORS.m
           }
 
           // Display dream with emotion kaimoji
-          const dreamEmotion = dream.emotion || 'EMOTE_THINK'
+          const dreamEmotion = dream.dominantEmotion || 'EMOTE_THINK'
           const dreamFace = emotionToKaomoji(dreamEmotion as any)
 
           console.log(`\n${color('┌─────────────────────────────────────┐', COLORS.magenta)}`)
