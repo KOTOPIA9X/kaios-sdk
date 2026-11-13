@@ -531,7 +531,7 @@ const MODEL_ALIASES: Record<string, string> = {
   'haiku': 'claude-3.5-haiku',
   'sonnet': 'claude-3.5-sonnet',
   'opus': 'claude-3-opus',
-  'gemini': 'gemini-1.5-flash',
+  'gemini': 'gemini-3.8-flash',
   'local': 'ollama/llama3',
 }
 
